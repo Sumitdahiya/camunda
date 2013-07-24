@@ -10,7 +10,9 @@
   <tbody>
     <tr ng-repeat="variable in variables">
       <td>
-        {{ variable.name }}
+        <span clip clip-load="loadVariableClip()">{{ variable.name }}</span>
+        <span clip clip-text="{{ variable.name }}">{{ variable.name }}</span>
+        <span clip>{{ variable.name }}</span>
       </td>
       <td>
 
@@ -94,7 +96,7 @@
       <td colspan="4">
         <i class="icon-loading"></i> loading process variables ...
       </td>
-    </tr>    
+    </tr>
   
     <tr ng-if="variables && !variables.length">
       <td  colspan="4">

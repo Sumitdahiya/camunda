@@ -1,6 +1,6 @@
 ngDefine('cockpit.plugin.base.views', function(module) {
 
-   function VariableInstancesController ($scope, $http, $location, Uri, LocalExecutionVariableResource, RequestStatus) {
+   function VariableInstancesController ($scope, $http, $location, Uri, LocalExecutionVariableResource, RequestStatus, $q) {
 
     // input: processInstanceId, selection, processInstance
 
@@ -38,6 +38,18 @@ ngDefine('cockpit.plugin.base.views', function(module) {
       }
       
     });
+
+    $scope.loadVariableClip = function() {
+      var deferred = $q.defer();
+
+      setTimeout(function() {
+        $scope.$apply(function() {
+          deferred.resolve("ASDF");
+        });
+      }, 2000);
+
+      return deferred.promise;
+    };
 
     $scope.$watch('selection.treeDiagramMapping.activityInstances', function (newValue) {
       var instances = newValue || [];
@@ -245,7 +257,7 @@ ngDefine('cockpit.plugin.base.views', function(module) {
 
   };
 
-  module.controller('VariableInstancesController', [ '$scope', '$http', '$location', 'Uri', 'LocalExecutionVariableResource', 'RequestStatus', VariableInstancesController ]);
+  module.controller('VariableInstancesController', [ '$scope', '$http', '$location', 'Uri', 'LocalExecutionVariableResource', 'RequestStatus', '$q', VariableInstancesController ]);
 
   var Configuration = function PluginConfiguration(ViewsProvider) {
 

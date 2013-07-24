@@ -10,6 +10,7 @@
     baseUrl: '../../../',
     paths: {
       'ngDefine' : 'assets/vendor/requirejs-angular-define/ngDefine',
+      'ZeroClipboard': 'assets/vendor/ZeroClipboard/ZeroClipboard.min',
       'domReady' : 'assets/vendor/require/domReady',
       'jquery' : 'assets/vendor/jquery/jquery',
       'jquery-mousewheel' : 'assets/vendor/jquery/jquery.mousewheel',

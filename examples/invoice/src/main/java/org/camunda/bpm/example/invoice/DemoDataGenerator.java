@@ -8,12 +8,12 @@ import org.camunda.bpm.engine.identity.User;
 
 /**
  * Creates demo credentials to be used in the invoice showcase.
- * 
+ *
  * @author drobisch
  */
 public class DemoDataGenerator {
 
-    private final static Logger LOGGER = Logger.getLogger(DemoDataGenerator.class.getName());
+    private final static Logger LOGGER = Logger.getLogger(InvoiceProcessApplication.class.getName());
 
     public void createUsers(ProcessEngine engine) {
 
@@ -22,7 +22,7 @@ public class DemoDataGenerator {
         return;
       }
 
-      LOGGER.info("Generating demo data for invoice showcase");
+      LOGGER.info("Creating demo data for invoice example");
 
       User user = engine.getIdentityService().newUser("demo");
       user.setFirstName("Demo");
