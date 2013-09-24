@@ -101,10 +101,12 @@ public class JobManager extends AbstractManager {
   }
 
   @SuppressWarnings("unchecked")
-  public List<JobEntity> findNextJobsToExecute(Page page) {
+  public List<JobEntity> findNextJobsToExecute(boolean prioritizedAcquisition, int priorityElevationPerMinute, Page page) {
     Map<String,Object> params = new HashMap<String, Object>();
     Date now = ClockUtil.getCurrentTime();
     params.put("now", now);
+    params.put("prioritizedAcquisition", prioritizedAcquisition);
+    params.put("priorityElevationPerMinute", priorityElevationPerMinute);
     params.put("deploymentAware", Context.getProcessEngineConfiguration().isJobExecutorDeploymentAware());
     if (Context.getProcessEngineConfiguration().isJobExecutorDeploymentAware()) {
       Set<String> registeredDeployments = Context.getProcessEngineConfiguration().getRegisteredDeployments();
@@ -112,6 +114,7 @@ public class JobManager extends AbstractManager {
         params.put("deploymentIds", registeredDeployments);
       }
     }
+
     return getDbSqlSession().selectList("selectNextJobsToExecute", params, page);
   }
 

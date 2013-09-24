@@ -21,6 +21,7 @@ import org.camunda.bpm.application.ProcessApplicationReference;
 import org.camunda.bpm.engine.RepositoryService;
 import org.camunda.bpm.engine.impl.cmd.ActivateProcessDefinitionCmd;
 import org.camunda.bpm.engine.impl.cmd.AddIdentityLinkForProcessDefinitionCmd;
+import org.camunda.bpm.engine.impl.cmd.AssignPriorityToProcessDefinitionCmd;
 import org.camunda.bpm.engine.impl.cmd.DeleteDeploymentCmd;
 import org.camunda.bpm.engine.impl.cmd.DeleteIdentityLinkForProcessDefinitionCmd;
 import org.camunda.bpm.engine.impl.cmd.DeployCmd;
@@ -131,6 +132,11 @@ public class RepositoryServiceImpl extends ServiceImpl implements RepositoryServ
 
   public void activateProcessDefinitionByKey(String processDefinitionKey, boolean activateProcessInstances, Date activationDate) {
     commandExecutor.execute(new ActivateProcessDefinitionCmd(null, processDefinitionKey, activateProcessInstances, activationDate));
+  }
+
+  public void assignPriorityById(String processDefinitionId, int priority) {
+    commandExecutor.execute(new AssignPriorityToProcessDefinitionCmd(processDefinitionId, priority));
+
   }
 
   public InputStream getProcessModel(String processDefinitionId) {

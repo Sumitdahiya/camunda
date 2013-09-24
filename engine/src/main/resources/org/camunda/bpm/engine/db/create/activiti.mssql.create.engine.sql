@@ -67,6 +67,7 @@ create table ACT_RU_JOB (
     HANDLER_TYPE_ nvarchar(255),
     HANDLER_CFG_ nvarchar(4000),
     DEPLOYMENT_ID_ nvarchar(64),
+    PRIORITY_ int,
     primary key (ID_)
 );
 
@@ -82,6 +83,7 @@ create table ACT_RE_PROCDEF (
     DGRM_RESOURCE_NAME_ nvarchar(4000),
     HAS_START_FORM_KEY_ tinyint,
     SUSPENSION_STATE_ tinyint,
+    JOB_PRIORITY_ int,
     primary key (ID_)
 );
 

@@ -28,6 +28,7 @@ import org.camunda.bpm.engine.impl.incident.FailedJobIncidentHandler;
 import org.camunda.bpm.engine.impl.incident.IncidentHandler;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.jobexecutor.JobHandler;
+import org.camunda.bpm.engine.impl.util.ClockUtil;
 import org.camunda.bpm.engine.runtime.Job;
 
 /**
@@ -44,13 +45,14 @@ public abstract class JobEntity implements Serializable, Job, PersistentObject, 
   public static final boolean DEFAULT_EXCLUSIVE = true;
   public static final int DEFAULT_RETRIES = 3;
   private static final int MAX_EXCEPTION_MESSAGE_LENGTH = 255;
+  public static final int DEFAULT_PRIORITY = 50;
 
   private static final long serialVersionUID = 1L;
 
   protected String id;
   protected int revision;
 
-  protected Date duedate;
+  protected Date duedate = ClockUtil.getCurrentTime();
 
   protected String lockOwner = null;
   protected Date lockExpirationTime = null;
@@ -71,6 +73,8 @@ public abstract class JobEntity implements Serializable, Job, PersistentObject, 
   protected String exceptionMessage;
 
   protected String deploymentId;
+
+  protected int priority = DEFAULT_PRIORITY;
 
   public void execute(CommandContext commandContext) {
     ExecutionEntity execution = null;
@@ -134,6 +138,7 @@ public abstract class JobEntity implements Serializable, Job, PersistentObject, 
     persistentState.put("retries", retries);
     persistentState.put("duedate", duedate);
     persistentState.put("exceptionMessage", exceptionMessage);
+    persistentState.put("priority", priority);
     if(exceptionByteArrayId != null) {
       persistentState.put("exceptionByteArrayId", exceptionByteArrayId);
     }
@@ -330,6 +335,14 @@ public abstract class JobEntity implements Serializable, Job, PersistentObject, 
 
   public void setDeploymentId(String deploymentId) {
     this.deploymentId = deploymentId;
+  }
+
+  public int getPriority() {
+    return priority;
+  }
+
+  public void setPriority(int priority) {
+    this.priority = priority;
   }
 
   @Override

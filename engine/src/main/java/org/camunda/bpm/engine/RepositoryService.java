@@ -194,6 +194,8 @@ public interface RepositoryService {
    */
   void activateProcessDefinitionByKey(String processDefinitionKey, boolean activateProcessInstances,  Date activationDate);
 
+  void assignPriorityById(String processDefinitionId, int priority);
+
   /**
    * Gives access to a deployed process model, e.g., a BPMN 2.0 XML file,
    * through a stream of bytes.

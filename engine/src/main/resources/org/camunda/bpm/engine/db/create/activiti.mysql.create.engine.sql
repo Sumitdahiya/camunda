@@ -67,6 +67,7 @@ create table ACT_RU_JOB (
     HANDLER_TYPE_ varchar(255),
     HANDLER_CFG_ varchar(4000),
     DEPLOYMENT_ID_ varchar(64),
+    PRIORITY_ integer,
     primary key (ID_)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE utf8_bin;
 
@@ -82,6 +83,7 @@ create table ACT_RE_PROCDEF (
     DGRM_RESOURCE_NAME_ varchar(4000),
     HAS_START_FORM_KEY_ TINYINT,
     SUSPENSION_STATE_ integer,
+    JOB_PRIORITY_ integer,
     primary key (ID_)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE utf8_bin;
 

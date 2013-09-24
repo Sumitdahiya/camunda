@@ -647,6 +647,7 @@ public class ExecutionEntity extends VariableScopeImpl implements ActivityExecut
     message.setExclusive(getActivity().isExclusive());
     message.setJobHandlerType(AsyncContinuationJobHandler.TYPE);
     message.setJobHandlerConfiguration(executionOperation.getCanonicalName());
+    message.setPriority(getProcessDefinition().getJobPriority());
 
     Context
       .getCommandContext()

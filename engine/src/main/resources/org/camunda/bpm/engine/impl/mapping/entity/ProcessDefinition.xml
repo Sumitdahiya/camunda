@@ -7,7 +7,7 @@
   <!-- PROCESSDEFINITION INSERT -->
 
   <insert id="insertProcessDefinition" parameterType="org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity">
-    insert into ${prefix}ACT_RE_PROCDEF(ID_, REV_, CATEGORY_, NAME_, KEY_, VERSION_, DEPLOYMENT_ID_, RESOURCE_NAME_, DGRM_RESOURCE_NAME_, HAS_START_FORM_KEY_, SUSPENSION_STATE_)
+    insert into ${prefix}ACT_RE_PROCDEF(ID_, REV_, CATEGORY_, NAME_, KEY_, VERSION_, DEPLOYMENT_ID_, RESOURCE_NAME_, DGRM_RESOURCE_NAME_, HAS_START_FORM_KEY_, SUSPENSION_STATE_, JOB_PRIORITY_)
     values (#{id, jdbcType=VARCHAR},
     		1,
             #{category, jdbcType=VARCHAR},
@@ -18,7 +18,8 @@
             #{resourceName, jdbcType=VARCHAR},
             #{diagramResourceName, jdbcType=VARCHAR},
             #{hasStartFormKey, jdbcType=BOOLEAN},
-            #{suspensionState, jdbcType=INTEGER})
+            #{suspensionState, jdbcType=INTEGER},
+            #{jobPriority, jdbcType=INTEGER})
   </insert>
   
   <!-- PROCESSDEFINITION UPDATE -->
@@ -26,7 +27,8 @@
   <update id="updateProcessDefinition" parameterType="org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity">
     update ${prefix}ACT_RE_PROCDEF set
       REV_ = #{revisionNext, jdbcType=INTEGER},    
-      SUSPENSION_STATE_ = #{suspensionState, jdbcType=INTEGER}
+      SUSPENSION_STATE_ = #{suspensionState, jdbcType=INTEGER},
+      JOB_PRIORITY_ = #{jobPriority, jdbcType=INTEGER}
     where ID_ = #{id, jdbcType=VARCHAR}
       and REV_ = #{revision, jdbcType=INTEGER}
   </update>
@@ -51,6 +53,7 @@
     <result property="diagramResourceName" column="DGRM_RESOURCE_NAME_" jdbcType="VARCHAR"/>
     <result property="hasStartFormKey" column="HAS_START_FORM_KEY_" jdbcType="BOOLEAN"/>
     <result property="suspensionState" column="SUSPENSION_STATE_" jdbcType="INTEGER"/>
+    <result property="jobPriority" column="JOB_PRIORITY_" jdbcType="INTEGER"/>
   </resultMap>
 
   <!-- PROCESSDEFINITION SELECT -->

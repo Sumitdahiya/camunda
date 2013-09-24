@@ -34,6 +34,7 @@
     <result property="jobHandlerType" column="HANDLER_TYPE_" jdbcType="VARCHAR" />
     <result property="jobHandlerConfiguration" column="HANDLER_CFG_" jdbcType="VARCHAR" />
     <result property="deploymentId" column="DEPLOYMENT_ID_" jdbcType="VARCHAR" />
+    <result property="priority" column="PRIORITY_" jdbcType="INTEGER" />
     <discriminator javaType="string" column="TYPE_">
       <case value="message" resultMap="messageResultMap"/> 
       <case value="timer" resultMap="timerResultMap"/> 
@@ -80,6 +81,13 @@
         </if>
         )
       </if>
+    <if test="parameter.prioritizedAcquisition">
+      order by 
+	      RES.PRIORITY_ +
+	        ((${dateDiff1} RES.DUEDATE_ ${dateDiff2} #{parameter.now} ${dateDiff3}) 
+	          / 60000 * #{parameter.priorityElevationPerMinute}) 
+      desc
+    </if>
     ${limitAfter}	    
   </select>
 
@@ -216,6 +224,7 @@
         </if>
         )
       </if>  
+    ${orderBy}
 	  ${limitAfter}
   </select>
   
@@ -323,12 +332,14 @@
             EXCLUSIVE_,
             EXECUTION_ID_, 
             PROCESS_INSTANCE_ID_,
+            DUEDATE_,
             RETRIES_, 
             EXCEPTION_STACK_ID_,
             EXCEPTION_MSG_,
             HANDLER_TYPE_,
             HANDLER_CFG_,
-            DEPLOYMENT_ID_)
+            DEPLOYMENT_ID_,
+            PRIORITY_)
     values (#{id, jdbcType=VARCHAR},
             1,
             'message',
@@ -337,12 +348,14 @@
             #{exclusive, jdbcType=BOOLEAN},
             #{executionId, jdbcType=VARCHAR},
             #{processInstanceId, jdbcType=VARCHAR},
+            #{duedate, jdbcType=TIMESTAMP},
             #{retries, jdbcType=INTEGER},
             #{exceptionByteArrayId, jdbcType=VARCHAR},
             #{exceptionMessage, jdbcType=VARCHAR},
             #{jobHandlerType, jdbcType=VARCHAR},
             #{jobHandlerConfiguration, jdbcType=VARCHAR},
-            #{deploymentId, jdbcType=VARCHAR}
+            #{deploymentId, jdbcType=VARCHAR},
+            #{priority, jdbcType=INTEGER}
     )
   </insert>
   
