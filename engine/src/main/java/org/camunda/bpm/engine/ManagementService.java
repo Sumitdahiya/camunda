@@ -151,10 +151,10 @@ public interface ManagementService {
 
   /**
    * Sets a new due date for the provided id.
-   * When newDuedate is null, the job is executed with the next
+   * Set this to a date in the past to ensure that the job is executed with the next
    * job executor run.
    * @param jobId id of job to modify, cannot be null.
-   * @param newDuedate new date for job execution
+   * @param newDuedate new date for job execution, cannot be null.
    */
   void setJobDuedate(String jobId, Date newDuedate);
 

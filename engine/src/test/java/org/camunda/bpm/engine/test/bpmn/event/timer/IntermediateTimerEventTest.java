@@ -91,7 +91,7 @@ public class IntermediateTimerEventTest extends PluggableProcessEngineTestCase {
 
     Job timerJob = managementService.createJobQuery().singleResult();
 
-    assertEquals("timer priority should be inherited from process definition", 75, ((JobEntity) timerJob).getPriority());
+    assertEquals("timer priority should be inherited from process definition", 75, timerJob.getPriority());
 
   }
 

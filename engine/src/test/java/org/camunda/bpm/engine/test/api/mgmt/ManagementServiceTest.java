@@ -308,13 +308,18 @@ public class ManagementServiceTest extends PluggableProcessEngineTestCase {
     assertNotNull("No job found for process instance", timerJob);
     assertNotNull(timerJob.getDuedate());
 
-    managementService.setJobDuedate(timerJob.getId(), null);
+    try {
+      managementService.setJobDuedate(timerJob.getId(), null);
+      fail("Setting due date to null should fail");
+    } catch (ProcessEngineException e) {
+      // happy path
 
-    timerJob = managementService.createJobQuery()
-      .processInstanceId(processInstance.getId())
-      .singleResult();
+      timerJob = managementService.createJobQuery()
+          .processInstanceId(processInstance.getId())
+          .singleResult();
 
-    assertNull(timerJob.getDuedate());
+      assertNotNull(timerJob.getDuedate());
+    }
   }
 
 

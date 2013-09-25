@@ -62,7 +62,7 @@ create table ACT_RU_JOB (
     RETRIES_ int,
     EXCEPTION_STACK_ID_ nvarchar(64),
     EXCEPTION_MSG_ nvarchar(4000),
-    DUEDATE_ datetime2 NULL,
+    DUEDATE_ datetime2 NOT NULL,
     REPEAT_ nvarchar(255),
     HANDLER_TYPE_ nvarchar(255),
     HANDLER_CFG_ nvarchar(4000),

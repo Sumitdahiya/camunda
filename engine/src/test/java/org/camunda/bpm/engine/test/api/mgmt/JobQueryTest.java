@@ -20,8 +20,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import junit.framework.Assert;
-
 import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.impl.cmd.DeleteJobsCmd;
 import org.camunda.bpm.engine.impl.interceptor.Command;
@@ -103,6 +101,7 @@ public class JobQueryTest extends PluggableProcessEngineTestCase {
     timerThreeFireTime = new Date(t3.getTime() + ONE_HOUR);
 
     // Create one message
+    ClockUtil.setCurrentTime(testStartTime);
     messageId = commandExecutor.execute(new Command<String>() {
       public String execute(CommandContext commandContext) {
         MessageEntity message = new MessageEntity();
@@ -198,51 +197,57 @@ public class JobQueryTest extends PluggableProcessEngineTestCase {
     }
   }
 
-  public void testQueryByDuedateLowerThen() {
-    JobQuery query = managementService.createJobQuery().duedateLowerThen(testStartTime);
+  public void testQueryByDuedateLowerThan() {
+    JobQuery query = managementService.createJobQuery().duedateLowerThan(testStartTime);
     verifyQueryResults(query, 0);
 
-    query = managementService.createJobQuery().duedateLowerThen(new Date(timerOneFireTime.getTime() + ONE_SECOND));
+    query = managementService.createJobQuery().duedateLowerThan(new Date(testStartTime.getTime() + ONE_SECOND));
     verifyQueryResults(query, 1);
 
-    query = managementService.createJobQuery().duedateLowerThen(new Date(timerTwoFireTime.getTime() + ONE_SECOND));
+    query = managementService.createJobQuery().duedateLowerThan(new Date(timerOneFireTime.getTime() + ONE_SECOND));
     verifyQueryResults(query, 2);
 
-    query = managementService.createJobQuery().duedateLowerThen(new Date(timerThreeFireTime.getTime() + ONE_SECOND));
+    query = managementService.createJobQuery().duedateLowerThan(new Date(timerTwoFireTime.getTime() + ONE_SECOND));
     verifyQueryResults(query, 3);
+
+    query = managementService.createJobQuery().duedateLowerThan(new Date(timerThreeFireTime.getTime() + ONE_SECOND));
+    verifyQueryResults(query, 4);
   }
 
-  public void testQueryByDuedateLowerThenOrEqual() {
-    JobQuery query = managementService.createJobQuery().duedateLowerThenOrEquals(testStartTime);
+  public void testQueryByDuedateLowerThanOrEqual() {
+    JobQuery query = managementService.createJobQuery().duedateLowerThenOrEquals(new Date(testStartTime.getTime() - ONE_SECOND));
     verifyQueryResults(query, 0);
+
+    query = managementService.createJobQuery().duedateLowerThenOrEquals(testStartTime);
+    verifyQueryResults(query, 1);
 
     query = managementService.createJobQuery().duedateLowerThenOrEquals(timerOneFireTime);
-    verifyQueryResults(query, 1);
+    verifyQueryResults(query, 2);
 
     query = managementService.createJobQuery().duedateLowerThenOrEquals(timerTwoFireTime);
-    verifyQueryResults(query, 2);
+    verifyQueryResults(query, 3);
 
     query = managementService.createJobQuery().duedateLowerThenOrEquals(timerThreeFireTime);
-    verifyQueryResults(query, 3);
+    verifyQueryResults(query, 4);
   }
 
-  public void testQueryByDuedateHigherThen() {
-    JobQuery query = managementService.createJobQuery().duedateHigherThen(testStartTime);
+  public void testQueryByDuedateHigherThan() {
+    JobQuery query = managementService.createJobQuery().duedateHigherThan(testStartTime);
     verifyQueryResults(query, 3);
 
-    query = managementService.createJobQuery().duedateHigherThen(timerOneFireTime);
+    query = managementService.createJobQuery().duedateHigherThan(timerOneFireTime);
     verifyQueryResults(query, 2);
 
-    query = managementService.createJobQuery().duedateHigherThen(timerTwoFireTime);
+    query = managementService.createJobQuery().duedateHigherThan(timerTwoFireTime);
     verifyQueryResults(query, 1);
 
-    query = managementService.createJobQuery().duedateHigherThen(timerThreeFireTime);
+    query = managementService.createJobQuery().duedateHigherThan(timerThreeFireTime);
     verifyQueryResults(query, 0);
   }
 
-  public void testQueryByDuedateHigherThenOrEqual() {
+  public void testQueryByDuedateHigherThanOrEqual() {
     JobQuery query = managementService.createJobQuery().duedateHigherThenOrEquals(testStartTime);
-    verifyQueryResults(query, 3);
+    verifyQueryResults(query, 4);
 
     query = managementService.createJobQuery().duedateHigherThenOrEquals(timerOneFireTime);
     verifyQueryResults(query, 3);
@@ -431,9 +436,9 @@ public class JobQueryTest extends PluggableProcessEngineTestCase {
     verifyQueryResults(query, 1);
 
     Job failedJob = query.singleResult();
-    Assert.assertNotNull(failedJob);
+    assertNotNull(failedJob);
     assertEquals(processInstance.getId(), failedJob.getProcessInstanceId());
-    Assert.assertNotNull(failedJob.getExceptionMessage());
+    assertNotNull(failedJob.getExceptionMessage());
     assertTextPresent(EXCEPTION_MESSAGE, failedJob.getExceptionMessage());
   }
 
