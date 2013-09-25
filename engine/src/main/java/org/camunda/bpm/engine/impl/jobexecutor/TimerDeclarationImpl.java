@@ -1,9 +1,9 @@
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -88,11 +88,11 @@ public class TimerDeclarationImpl implements Serializable {
   public void setJobHandlerType(String jobHandlerType) {
     this.jobHandlerType = jobHandlerType;
   }
-  
+
   public boolean isInterruptingTimer() {
     return isInterruptingTimer;
   }
-  
+
   public void setInterruptingTimer(boolean isInterruptingTimer) {
     this.isInterruptingTimer = isInterruptingTimer;
   }
@@ -102,12 +102,12 @@ public class TimerDeclarationImpl implements Serializable {
         .getProcessEngineConfiguration()
         .getBusinessCalendarManager()
         .getBusinessCalendar(type.calendarName);
-    
+
     if (description==null) {
       // Prefent NPE from happening in the next line
       throw new ProcessEngineException("Timer '"+executionEntity.getActivityId()+"' was not configured with a valid duration/time");
     }
-    
+
     String dueDateString = null;
     Date duedate = null;
 
@@ -128,26 +128,30 @@ public class TimerDeclarationImpl implements Serializable {
     else {
       throw new ProcessEngineException("Timer '"+executionEntity.getActivityId()+"' was not configured with a valid duration/time, either hand in a java.util.Date or a String in format 'yyyy-MM-dd'T'hh:mm:ss'");
     }
-    
-    if (duedate==null) {      
+
+    if (duedate==null) {
       duedate = businessCalendar.resolveDuedate(dueDateString);
     }
 
     TimerEntity timer = new TimerEntity(this);
     timer.setDuedate(duedate);
+
     if (executionEntity != null) {
       timer.setExecution(executionEntity);
+      if (executionEntity.getProcessDefinition() != null) {
+        timer.setPriority(executionEntity.getProcessDefinition().getJobPriority());
+      }
     }
-    
+
     if (type == TimerDeclarationType.CYCLE) {
-      
+
       // See ACT-1427: A boundary timer with a cancelActivity='true', doesn't need to repeat itself
       if (!isInterruptingTimer) {
         String prepared = prepareRepeat(dueDateString);
         timer.setRepeat(prepared);
       }
     }
-    
+
     return timer;
   }
   private String prepareRepeat(String dueDate) {

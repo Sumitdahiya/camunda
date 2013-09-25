@@ -17,6 +17,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import junit.framework.Assert;
+
+import org.camunda.bpm.engine.impl.persistence.entity.JobEntity;
 import org.camunda.bpm.engine.impl.test.PluggableProcessEngineTestCase;
 import org.camunda.bpm.engine.impl.util.ClockUtil;
 import org.camunda.bpm.engine.runtime.Job;
@@ -48,19 +51,19 @@ public class IntermediateTimerEventTest extends PluggableProcessEngineTestCase {
 
   }
 
-  @Deployment 
+  @Deployment
   public void testExpression() {
     // Set the clock fixed
     HashMap<String, Object> variables1 = new HashMap<String, Object>();
     variables1.put("dueDate", new Date());
-    
+
     HashMap<String, Object> variables2 = new HashMap<String, Object>();
     variables2.put("dueDate", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date()));
-    
-    // After process start, there should be timer created    
+
+    // After process start, there should be timer created
     ProcessInstance pi1 = runtimeService.startProcessInstanceByKey("intermediateTimerEventExample", variables1);
     ProcessInstance pi2 = runtimeService.startProcessInstanceByKey("intermediateTimerEventExample", variables2);
-    
+
     assertEquals(1, managementService.createJobQuery().processInstanceId(pi1.getId()).count());
     assertEquals(1, managementService.createJobQuery().processInstanceId(pi2.getId()).count());
 
@@ -70,12 +73,26 @@ public class IntermediateTimerEventTest extends PluggableProcessEngineTestCase {
     for (Job job : jobs) {
       managementService.executeJob(job.getId());
     }
-    
+
     assertEquals(0, managementService.createJobQuery().processInstanceId(pi1.getId()).count());
     assertEquals(0, managementService.createJobQuery().processInstanceId(pi2.getId()).count());
 
     assertProcessEnded(pi1.getProcessInstanceId());
-    assertProcessEnded(pi2.getProcessInstanceId());    
+    assertProcessEnded(pi2.getProcessInstanceId());
+  }
+
+  @Deployment(resources = "org/camunda/bpm/engine/test/bpmn/event/timer/IntermediateTimerEventTest.testCatchingTimerEvent.bpmn20.xml")
+  public void testTimerJobPriority() {
+    String processDefinitionId = repositoryService.createProcessDefinitionQuery().singleResult().getId();
+
+    repositoryService.assignPriorityById(processDefinitionId, 75);
+
+    runtimeService.startProcessInstanceById(processDefinitionId);
+
+    Job timerJob = managementService.createJobQuery().singleResult();
+
+    assertEquals("timer priority should be inherited from process definition", 75, ((JobEntity) timerJob).getPriority());
+
   }
 
 }

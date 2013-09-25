@@ -261,7 +261,8 @@
             REPEAT_,
             HANDLER_TYPE_,
             HANDLER_CFG_,
-            DEPLOYMENT_ID_ )
+            DEPLOYMENT_ID_,
+            PRIORITY_)
     values (#{id, jdbcType=VARCHAR},
             1,
             'timer',
@@ -277,7 +278,8 @@
             #{repeat, jdbcType=VARCHAR},
             #{jobHandlerType, jdbcType=VARCHAR},
             #{jobHandlerConfiguration, jdbcType=VARCHAR},
-            #{deploymentId, jdbcType=VARCHAR}
+            #{deploymentId, jdbcType=VARCHAR},
+            #{priority, jdbcType=INTEGER}
     )
   </insert>
 

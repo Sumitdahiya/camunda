@@ -48,10 +48,15 @@ public class JobExecutorTestCase extends PluggableProcessEngineTestCase {
   }
 
   protected TimerEntity createTweetTimer(String msg, Date duedate) {
+    return createTweetTimer(msg, duedate, JobEntity.DEFAULT_PRIORITY);
+  }
+
+  protected TimerEntity createTweetTimer(String msg, Date duedate, int priority) {
     TimerEntity timer = new TimerEntity();
     timer.setJobHandlerType("tweet");
     timer.setJobHandlerConfiguration(msg);
     timer.setDuedate(duedate);
+    timer.setPriority(priority);
     return timer;
   }
 

@@ -73,6 +73,9 @@ public class JobExecutorTest extends JobExecutorTestCase {
         jobManager.send(createTweetMessage("message-two", 60));
         jobManager.send(createTweetMessage("message-three", 30));
         jobManager.send(createTweetMessage("message-four", 90));
+
+        jobManager.schedule(createTweetTimer("timer-one", new Date(), 40));
+        jobManager.schedule(createTweetTimer("timer-two", new Date(), 100));
         return null;
       }
     });
@@ -80,11 +83,13 @@ public class JobExecutorTest extends JobExecutorTestCase {
     waitForJobExecutorToProcessAllJobs(8000L);
 
     List<String> messages = tweetHandler.getMessages();
-    assertEquals(4, messages.size());
-    assertEquals("message-four", messages.get(0));
-    assertEquals("message-two", messages.get(1));
-    assertEquals("message-three", messages.get(2));
-    assertEquals("message-one", messages.get(3));
+    assertEquals(6, messages.size());
+    assertEquals("timer-two", messages.get(0));
+    assertEquals("message-four", messages.get(1));
+    assertEquals("message-two", messages.get(2));
+    assertEquals("timer-one", messages.get(3));
+    assertEquals("message-three", messages.get(4));
+    assertEquals("message-one", messages.get(5));
   }
 
   public void testJobAging() {
@@ -121,4 +126,5 @@ public class JobExecutorTest extends JobExecutorTestCase {
     assertEquals("message-two", messages.get(1));
     assertEquals("message-one", messages.get(2));
   }
+
 }
