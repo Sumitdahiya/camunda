@@ -4,7 +4,7 @@
   <artifactId>camunda-qa-glassfish-runtime</artifactId>
   <packaging>pom</packaging>
 
-  <name>camunda BPM - QA Glassfish 3.1.x Test Runtime</name>
+  <name>camunda BPM - QA Glassfish Test Runtime</name>
   
   <parent>
     <groupId>org.camunda.bpm.qa</groupId>
@@ -86,7 +86,7 @@
                 <inherited>false</inherited>
                 <configuration>
                    <includeScope>runtime</includeScope>
-                   <outputDirectory>${project.build.directory}/server/glassfish3/glassfish/lib</outputDirectory>             
+                   <outputDirectory>${project.build.directory}/server/glassfish4/glassfish/lib</outputDirectory>
                 </configuration>
               </execution>
             </executions>
@@ -101,7 +101,7 @@
                   <goal>copy-resources</goal>
                 </goals>
                 <configuration>
-                  <outputDirectory>${project.build.directory}/server/glassfish3/glassfish/domains</outputDirectory>
+                  <outputDirectory>${project.build.directory}/server/glassfish4/glassfish/domains</outputDirectory>
                   <resources>          
                     <resource>
                       <directory>src/main/domains</directory>

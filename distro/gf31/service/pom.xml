@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>camunda-glassfish-service</artifactId>
   <packaging>jar</packaging>
-  <name>camunda BPM - Glassfish 3.1.x Service</name>
+  <name>camunda BPM - Glassfish Service</name>
 
   <parent>
     <groupId>org.camunda.bpm.glassfish</groupId>

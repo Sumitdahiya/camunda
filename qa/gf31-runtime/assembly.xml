@@ -13,7 +13,7 @@
   
   <fileSets>
     <fileSet>
-      <directory>target/glassfish3</directory>
+      <directory>target/glassfish4</directory>
       <outputDirectory></outputDirectory>
     </fileSet>
   </fileSets>

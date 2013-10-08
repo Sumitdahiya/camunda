@@ -48,35 +48,35 @@
       </includes>     
     </dependencySet>
     <dependencySet>
-      <outputDirectory>server/glassfish3/glassfish/domains/domain1/applications/camunda-bpm-platform</outputDirectory>
+      <outputDirectory>server/glassfish4/glassfish/domains/domain1/applications/camunda-bpm-platform</outputDirectory>
       <includes>
         <include>org.camunda.bpm.glassfish:camunda-glassfish-ear:ear:*</include>
       </includes>
       <unpack>true</unpack>
     </dependencySet>
     <dependencySet>
-      <outputDirectory>server/glassfish3/glassfish/domains/domain1/applications/camunda-bpm-platform/camunda-jobexecutor-service-${project.version}_jar</outputDirectory>
+      <outputDirectory>server/glassfish4/glassfish/domains/domain1/applications/camunda-bpm-platform/camunda-jobexecutor-service-${project.version}_jar</outputDirectory>
       <includes>
     		<include>org.camunda.bpm.javaee:camunda-jobexecutor-service:jar:*</include>
       </includes>
       <unpack>true</unpack>
     </dependencySet>
     <dependencySet>
-      <outputDirectory>server/glassfish3/glassfish/domains/domain1/applications/camunda-bpm-platform/camunda-glassfish-service-${project.version}_jar</outputDirectory>
+      <outputDirectory>server/glassfish4/glassfish/domains/domain1/applications/camunda-bpm-platform/camunda-glassfish-service-${project.version}_jar</outputDirectory>
       <includes>
         <include>org.camunda.bpm.glassfish:camunda-glassfish-service:jar:*</include>
       </includes>
       <unpack>true</unpack>
     </dependencySet>
     <dependencySet>
-      <outputDirectory>server/glassfish3/glassfish/domains/domain1/applications/camunda-jobexecutor-rar</outputDirectory>
+      <outputDirectory>server/glassfish4/glassfish/domains/domain1/applications/camunda-jobexecutor-rar</outputDirectory>
       <includes>
         <include>org.camunda.bpm.javaee:camunda-jobexecutor-rar:rar:*</include>
       </includes>
       <unpack>true</unpack>     
     </dependencySet>
     <dependencySet>
-      <outputDirectory>server/glassfish3/glassfish/lib</outputDirectory>
+      <outputDirectory>server/glassfish4/glassfish/lib</outputDirectory>
       <includes>
         <include>org.camunda.bpm:camunda-engine:jar:*</include>
         <include>org.camunda.bpm.identity:camunda-identity-ldap:jar:*</include>
@@ -86,7 +86,7 @@
       </includes>     
     </dependencySet>
     <dependencySet>
-      <outputDirectory>server/glassfish3/glassfish/lib</outputDirectory>
+      <outputDirectory>server/glassfish4/glassfish/lib</outputDirectory>
       <includes>        
         <include>com.h2database:h2:jar:*</include>
       </includes>     
@@ -119,12 +119,12 @@
     <file>
       <source>target/filtered-resources/domain.xml</source>
       <filtered>false</filtered>
-      <outputDirectory>server/glassfish3/glassfish/domains/domain1/config</outputDirectory>
+      <outputDirectory>server/glassfish4/glassfish/domains/domain1/config</outputDirectory>
     </file>
     <file>
       <source>src/default-web.xml</source>
       <filtered>false</filtered>
-      <outputDirectory>server/glassfish3/glassfish/domains/domain1/config</outputDirectory>
+      <outputDirectory>server/glassfish4/glassfish/domains/domain1/config</outputDirectory>
     </file>
   </files>
 </assembly>

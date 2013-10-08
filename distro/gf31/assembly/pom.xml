@@ -15,7 +15,7 @@
     <version>7.1.0-SNAPSHOT</version>
   </parent>
 
-  <name>camunda BPM - Glassfish 3.1.x Assembly</name>
+  <name>camunda BPM - Glassfish Assembly</name>
 
   <dependencies>
 
@@ -36,48 +36,44 @@
              they added some, exclude these as well. (DM)  -->
         
         <exclusion>
-          <groupId>org.glassfish.distributions</groupId>
+          <groupId>org.glassfish.main.distributions</groupId>
           <artifactId>web</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.glassfish.packager</groupId>
+          <groupId>org.glassfish.main.packager</groupId>
           <artifactId>glassfish-common-full</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.glassfish.packager</groupId>
+          <groupId>org.glassfish.main.packager</groupId>
           <artifactId>glassfish-ejb</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.glassfish.packager</groupId>
+          <groupId>org.glassfish.main.packager</groupId>
           <artifactId>glassfish-cmp</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.glassfish.packager</groupId>
+          <groupId>org.glassfish.main.packager</groupId>
+          <artifactId>glassfish-entitybeans-container</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.glassfish.main.packager</groupId>
           <artifactId>glassfish-corba</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.glassfish.packager</groupId>
+          <groupId>org.glassfish.main.packager</groupId>
           <artifactId>metro</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.glassfish.packager</groupId>
+          <groupId>org.glassfish.main.packager</groupId>
           <artifactId>glassfish-appclient</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.glassfish.packager</groupId>
+          <groupId>org.glassfish.main.packager</groupId>
           <artifactId>glassfish-jms</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.glassfish.packager</groupId>
+          <groupId>org.glassfish.main.packager</groupId>
           <artifactId>mq</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.glassfish.registration</groupId>
-          <artifactId>servicetag-registry</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.glassfish.packager</groupId>
-          <artifactId>legal-fragment</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
