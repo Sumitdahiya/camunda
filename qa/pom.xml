@@ -34,7 +34,7 @@
     <jboss.mail-smtp.port>25</jboss.mail-smtp.port>
     
     <!-- glassfish properties -->
-    <glassfish.runtime.location>../gf31-runtime/target/server/glassfish4</glassfish.runtime.location>
+    <glassfish.runtime.location>../glassfish-runtime/target/server/glassfish4</glassfish.runtime.location>
     
     <glassfish.http.port>28080</glassfish.http.port>
     <glassfish.admin.port>24848</glassfish.admin.port>
@@ -70,7 +70,7 @@
 	  <id>distro</id>  
       <modules>
         <module>jboss7-runtime</module>
-        <module>gf31-runtime</module>
+        <module>glassfish-runtime</module>
         <module>tomcat-runtime</module>
         <module>integration-tests-webapps</module>
         <module>integration-tests-engine</module>
@@ -83,7 +83,7 @@
     <profile>
       <id>glassfish</id>
       <modules>
-        <module>gf31-runtime</module>
+        <module>glassfish-runtime</module>
       </modules>
     </profile>
 	

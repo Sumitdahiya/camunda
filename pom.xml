@@ -110,7 +110,7 @@
         <module>examples/wait-states</module>
     
         <module>distro/jbossas71</module>
-        <module>distro/gf31</module>
+        <module>distro/glassfish</module>
         <module>distro/tomcat</module>
         <module>distro/sql-script</module>
 
