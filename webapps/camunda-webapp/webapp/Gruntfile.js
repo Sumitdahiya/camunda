@@ -42,12 +42,7 @@ module.exports = function(grunt) {
               'require-conf.js',
               'index.html'
             ],
-            dest: 'target/webapp/',
-            options: {
-              process: function(content, srcpath) {
-                return content.replace(/\/\*\* live-reload/, '');
-              }
-            }
+            dest: 'target/webapp/'
           },
           {
             expand: true,
@@ -57,7 +52,15 @@ module.exports = function(grunt) {
             ],
             dest: 'target/webapp/'
           }
-        ]
+        ],
+        options: {
+          process: function(content, srcpath) {
+            if (!/require-conf/.test(srcpath)) {
+              return content;
+            }
+            return content.replace(/\/\*\* live-reload/, '/* live-reload */');
+          }
+        }
       },
 
       assets: {
