@@ -122,7 +122,7 @@
   /** live-reload
   // loads livereload client library (without breaking other scripts execution)
   require(['jquery'], function($) {
-    $('body').append('<script src="//localhost:8081/livereload.js?snipver=1"></script>');
+    $('body').append('<script src="//localhost:LIVERELOAD_PORT/livereload.js?snipver=1"></script>');
   });
   /**/
 

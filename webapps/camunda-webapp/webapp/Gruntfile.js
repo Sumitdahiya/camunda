@@ -4,6 +4,7 @@ var _ = require('underscore');
 
 var rjsConf = require('./src/main/webapp/require-conf');
 
+var livereloadPort = process.env.LIVERELOAD_PORT || 8081;
 
 module.exports = function(grunt) {
   var packageJSON = grunt.file.readJSON('package.json');
@@ -58,7 +59,10 @@ module.exports = function(grunt) {
             if (!/require-conf/.test(srcpath)) {
               return content;
             }
-            return content.replace(/\/\*\* live-reload/, '/* live-reload */');
+            return content
+              .replace(/LIVERELOAD_PORT/, livereloadPort)
+              .replace(/\/\*\* live-reload/, '/* live-reload */')
+            ;
           }
         }
       },
