@@ -15,7 +15,8 @@
   <tbody>
     <tr ng-repeat="userTask in userTasks">
       <td>
-        <a href="{{ getHref(userTask) }}">{{ userTask.instance.name || userTask.instance.id }}</a>
+        <a ng-click="selectActivity(userTask.instance.id, $event)"
+           ng-href="{{ getHref(userTask) }}">{{ userTask.instance.name || userTask.instance.id }}</a>
       </td>
       <td>
         <div ng-if="!userTask.inEditMode">

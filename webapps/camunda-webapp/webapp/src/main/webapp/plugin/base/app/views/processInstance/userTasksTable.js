@@ -144,6 +144,14 @@ ngDefine('cockpit.plugin.base.views', function(module) {
       return taskIdIdToExceptionMessageMap[userTask.id];
     };
 
+    $scope.selectActivity = function(activityId, event) {
+      event.preventDefault();
+      console.info('userTasksTable', $scope, activityId);
+      $scope.processData.set('filter', angular.extend({}, $scope.filter, {
+        activityInstanceIds: [activityId],
+        activityIds: [activityId.split(':').shift()]
+      }));
+    };
   };
 
   module.controller('UserTaskController', [ '$scope', 'search', 'TaskResource', 'Notifications', UserTaskController ]);
