@@ -2,7 +2,7 @@
     configuration file for cockpit testing
 
     to run test start:
-    1. cockpit
+    1. admin
     2. webdriver-manager start
     3. protractor conf-file-name.js
 */
@@ -27,11 +27,11 @@ exports.config = {
   //
   // Spec patterns are relative to the location of the spec file. They may
   // include glob patterns.
-  specs: ['cockpit/*Spec.js'],
+  specs: ['admin/*Spec.js'],
 
   // A base URL for your application under test. Calls to protractor.get()
   // with relative paths will be prepended with this.
-  baseUrl: 'http://localhost:8888',
+  baseUrl: 'http://localhost:8080',
 
   // ----- The test framework -----
   //
