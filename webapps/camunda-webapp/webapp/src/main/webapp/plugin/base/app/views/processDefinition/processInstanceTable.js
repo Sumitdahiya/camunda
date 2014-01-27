@@ -6,7 +6,7 @@ ngDefine('cockpit.plugin.base.views', function(module) {
     var processData = $scope.processData.newChild($scope);
 
     var processDefinition = $scope.processDefinition;
-    
+
     var DEFAULT_PAGES = { size: 50, total: 0, current: 1 };
 
     var pages = $scope.pages = angular.copy(DEFAULT_PAGES);
@@ -66,6 +66,11 @@ ngDefine('cockpit.plugin.base.views', function(module) {
         pages.total = Math.ceil(data.data.count / pages.size);
       });
     }
+
+    $scope.selectActivity = function(activityId, event) {
+      event.preventDefault();
+      $scope.processData.set('filter', angular.extend({}, $scope.filter, { activityIds: [activityId] }));
+    };
   }];
 
   var Configuration = [ 'ViewsProvider', function(ViewsProvider) {
