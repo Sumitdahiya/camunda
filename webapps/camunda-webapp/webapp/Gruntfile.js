@@ -164,8 +164,8 @@ module.exports = function(grunt) {
         ],
         tasks: [
           // 'jshint:scripts',
-          // 'newer:copy:development'
-          'copy:development'
+          'newer:copy:development'
+          // 'copy:development'
         ]
       },
 
@@ -204,8 +204,8 @@ module.exports = function(grunt) {
           'src/main/webapp/assets/css/**/*.css'
         ],
         tasks: [
-          // 'newer:copy:css'
-          'copy:css'
+          'newer:copy:css'
+          // 'copy:css'
         ]
       },
 
@@ -401,8 +401,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-less');
   grunt.loadNpmTasks('grunt-jsdoc');
   grunt.loadNpmTasks('grunt-bower-task');
-  grunt.loadNpmTasks('grunt-karma');
-  // grunt.loadNpmTasks('grunt-newer');
+  // grunt.loadNpmTasks('grunt-karma');
+  grunt.loadNpmTasks('grunt-newer');
 
   // custom task for ngDefine minification
   grunt.registerMultiTask('ngr', 'Minifies the angular related scripts', function() {
@@ -439,10 +439,10 @@ module.exports = function(grunt) {
     }
     else {
       tasks = tasks.concat([
-        // 'newer:copy:assets',
-        // 'newer:copy:development'
-        'copy:assets',
-        'copy:development'
+        'newer:copy:assets',
+        'newer:copy:development'
+        // 'copy:assets',
+        // 'copy:development'
       ]);
     }
 
