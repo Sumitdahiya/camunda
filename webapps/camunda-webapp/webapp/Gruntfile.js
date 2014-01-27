@@ -4,10 +4,24 @@ var _ = require('underscore');
 
 var rjsConf = require('./src/main/webapp/require-conf');
 
-var livereloadPort = process.env.LIVERELOAD_PORT || 8081;
+var livereloadPort = parseInt(process.env.LIVERELOAD_PORT || 8081, 10);
+
+var commentLineExp = /^[\s]*<!-- (\/|#) (CE|EE)/;
+
+function productionFileProcessing(content, srcpath) {
+  // removes the template comments
+  content = content
+            .split('\n').filter(function(line) {
+              console.info(line.slice(0, 10), !commentLineExp.test(line));
+              return !commentLineExp.test(line);
+            }).join('\n');
+
+  return content;
+}
+
 
 function developmentFileProcessing(content, srcpath) {
-  // Unfortunately, this might (in some cases) make angular complain about template having no single root element (observed in only 1 template so far).
+  // Unfortunately, this might (in some cases) make angular complaining about template having no single root element (when the "replace" option is set to "true").
 
   // if (/\.html$/.test(srcpath)) {
   //   content = '<!-- # CE - auto-comment - '+ srcpath +' -->\n'+
@@ -76,6 +90,36 @@ module.exports = function(grunt) {
           process: developmentFileProcessing
         }
       },
+      production: {
+        files: [
+          {
+            expand: true,
+            cwd: 'src/main/webapp/WEB-INF',
+            src: ['*'],
+            dest: 'target/webapp/WEB-INF'
+          },
+          {
+            expand: true,
+            cwd: 'src/main/webapp/',
+            src: [
+              'require-conf.js',
+              'index.html'
+            ],
+            dest: 'target/webapp/'
+          },
+          {
+            expand: true,
+            cwd: 'src/main/webapp/',
+            src: [
+              '{app,plugin,develop,common}/{,**/}*.{js,html}'
+            ],
+            dest: 'target/webapp/'
+          }
+        ],
+        options: {
+          process: productionFileProcessing
+        }
+      },
 
       assets: {
         files: [
@@ -129,20 +173,20 @@ module.exports = function(grunt) {
       // QUESTION:
       // Does that entry make sense?
       // We can use `karma:unit` and `karma:e2e` instead of watching
-      tests: {
-        files: [
-          'src/main/webapp/require-conf.js',
-          'src/main/webapp/{app,develop,plugin,common}/**/*.{js,html}',
-          'src/test/js/{config,e2e,test,unit}/{,**/}*.js'
-        ],
-        tasks: [
-          // 'jshint:test',
-          // we use the CI versions (who are runned only once)
-          // 'karma:testOnce',
-          'karma:unitOnce',
-          'karma:e2eOnce'
-        ]
-      },
+      // tests: {
+      //   files: [
+      //     'src/main/webapp/require-conf.js',
+      //     'src/main/webapp/{app,develop,plugin,common}/**/*.{js,html}',
+      //     'src/test/js/{config,e2e,test,unit}/{,**/}*.js'
+      //   ],
+      //   tasks: [
+      //     // 'jshint:test',
+      //     // we use the CI versions (who are runned only once)
+      //     // 'karma:testOnce',
+      //     'karma:unitOnce',
+      //     'karma:e2eOnce'
+      //   ]
+      // },
 
       // TODO: add that when using less
       // styles: {
