@@ -11,7 +11,7 @@
   <tbody>
     <tr ng-repeat="processInstance in processInstances">
       <td>
-        <a href="#/process-instance/{{ processInstance.id }}?detailsTab=incidents-tab" title="{{ processInstance.id }}">
+        <a href="#/process-instance/{{ processInstance.id }}" title="{{ processInstance.id }}">
           {{ processInstance.id | shorten:8 }}
         </a>
       </td>
