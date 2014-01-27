@@ -6,6 +6,24 @@ var rjsConf = require('./src/main/webapp/require-conf');
 
 var livereloadPort = process.env.LIVERELOAD_PORT || 8081;
 
+function developmentFileProcessing(content, srcpath) {
+  // Unfortunately, this might (in some cases) make angular complain about template having no single root element (observed in only 1 template so far).
+
+  // if (/\.html$/.test(srcpath)) {
+  //   content = '<!-- # CE - auto-comment - '+ srcpath +' -->\n'+
+  //             content +
+  //             '\n<!-- / CE - auto-comment - '+ srcpath +' -->';
+  // }
+
+  if (/require-conf.js$/.test(srcpath)) {
+    content = content
+              .replace(/\/\* live-reload/, '/* live-reload */')
+              .replace(/LIVERELOAD_PORT/g, livereloadPort);
+  }
+  return content;
+}
+
+
 module.exports = function(grunt) {
   var packageJSON = grunt.file.readJSON('package.json');
 
@@ -55,15 +73,7 @@ module.exports = function(grunt) {
           }
         ],
         options: {
-          process: function(content, srcpath) {
-            if (!/require-conf/.test(srcpath)) {
-              return content;
-            }
-            return content
-              .replace(/LIVERELOAD_PORT/, livereloadPort)
-              .replace(/\/\*\* live-reload/, '/* live-reload */')
-            ;
-          }
+          process: developmentFileProcessing
         }
       },
 
