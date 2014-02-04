@@ -4,23 +4,35 @@ var _ = require('underscore');
 
 var rjsConf = require('./src/main/webapp/require-conf');
 
+
 var commentLineExp = /^[\s]*<!-- (\/|#) (CE|EE)/;
 
-function distFileProcessing(content, srcpath) {
-  // removes the template comments
-  content = content
-            .split('\n').filter(function(line) {
-              // console.info(line.slice(0, 10), !commentLineExp.test(line));
-              return !commentLineExp.test(line);
-            }).join('\n');
+var semAttributeExp = / sem-[^\s]+/;
+
+var htmlExtExp = /\.html$/;
+
+function productionFileProcessing(content, srcpath) {
+  if (htmlExtExp.test(srcpath)) {
+    content = content
+
+      // removes the template comments
+      .split('\n').filter(function(line) {
+        // console.info(line.slice(0, 10), !commentLineExp.test(line));
+        return !commentLineExp.test(line);
+      })
+      .join('\n')
+
+      // removes the "sem-*" attributes used in HTML for e2e testing
+      .replace(semAttributeExp, '');
+  }
 
   return content;
 }
 
 
 function developmentFileProcessing(content, srcpath) {
-  // Unfortunately, this might (in some cases) make angular complaining
-  // about template having no single root element
+  // Unfortunately, this might (in some cases) make angular
+  // complaining about template having no single root element
   // (when the "replace" option is set to "true").
 
   // if (/\.html$/.test(srcpath)) {
@@ -480,7 +492,7 @@ module.exports = function(grunt) {
 
   // Aimed to hold more complex build processes
   grunt.registerTask('build', 'Build the frontend assets', function(target) {
-    var tasks = [
+    var defaultTasks = [
       'clean',
       'bower'
     ];
@@ -490,20 +502,21 @@ module.exports = function(grunt) {
       // - Minifaction: https://app.camunda.com/jira/browse/CAM-1667
       // - Bug in ngDefine: https://app.camunda.com/jira/browse/CAM-1713
 
-      tasks = tasks.concat([
+      return grunt.task.run(defaultTasks.concat([
         'copy:assets',
-        'copy:dist'
-      ]);
+        'copy:production'
+      ]));
     }
 
+    // tasks.push('newer:less:'+ this.target);
+    // tasks.push('less:'+ this.target);
 
-    tasks = tasks.concat([
-      'less:'+ target,
+    return grunt.task.run(defaultTasks.concat([
       'newer:copy:assets',
-      'newer:copy:'+ target
-    ]);
-
-    return grunt.task.run(tasks);
+      'newer:copy:development'
+      // 'copy:assets',
+      // 'copy:development'
+    ]));
   });
 
   grunt.registerTask('test', []);
