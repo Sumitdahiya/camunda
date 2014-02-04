@@ -5,8 +5,8 @@ describe('tasklist dashboard', function() {
     var ptor = protractor.getInstance();
     browser.get('camunda/app/tasklist/');
     
-    var ele = ptor.findElement(by.className('camunda Tasklist'));
-    expect(ptor.isElementPresent(ele)).toBe(false);
+/*    var ele = ptor.findElement(by.className('camunda Tasklist'));
+    expect(ptor.isElementPresent(ele)).toBe(false);*/
   });
 
   it('should validate credentials', function() {
@@ -17,6 +17,11 @@ describe('tasklist dashboard', function() {
 
     var submitButton = element(by.css('.btn-primary.btn-large'));
     submitButton.click();
+  });
+
+  it('should switch to admin', function() {
+    element(by.css('.navbar [sem-show-apps]')).click();
+    element(by.css('.navbar [sem-jump-to-admin]')).click();
   });
 
 	it('should start a process instance', function() {

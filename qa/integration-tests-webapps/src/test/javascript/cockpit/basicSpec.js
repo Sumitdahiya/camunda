@@ -33,6 +33,7 @@ describe('cockpit dashboard', function() {
 
   function openTasklist() {
     element(by.css('.icon-home.icon-white')).click();
+    element(by.css('.dropdown-menu ul li:nth-child(1)')).click();  
     //TODO select Tasklist in dropdown
   }
 
@@ -67,18 +68,18 @@ describe('cockpit dashboard', function() {
     login('jonny1', 'jonny1', true);
   });
 
-  it('schould check existenc of plugin', function() {
+  it('should check existenc of plugin', function() {
     checkPluginHeaderName_h1('Deployed Processes (List)');
   });
 
   it('should find process in Deployed Processes (List)', function() {
-    var items = element(by.repeater('statistic in statistics').row(0).column('{{ statistic.definition.name }}'));
+    var items = element(by.repeater('statistic in statistics').row(0).column('definition.name'));
 
     expect(items.getText()).toEqual('Another Failing Process');
   });    
 
   it('it should select process in Deployed Process (List)', function() {
-    var items = element(by.repeater('statistic in statistics').row(3).column('{{ statistic.definition.name }}'));
+    var items = element(by.repeater('statistic in statistics').row(3).column('definition.name'));
     
     expect(items.getText()).toEqual('Cornercases Process');
     items.click();
@@ -88,14 +89,25 @@ describe('cockpit dashboard', function() {
   });
 
   it('it should select process instance in Process Instances Table', function() {
-    var items = element(by.repeater('processInstance in processInstances').row(0)); //.column('{{ processInstance.id }}'));
-    browser.debugger();
-
-    console.log(items.getText());
-
-    
+    var items = element(by.repeater('processInstance in processInstances').row(1).column('id'));
     items.click();
+
   });  
+
+  it('should select activity in diagram', function() {
+    element(by.css('.process-diagram *[data-activity-id="UserTask_2"]')).click();
+  });
+
+  it('should switch tab in instance details view', function() {
+    element(by.repeater('tabProvider in processInstanceTabs').row(3).column('label')).click();
+
+/*    items = element(by.repeater('userTask in userTasks').row(0).column('name'));
+    expect(items.getText()).toEqual('Inner Task');*/
+
+
+    var tabContent = element(by.css('view[provider=selectedTab]')).findElement(by.repeater('userTask in userTasks').row(0).column('name'));    
+    expect(tabContent.getText()).toEqual('Inner Task');
+  });
 
 });
 
