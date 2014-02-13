@@ -44,12 +44,18 @@ ngDefine('cockpit.directives', [ 'angular', 'require' ], function(module, angula
             return;
           }
 
+
           if (oldValue && oldValue.indexOf(node.id) != -1) {
             node.isSelected = false;
           }
 
           if (newValue && newValue.indexOf(node.id) != -1) {
             node.isSelected = true;
+
+            // opens the parent node in the tree,
+            // should probably propagate up too
+            var parentNode = scope.$parent.$parent.node;
+            parentNode.isOpen = true;
           }
         });
 
@@ -59,7 +65,6 @@ ngDefine('cockpit.directives', [ 'angular', 'require' ], function(module, angula
         };
 
         scope.select = function($event) {
-
           var node = scope.node;
 
           $event.stopPropagation();
