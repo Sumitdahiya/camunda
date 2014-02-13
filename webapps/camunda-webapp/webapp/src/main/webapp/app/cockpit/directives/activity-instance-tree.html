@@ -2,7 +2,7 @@
 <div class="tree-node"
      ng-class="{ 'selected' : node.isSelected }">
 
-  <div class="tree-node-label" ng-class="{ 'badge-info' : node.endTime }">
+  <div class="tree-node-label" ng-class="{ 'activity-instance-finished' : node.endTime }">
     <button class="btn btn-link btn-control-link btn-toggle" ng-if="node.children.length" ng-click="toggleOpen()">
       <i ng-class="{ 'icon-chevron-right' : !node.isOpen, 'icon-chevron-down' : node.isOpen }"></i>
     </button>
