@@ -1,4 +1,4 @@
-/* global describe: false, xit: false, beforeEach: false, expect: false, browser: false, sleep: false, element: false */
+/* global describe: false, it: false, beforeEach: false, expect: false, browser: false, sleep: false, element: false */
 describe('cockpit', function() {
   'use strict';
 
@@ -7,7 +7,7 @@ describe('cockpit', function() {
     sleep(1);
   });
 
-  xit('should show dashboard with navigation', function() {
+  it('should show dashboard with navigation', function() {
     expect(browser().location().path()).toBe('/dashboard');
     expect(element('a.tile').count()).toBe(3);
 

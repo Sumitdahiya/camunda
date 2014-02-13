@@ -87,7 +87,7 @@ module.exports = function(grunt) {
             expand: true,
             cwd: 'src/main/webapp/',
             src: [
-              '{app,plugin,develop,common}/{,**/}*.{js,html}'
+              '{app,plugin,develop,common}/**/*.{js,html}'
             ],
             dest: 'target/webapp/'
           }
@@ -124,7 +124,7 @@ module.exports = function(grunt) {
             expand: true,
             cwd: 'src/main/webapp/',
             src: [
-              '{app,plugin,develop,common}/{,**/}*.{js,html}'
+              '{app,plugin,develop,common}/**/*.{js,html}'
             ],
             dest: 'target/webapp/'
           }
@@ -156,7 +156,7 @@ module.exports = function(grunt) {
             expand: true,
             cwd: 'src/main/webapp/',
             src: [
-              '{app,plugin,develop,common}/{,**/}*.{js,html}'
+              '{app,plugin,develop,common}/**/*.{js,html}'
             ],
             dest: 'target/webapp/'
           }
@@ -212,7 +212,7 @@ module.exports = function(grunt) {
         files: [
           'src/main/webapp/require-conf.js',
           'src/main/webapp/{app,develop,plugin,common}/**/*.{js,html}',
-          'src/test/js/{config,e2e,test,unit}/{,**/}*.js'
+          'src/test/js/{config,e2e,test,unit}/**/*.js'
         ],
         tasks: [
           // 'jshint:test',
@@ -255,7 +255,7 @@ module.exports = function(grunt) {
       test: {
         files: {
           src: [
-            'test/js/{config,e2e,unit}/{,**/}*.js'
+            'test/js/{config,e2e,unit}/**/*.js'
           ]
         }
       },
@@ -263,7 +263,7 @@ module.exports = function(grunt) {
         files: {
           src: [
             'Gruntfile.js',
-            'src/main/webapp/{app,assets,develop,plugin}/{,**/}*.js'
+            'src/main/webapp/{app,assets,develop,plugin}/**/*.js'
           ]
         }
       }

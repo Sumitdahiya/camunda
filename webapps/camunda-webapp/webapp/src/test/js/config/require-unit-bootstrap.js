@@ -54,7 +54,7 @@
 //     'angular-mocks',
 //     'ngDefine' ], function(angular, $) {
 
-/* global require: false, ngDefine: false, console: false */
+/* global require: false, console: false */
 (function(document, window, require) {
   'use strict';
 
@@ -83,8 +83,6 @@
         tests.push(file);
       }
     }
-
-    console.info('"unit" test files', tests);
 
     require([
       'angular',
