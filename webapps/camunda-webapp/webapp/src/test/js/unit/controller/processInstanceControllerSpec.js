@@ -19,7 +19,7 @@ define([
    */
   return describe('controllers', function() {
 
-    describe('process instance controller', function() {
+    xdescribe('process instance controller', function() {
 
       beforeEach(function () {
         angular.module('testmodule', [ 'cockpit.pages',

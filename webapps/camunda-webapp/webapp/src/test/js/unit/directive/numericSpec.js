@@ -13,7 +13,7 @@ define([
    */
   return describe('directives', function() {
     /* global browserTrigger: false */
-    describe('numeric directive', function() {
+    xdescribe('numeric directive', function() {
       var element;
 
       function createElement(content) {
