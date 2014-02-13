@@ -8,8 +8,9 @@ module.exports = function(karma) {
       '../e2e/cockpit-scenario.js'
     ],
 
-    browsers: ["PhantomJS", "Firefox", "Chrome"],
+    browsers: ['PhantomsJS'],
 
+    singleRun: true,
     autoWatch: false,
 
     junitReporter: {

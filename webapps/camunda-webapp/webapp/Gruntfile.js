@@ -183,20 +183,6 @@ module.exports = function(grunt) {
             dest: 'target/webapp/assets'
           }
         ]
-      },
-
-      // TODO: remove that when using less
-      css: {
-        files: [
-          {
-            expand: true,
-            cwd: 'src/main/webapp/assets',
-            src: [
-              'css/**/*'
-            ],
-            dest: 'target/webapp/assets'
-          }
-        ]
       }
     },
 
@@ -222,22 +208,21 @@ module.exports = function(grunt) {
       // QUESTION:
       // Does that entry make sense?
       // We can use `karma:unit` and `karma:e2e` instead of watching
-      // tests: {
-      //   files: [
-      //     'src/main/webapp/require-conf.js',
-      //     'src/main/webapp/{app,develop,plugin,common}/**/*.{js,html}',
-      //     'src/test/js/{config,e2e,test,unit}/{,**/}*.js'
-      //   ],
-      //   tasks: [
-      //     // 'jshint:test',
-      //     // we use the CI versions (who are runned only once)
-      //     // 'karma:testOnce',
-      //     'karma:unitOnce',
-      //     'karma:e2eOnce'
-      //   ]
-      // },
+      tests: {
+        files: [
+          'src/main/webapp/require-conf.js',
+          'src/main/webapp/{app,develop,plugin,common}/**/*.{js,html}',
+          'src/test/js/{config,e2e,test,unit}/{,**/}*.js'
+        ],
+        tasks: [
+          // 'jshint:test',
+          // we use the CI versions (who are runned only once)
+          'karma:test',
+          'karma:unit',
+          'karma:e2e'
+        ]
+      },
 
-      // TODO: add that when using less
       styles: {
         files: [
           'src/main/webapp/assets/styles/**/*.less'
@@ -246,17 +231,6 @@ module.exports = function(grunt) {
           'less:development'
         ]
       },
-
-      // TODO: remove that when using less
-      // css: {
-      //   files: [
-      //     'src/main/webapp/assets/css/**/*.css'
-      //   ],
-      //   tasks: [
-      //     'newer:copy:css'
-      //     // 'copy:css'
-      //   ]
-      // },
 
       servedAssets: {
         options: {
@@ -270,62 +244,65 @@ module.exports = function(grunt) {
       }
     },
 
-    // jshint: {
-    //   options: {
-    //     browser: true,
-    //     globals: {
-    //       angular: true,
-    //       jQuery: true
-    //     }
-    //   },
-    //   test: {
-    //     files: {
-    //       src: [
-    //         'test/js/{config,e2e,unit}/{,**/}*.js'
-    //       ]
-    //     }
-    //   },
-    //   scripts: {
-    //     files: {
-    //       src: [
-    //         'Gruntfile.js',
-    //         'src/main/webapp/{app,assets,develop,plugin}/{,**/}*.js'
-    //       ]
-    //     }
-    //   }
-    // },
+    jshint: {
+      options: {
+        browser: true,
+        globals: {
+          angular: true,
+          jQuery: true
+        }
+      },
+      test: {
+        files: {
+          src: [
+            'test/js/{config,e2e,unit}/{,**/}*.js'
+          ]
+        }
+      },
+      scripts: {
+        files: {
+          src: [
+            'Gruntfile.js',
+            'src/main/webapp/{app,assets,develop,plugin}/{,**/}*.js'
+          ]
+        }
+      }
+    },
 
-    // karma: {
-    //   options: {
-    //     browsers: ['Chrome', 'Firefox']//, 'IE']
-    //   },
+    karma: {
+      // to test the testing environment
+      test: {
+        configFile: 'src/test/js/config/karma.test.js'
+      },
 
-    //   // to test the testing environment
-    //   test: {
-    //     configFile: 'src/test/js/config/karma.test.js'
-    //   },
+      unit: {
+        configFile: 'src/test/js/config/karma.unit.js'
+      },
+      e2e: {
+        configFile: 'src/test/js/config/karma.e2e.js'
+      },
 
-    //   unit: {
-    //     configFile: 'src/test/js/config/karma.unit.js'
-    //   },
-    //   e2e: {
-    //     configFile: 'src/test/js/config/karma.e2e.js'
-    //   },
+      //continuous integration mode: run tests once in PhantomJS browser.
+      testWatched: {
+        singleRun: false,
+        autoWatch: true,
+        configFile: 'src/test/js/config/karma.test.js',
+        browsers: ['Chrome', 'Firefox']
+      },
 
-    //   //continuous integration mode: run tests once in PhantomJS browser.
-    //   unitOnce: {
-    //     singleRun: true,
-    //     autoWatch: false,
-    //     configFile: 'src/test/js/config/karma.unit.js',
-    //     browsers: ['PhantomJS']
-    //   },
-    //   e2eOnce: {
-    //     singleRun: true,
-    //     autoWatch: false,
-    //     configFile: 'src/test/js/config/karma.e2e.js',
-    //     browsers: ['PhantomJS']
-    //   }
-    // },
+      unitWatched: {
+        singleRun: false,
+        autoWatch: true,
+        configFile: 'src/test/js/config/karma.unit.js',
+        browsers: ['Chrome', 'Firefox']
+      },
+      e2eWatched: {
+        singleRun: false,
+        autoWatch: true,
+        configFile: 'src/test/js/config/karma.e2e.js',
+        browsers: ['Chrome', 'Firefox']
+      }
+    },
 
     jsdoc : {
       dist : {
@@ -347,71 +324,71 @@ module.exports = function(grunt) {
       install: {}
     },
 
-    requirejs: {
-    // ngr: {
-      // see https://github.com/jrburke/r.js/blob/master/build/example.build.js
-      options: {
-        baseUrl: 'src/main/webapp',
+    // requirejs: {
+    // // ngr: {
+    //   // see https://github.com/jrburke/r.js/blob/master/build/example.build.js
+    //   options: {
+    //     baseUrl: 'src/main/webapp',
 
-        dir: 'target/webapp',
+    //     dir: 'target/webapp',
 
-        // Inlines the text for any text! dependencies, to avoid the separate
-        // async XMLHttpRequest calls to load those dependencies.
-        inlineText: true,
+    //     // Inlines the text for any text! dependencies, to avoid the separate
+    //     // async XMLHttpRequest calls to load those dependencies.
+    //     inlineText: true,
 
-        optimize: 'none',
+    //     optimize: 'none',
 
-        paths: rjsConf.paths,
-        shim: rjsConf.shim,
+    //     paths: rjsConf.paths,
+    //     shim: rjsConf.shim,
 
-        // CommonJS packages support
-        // http://requirejs.org/docs/api.html#packages
-        packages: rjsConf.packages,
+    //     // CommonJS packages support
+    //     // http://requirejs.org/docs/api.html#packages
+    //     packages: rjsConf.packages,
 
-        //
-        optimizeCss: 'none'
-      },
+    //     //
+    //     optimizeCss: 'none'
+    //   },
 
-      app: {
-        modules: [{
-          name: 'src/main/webapp/app/app',
-          out: 'app/app.js',
-          override: {},
-          exclude: [
-            'ngDefine'
-          ]
-        }]
-      },
+    //   app: {
+    //     modules: [{
+    //       name: 'src/main/webapp/app/app',
+    //       out: 'app/app.js',
+    //       override: {},
+    //       exclude: [
+    //         'ngDefine'
+    //       ]
+    //     }]
+    //   },
 
-      admin: {
-        modules: [{
-          name: 'app/admin/admin',
-          out: 'app/admin.min.js',
-          override: {},
-          exclude: []
-        }]
-      },
+    //   admin: {
+    //     modules: [{
+    //       name: 'app/admin/admin',
+    //       out: 'app/admin.min.js',
+    //       override: {},
+    //       exclude: []
+    //     }]
+    //   },
 
-      cockpit: {
-        modules: [
-          {
-            name: 'app/cockpit/cockpit',
-            out: 'app/cockpit.min.js',
-            override: {},
-            exclude: []
-          }
-        ]
-      },
+    //   cockpit: {
+    //     modules: [
+    //       {
+    //         name: 'app/cockpit/cockpit',
+    //         out: 'app/cockpit.min.js',
+    //         override: {},
+    //         exclude: []
+    //       }
+    //     ]
+    //   },
 
-      tasklist: {
-        modules: [{
-          name: 'src/main/webapp/app/tasklist/tasklist',
-          out: 'app/tasklist.js',
-          override: {},
-          exclude: []
-        }]
-      }
-    },
+    //   tasklist: {
+    //     modules: [{
+    //       name: 'src/main/webapp/app/tasklist/tasklist',
+    //       out: 'app/tasklist.js',
+    //       override: {},
+    //       exclude: []
+    //     }]
+    //   }
+    // },
 
     open: {
       server: {
@@ -447,26 +424,25 @@ module.exports = function(grunt) {
     }
   });
 
-  // custom task for ngDefine minification
-  grunt.registerMultiTask('ngr', 'Minifies the angular related scripts', function() {
-    var done = this.async();
-    var ngr = require('requirejs-angular-define/src/ngr');
+  // // custom task for ngDefine minification
+  // grunt.registerMultiTask('ngr', 'Minifies the angular related scripts', function() {
+  //   var done = this.async();
+  //   var ngr = require('requirejs-angular-define/src/ngr');
 
-    var setup = _.extend({}, this.options(), this.data);
-    // console.info('ngr options', setup);
+  //   var setup = _.extend({}, this.options(), this.data);
+  //   // console.info('ngr options', setup);
 
-    ngr.optimize(setup, function() {
-      console.info('optimized', arguments.length);
-      done();
-    }, function(e) {
-      console.log('Error during minify: ', e);
-      done(new Error('With failures: ' + e));
-    });
-  });
+  //   ngr.optimize(setup, function() {
+  //     console.info('optimized', arguments.length);
+  //     done();
+  //   }, function(e) {
+  //     console.log('Error during minify: ', e);
+  //     done(new Error('With failures: ' + e));
+  //   });
+  // });
 
   // automatically (re-)build web assets
   grunt.registerTask('auto-build', 'Continuously (re-)build front-end assets', function (target) {
-
     if (target === 'dist') {
       throw new Error('dist target not yet supported');
     }
@@ -506,7 +482,22 @@ module.exports = function(grunt) {
     return grunt.task.run(tasks);
   });
 
-  grunt.registerTask('test', []);
+  grunt.registerTask('test', 'Run the tests', function(target) {
+    var tasks = [];
+
+    // switch (target) {
+    //   case 'unit':
+    //     break;
+
+    //   // should use protractor
+    //   case 'e2e':
+    //     break;
+    // }
+
+    tasks.push('karma:'+ (target || 'test'));
+
+    return grunt.task.run(tasks);
+  });
 
   // Default task(s).
   grunt.registerTask('default', ['build:dist']);
