@@ -57,7 +57,7 @@ Tree
   background: url('../../img/stripe.png') #ddd;
 }
 .instance-tree .tree-node-label.activity-instance-finished {
-  color: #7A7A7A;
+  color: #454545;
 }
 
 .activity-bottom-left-position {
@@ -250,27 +250,28 @@ a.expand-collapse {
   border: none 1px #E5E5E5;
   position: absolute;
   background: whiteSmoke;
+
+  &.horizontal {
+    height: 5px;
+
+    right: 0;
+    left: 0;
+
+    border-style: solid none;
+
+    cursor: n-resize;
+  }
+
+  &.vertical {
+    width: 5px;
+    top: 0;
+    bottom: 0;
+    cursor: e-resize;
+
+    border-style: none solid;
+  }
 }
 
-.resize-handle.horizontal {
-  height: 5px;
-
-  right: 0;
-  left: 0;
-
-  border-style: solid none;
-
-  cursor: n-resize;
-}
-
-.resize-handle.vertical {
-  width: 5px;
-  top: 0;
-  bottom: 0;
-  cursor: e-resize;
-
-  border-style: none solid;
-}
 
 @media (max-width: 979px) {
 
@@ -339,7 +340,9 @@ a.expand-collapse {
 
 .btn-control-link {
   padding: 0;
-  margin-left: 5px;
+  &:focus {
+    outline: none;
+  }
 }
 
 /**
@@ -538,20 +541,11 @@ textarea.variable-type-string {
     opacity: 1.0;
   }
 
-  /*
-  .tree-node-label {
-    opacity: 0.5;
-  }*/
-
-  /*
-  .tree-node.selected > .tree-node-label, .instance-tree:hover .tree-node-label {
-    opacity: 1.0;
-  }*/
-
   a {
     text-decoration: none;
     color: inherit;
     cursor: pointer;
+    vertical-align: middle;
   }
 
   .btn-toggle i {
