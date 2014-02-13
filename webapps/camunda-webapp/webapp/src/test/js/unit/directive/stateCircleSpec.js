@@ -1,6 +1,11 @@
 /* global define: false, describe: false, xdescribe: false, beforeEach: false, afterEach: false, module: false, inject: false, xit: false, it: false, expect: false */
 /* jshint unused: false */
-define([ 'angular', 'jquery', 'camunda-common/directives/main', 'camunda-common/extensions/main' ], function(angular, $) {
+define([
+  'angular',
+  'jquery',
+  'camunda-common/directives/main',
+  'camunda-common/extensions/main'
+], function(angular, $) {
   'use strict';
 
   /**
