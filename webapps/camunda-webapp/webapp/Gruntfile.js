@@ -1,39 +1,23 @@
-var path = require('path');
-var fs = require('fs');
-var _ = require('underscore');
+/* global process: false, require: false, module: false, __dirname: false, console: false */
+'use strict';
+/* jshint unused: false */
+var spawn = require('child_process').spawn;
 
-var rjsConf = require('./src/main/webapp/require-conf');
 
-var commentLineExp = /^[\s]*<!-- (\/|#) (CE|EE)/;
+var commentLineExp =  /^[\s]*<!-- (\/|#) (CE|EE)/;
+var htmlFileExp =     /\.html$/;
+var requireConfExp =  /require-conf.js$/;
+
 
 function distFileProcessing(content, srcpath) {
-  // removes the template comments
-  content = content
-            .split('\n').filter(function(line) {
-              // console.info(line.slice(0, 10), !commentLineExp.test(line));
-              return !commentLineExp.test(line);
-            }).join('\n');
-
-  return content;
-}
-
-
-function developmentFileProcessing(content, srcpath) {
-  // Unfortunately, this might (in some cases) make angular complaining
-  // about template having no single root element
-  // (when the "replace" option is set to "true").
-
-  // if (/\.html$/.test(srcpath)) {
-  //   content = '<!-- # CE - auto-comment - '+ srcpath +' -->\n'+
-  //             content +
-  //             '\n<!-- / CE - auto-comment - '+ srcpath +' -->';
-  // }
-
-  if (/require-conf.js$/.test(srcpath)) {
+  if (htmlFileExp.test(srcpath)) {
+    // removes the template comments
     content = content
-              .replace(/\/\* live-reload/, '/* live-reload */')
-              .replace(/LIVERELOAD_PORT/g, "<%= app.liveReloadPort %>");
+              .split('\n').filter(function(line) {
+                return !commentLineExp.test(line);
+              }).join('\n');
   }
+
   return content;
 }
 
@@ -94,12 +78,24 @@ module.exports = function(grunt) {
         ],
         options: {
           process: function(content, srcpath) {
+            // Unfortunately, this might (in some cases) make angular complaining
+            // about template having no single root element
+            // (when the "replace" option is set to "true").
 
-            var liveReloadPort = grunt.config('app.liveReloadPort');
+            // if (htmlFileExp.test(srcpath)) {
+            //   content = '<!-- # CE - auto-comment - '+ srcpath +' -->\n'+
+            //             content +
+            //             '\n<!-- / CE - auto-comment - '+ srcpath +' -->';
+            // }
 
-            return content
-              .replace(/\/\* live-reload/, '/* live-reload */')
-              .replace(/LIVERELOAD_PORT/g, liveReloadPort);
+            if (requireConfExp.test(srcpath)) {
+              content = content
+                // .replace(/CACHE_BUST/, 'bust='+ (new Date()).getTime())
+                .replace(/\/\* live-reload/, '/* live-reload */')
+                .replace(/LIVERELOAD_PORT/g, grunt.config('app.liveReloadPort'));
+            }
+
+            return content;
           }
         }
       },
@@ -132,35 +128,6 @@ module.exports = function(grunt) {
         options: {
           process: distFileProcessing
         }
-      },
-
-      // for now, copy as development, but leave the livereload comment
-      dist: {
-        files: [
-          {
-            expand: true,
-            cwd: 'src/main/webapp/WEB-INF',
-            src: ['*'],
-            dest: 'target/webapp/WEB-INF'
-          },
-          {
-            expand: true,
-            cwd: 'src/main/webapp/',
-            src: [
-              'require-conf.js',
-              'index.html'
-            ],
-            dest: 'target/webapp/'
-          },
-          {
-            expand: true,
-            cwd: 'src/main/webapp/',
-            src: [
-              '{app,plugin,develop,common}/**/*.{js,html}'
-            ],
-            dest: 'target/webapp/'
-          }
-        ]
       },
 
       assets: {
@@ -198,7 +165,7 @@ module.exports = function(grunt) {
           'src/main/webapp/{app,develop,plugin,common}/**/*.{js,html}'
         ],
         tasks: [
-          // 'jshint:scripts',
+          'newer:jshint:scripts',
           'newer:copy:development'
           // 'copy:development'
         ]
@@ -215,8 +182,7 @@ module.exports = function(grunt) {
           'src/test/js/{config,e2e,test,unit}/**/*.js'
         ],
         tasks: [
-          // 'jshint:test',
-          // we use the CI versions (who are runned only once)
+          'newer:jshint:test',
           'karma:test',
           'karma:unit',
           'karma:e2e'
@@ -247,10 +213,10 @@ module.exports = function(grunt) {
     jshint: {
       options: {
         browser: true,
-        globals: {
-          angular: true,
-          jQuery: true
-        }
+        // globals: {
+        //   angular: true,
+        //   jQuery: true
+        // }
       },
       test: {
         files: {
@@ -275,14 +241,14 @@ module.exports = function(grunt) {
         configFile: 'src/test/js/config/karma.test.js'
       },
 
+      // moved to protractor-runner task
+      // e2e: {
+      //   configFile: 'src/test/js/config/karma.e2e.js'
+      // },
       unit: {
         configFile: 'src/test/js/config/karma.unit.js'
       },
-      e2e: {
-        configFile: 'src/test/js/config/karma.e2e.js'
-      },
 
-      //continuous integration mode: run tests once in PhantomJS browser.
       testWatched: {
         singleRun: false,
         autoWatch: true,
@@ -290,18 +256,40 @@ module.exports = function(grunt) {
         browsers: ['Chrome', 'Firefox']
       },
 
+      // moved to protractor-runner task
+      // e2eWatched: {
+      //   singleRun: false,
+      //   autoWatch: true,
+      //   configFile: 'src/test/js/config/karma.e2e.js',
+      //   browsers: ['Chrome', 'Firefox']
+      // },
       unitWatched: {
         singleRun: false,
         autoWatch: true,
         configFile: 'src/test/js/config/karma.unit.js',
         browsers: ['Chrome', 'Firefox']
-      },
-      e2eWatched: {
-        singleRun: false,
-        autoWatch: true,
-        configFile: 'src/test/js/config/karma.e2e.js',
-        browsers: ['Chrome', 'Firefox']
       }
+    },
+
+    protractor: {
+      options: {
+        singleRun: true,
+        // configFile: 'node_modules/protractor/referenceConf.js', // Default config file
+        // keepAlive: true, // If false, the grunt process stops when the test fails.
+        // noColor: false, // If true, protractor will not use colors in its output.
+        args: {
+          // Arguments passed to the command
+          // browser: 'chrome',
+          seleniumServerJar: './node/'
+        }
+      },
+
+      e2e: {
+        options: {
+          configFile: 'src/test/js/config/protractor.e2e.js', // Target-specific config file
+          args: {} // Target-specific arguments
+        }
+      },
     },
 
     jsdoc : {
@@ -313,8 +301,11 @@ module.exports = function(grunt) {
           'src/main/webapp/develop',
           'src/main/webapp/plugin'
         ],
+
         options: {
-          configure: './jsdoc-conf.json',
+          // grunt-jsdoc has a big problem... some kind of double-parsing...
+          // using the `jsdoc -d doc -r -c jsdoc-conf.json` command works fine
+          // configure: './jsdoc-conf.json',
           destination: 'doc'
         }
       }
@@ -322,78 +313,6 @@ module.exports = function(grunt) {
 
     bower: {
       install: {}
-    },
-
-    // requirejs: {
-    // // ngr: {
-    //   // see https://github.com/jrburke/r.js/blob/master/build/example.build.js
-    //   options: {
-    //     baseUrl: 'src/main/webapp',
-
-    //     dir: 'target/webapp',
-
-    //     // Inlines the text for any text! dependencies, to avoid the separate
-    //     // async XMLHttpRequest calls to load those dependencies.
-    //     inlineText: true,
-
-    //     optimize: 'none',
-
-    //     paths: rjsConf.paths,
-    //     shim: rjsConf.shim,
-
-    //     // CommonJS packages support
-    //     // http://requirejs.org/docs/api.html#packages
-    //     packages: rjsConf.packages,
-
-    //     //
-    //     optimizeCss: 'none'
-    //   },
-
-    //   app: {
-    //     modules: [{
-    //       name: 'src/main/webapp/app/app',
-    //       out: 'app/app.js',
-    //       override: {},
-    //       exclude: [
-    //         'ngDefine'
-    //       ]
-    //     }]
-    //   },
-
-    //   admin: {
-    //     modules: [{
-    //       name: 'app/admin/admin',
-    //       out: 'app/admin.min.js',
-    //       override: {},
-    //       exclude: []
-    //     }]
-    //   },
-
-    //   cockpit: {
-    //     modules: [
-    //       {
-    //         name: 'app/cockpit/cockpit',
-    //         out: 'app/cockpit.min.js',
-    //         override: {},
-    //         exclude: []
-    //       }
-    //     ]
-    //   },
-
-    //   tasklist: {
-    //     modules: [{
-    //       name: 'src/main/webapp/app/tasklist/tasklist',
-    //       out: 'app/tasklist.js',
-    //       override: {},
-    //       exclude: []
-    //     }]
-    //   }
-    // },
-
-    open: {
-      server: {
-        url: 'http://localhost:<%= app.port %>/camunda'
-      }
     },
 
     less: {
@@ -421,25 +340,36 @@ module.exports = function(grunt) {
           'target/webapp/assets/css/tasklist/loader.css': 'src/main/webapp/assets/styles/tasklist/loader.less'
         }
       }
+    },
+
+    open: {
+      server: {
+        url: 'http://localhost:<%= app.port %>/camunda'
+      }
     }
   });
 
-  // // custom task for ngDefine minification
-  // grunt.registerMultiTask('ngr', 'Minifies the angular related scripts', function() {
-  //   var done = this.async();
-  //   var ngr = require('requirejs-angular-define/src/ngr');
+  grunt.registerTask('selenium-install', 'Automate the selenium webdriver installation', function() {
+    var done = this.async();
+    var managerPath = './node_modules/grunt-protractor-runner/node_modules/protractor/bin/webdriver-manager';
+    var args = [
+      'update',
+      '--out_dir',
+      __dirname +'/selenium'
+    ];
 
-  //   var setup = _.extend({}, this.options(), this.data);
-  //   // console.info('ngr options', setup);
+    // grunt.log.writeln('Running '+ managerPath +' '+ args.join(' '));
 
-  //   ngr.optimize(setup, function() {
-  //     console.info('optimized', arguments.length);
-  //     done();
-  //   }, function(e) {
-  //     console.log('Error during minify: ', e);
-  //     done(new Error('With failures: ' + e));
-  //   });
-  // });
+    var install = spawn(managerPath, args);
+
+    // install.stdout.on('data', function(data) {grunt.log.writeln('stdout data: '+ data);});
+    // install.stderr.on('data', function(data) {grunt.log.writeln('stderr data: '+ data);});
+
+    install.on('exit', function (code) {
+      // grunt.log.writeln('selenium-install exit with code: '+ code);
+      done(code ? new Error('selenium-install exit with code: '+ code) : null);
+    });
+  });
 
   // automatically (re-)build web assets
   grunt.registerTask('auto-build', 'Continuously (re-)build front-end assets', function (target) {
@@ -452,6 +382,23 @@ module.exports = function(grunt) {
       'open',
       'watch'
     ]);
+  });
+
+  grunt.registerTask('test', 'Run the tests', function(target) {
+    var tasks = [];
+
+    // switch (target) {
+    //   case 'unit':
+    //     break;
+
+    //   // should use protractor
+    //   case 'e2e':
+    //     break;
+    // }
+
+    tasks.push('karma:'+ (target || 'test'));
+
+    return grunt.task.run(tasks);
   });
 
   // Aimed to hold more complex build processes
@@ -478,23 +425,6 @@ module.exports = function(grunt) {
       'newer:copy:assets',
       'newer:copy:'+ target
     ]);
-
-    return grunt.task.run(tasks);
-  });
-
-  grunt.registerTask('test', 'Run the tests', function(target) {
-    var tasks = [];
-
-    // switch (target) {
-    //   case 'unit':
-    //     break;
-
-    //   // should use protractor
-    //   case 'e2e':
-    //     break;
-    // }
-
-    tasks.push('karma:'+ (target || 'test'));
 
     return grunt.task.run(tasks);
   });
