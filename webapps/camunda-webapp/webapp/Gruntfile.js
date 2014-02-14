@@ -384,19 +384,25 @@ module.exports = function(grunt) {
     ]);
   });
 
-  grunt.registerTask('test', 'Run the tests', function(target) {
+  grunt.registerTask('test', 'Run the tests (by default: karma:unit)', function(target) {
     var tasks = [];
 
-    // switch (target) {
-    //   case 'unit':
-    //     break;
+    switch (target) {
+      // test the testing environment
+      case 'test':
+        tasks.push('karma:test');
+        break;
 
-    //   // should use protractor
-    //   case 'e2e':
-    //     break;
-    // }
+      // should use protractor
+      case 'e2e':
+        tasks.push('protractor');
+        break;
 
-    tasks.push('karma:'+ (target || 'test'));
+      // unit testing by default
+      default:
+        tasks.push('karma:unit');
+    }
+
 
     return grunt.task.run(tasks);
   });
