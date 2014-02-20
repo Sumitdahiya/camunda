@@ -186,16 +186,29 @@ module.exports = function(grunt) {
         ]
       },
 
-      tests: {
+      unitTests: {
         files: [
           'src/main/webapp/require-conf.js',
           'src/main/webapp/{app,develop,plugin,common}/**/*.{js,html}',
-          'src/test/js/{config,e2e,test,unit}/**/*.js'
+          'src/test/js/{config,test,unit}/**/*.js'
         ],
         tasks: [
-          'newer:jshint:test',
+          'newer:jshint:unitTest',
           'karma:test',
           'karma:unit'
+        ]
+      },
+
+      e2eTests: {
+        // runs only when the tests are modified
+        files: [
+          // 'src/main/webapp/require-conf.js',
+          // 'src/main/webapp/{app,develop,plugin,common}/**/*.{js,html}',
+          'src/test/js/e2e/**/*.js'
+        ],
+        tasks: [
+          'newer:jshint:e2eTest',
+          'test:e2e'
         ]
       },
 
@@ -228,13 +241,23 @@ module.exports = function(grunt) {
         //   jQuery: true
         // }
       },
-      test: {
+
+      unitTest: {
         files: {
           src: [
-            'test/js/{config,e2e,unit}/**/*.js'
+            'src/test/js/{config,test,unit}/**/*.js'
           ]
         }
       },
+
+      e2eTest: {
+        files: {
+          src: [
+            'src/test/js/e2e/**/*.js'
+          ]
+        }
+      },
+
       scripts: {
         files: {
           src: [
@@ -253,20 +276,6 @@ module.exports = function(grunt) {
 
       unit: {
         configFile: 'src/test/js/config/karma.unit.js'
-      },
-
-      testWatched: {
-        singleRun: false,
-        autoWatch: true,
-        configFile: 'src/test/js/config/karma.test.js',
-        browsers: ['Chrome', 'Firefox']
-      },
-
-      unitWatched: {
-        singleRun: false,
-        autoWatch: true,
-        configFile: 'src/test/js/config/karma.unit.js',
-        browsers: ['Chrome', 'Firefox']
       }
     },
 
@@ -367,14 +376,6 @@ module.exports = function(grunt) {
       }
 
       grunt.log.writeln('selenium standalone server installed');
-
-      // // updates the configuration of protractor
-      // // with the right version of selenium standalone web-driver
-      // var originalProtractorConf = grunt.config.getRaw('protractor');
-      // originalProtractorConf.options.args.seleniumServerJar = standaloneSeleniumJar();
-      // grunt.config('protractor', originalProtractorConf);
-
-      // console.info('grunt', [[grunt.config]], grunt.config('protractor'));
       done();
     });
   });
