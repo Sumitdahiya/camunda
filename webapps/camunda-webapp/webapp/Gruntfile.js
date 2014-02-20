@@ -2,12 +2,17 @@
 'use strict';
 /* jshint unused: false */
 var spawn = require('child_process').spawn;
-
+var path = require('path');
+var fs = require('fs');
+var _ = require('underscore');
 
 var commentLineExp =  /^[\s]*<!-- (\/|#) (CE|EE)/;
 var htmlFileExp =     /\.html$/;
 var requireConfExp =  /require-conf.js$/;
-
+// var seleniumJarExp = /\.jar downloaded to (.+)$/gm;
+var seleniumJarNameExp = /selenium-server-standalone/;
+// var seleniumExp = /(.+)\/([^\/]+)/;
+var seleniumServerJarPath;
 
 function distFileProcessing(content, srcpath) {
   if (htmlFileExp.test(srcpath)) {
@@ -19,6 +24,16 @@ function distFileProcessing(content, srcpath) {
   }
 
   return content;
+}
+
+function standaloneSeleniumJar() {
+  if (!fs.existsSync('selenium')) {
+    return false;
+  }
+  var filename = _.find(fs.readdirSync('selenium'), function(filename) {
+    return seleniumJarNameExp.test(filename);
+  });
+  return path.join(__dirname, 'selenium', filename);
 }
 
 module.exports = function(grunt) {
@@ -37,7 +52,8 @@ module.exports = function(grunt) {
 
     app: {
       port: parseInt(process.env.APP_PORT || 8080, 10),
-      liveReloadPort: parseInt(process.env.LIVERELOAD_PORT || 8081, 10)
+      liveReloadPort: parseInt(process.env.LIVERELOAD_PORT || 8081, 10),
+      standaloneSeleniumJar: standaloneSeleniumJar
     },
 
     clean: {
@@ -167,14 +183,9 @@ module.exports = function(grunt) {
         tasks: [
           'newer:jshint:scripts',
           'newer:copy:development'
-          // 'copy:development'
         ]
       },
 
-      // watch for source script and test changes
-      // QUESTION:
-      // Does that entry make sense?
-      // We can use `karma:unit` and `karma:e2e` instead of watching
       tests: {
         files: [
           'src/main/webapp/require-conf.js',
@@ -184,8 +195,7 @@ module.exports = function(grunt) {
         tasks: [
           'newer:jshint:test',
           'karma:test',
-          'karma:unit',
-          'karma:e2e'
+          'karma:unit'
         ]
       },
 
@@ -241,10 +251,6 @@ module.exports = function(grunt) {
         configFile: 'src/test/js/config/karma.test.js'
       },
 
-      // moved to protractor-runner task
-      // e2e: {
-      //   configFile: 'src/test/js/config/karma.e2e.js'
-      // },
       unit: {
         configFile: 'src/test/js/config/karma.unit.js'
       },
@@ -256,13 +262,6 @@ module.exports = function(grunt) {
         browsers: ['Chrome', 'Firefox']
       },
 
-      // moved to protractor-runner task
-      // e2eWatched: {
-      //   singleRun: false,
-      //   autoWatch: true,
-      //   configFile: 'src/test/js/config/karma.e2e.js',
-      //   browsers: ['Chrome', 'Firefox']
-      // },
       unitWatched: {
         singleRun: false,
         autoWatch: true,
@@ -274,22 +273,16 @@ module.exports = function(grunt) {
     protractor: {
       options: {
         singleRun: true,
-        // configFile: 'node_modules/protractor/referenceConf.js', // Default config file
-        // keepAlive: true, // If false, the grunt process stops when the test fails.
-        // noColor: false, // If true, protractor will not use colors in its output.
         args: {
-          // Arguments passed to the command
-          // browser: 'chrome',
-          seleniumServerJar: './node/'
+          // use a function(!!!) to determine the path of selenium standalone web-driver
+          seleniumServerJar: '<%= app.standaloneSeleniumJar() %>',
+          specs: [
+            'src/test/js/e2e/**/*Test.js'
+          ]
         }
       },
 
-      e2e: {
-        options: {
-          configFile: 'src/test/js/config/protractor.e2e.js', // Target-specific config file
-          args: {} // Target-specific arguments
-        }
-      },
+      e2e: {}
     },
 
     jsdoc : {
@@ -351,6 +344,9 @@ module.exports = function(grunt) {
 
   grunt.registerTask('selenium-install', 'Automate the selenium webdriver installation', function() {
     var done = this.async();
+    var stdout = '';
+    var stderr = '';
+
     var managerPath = './node_modules/grunt-protractor-runner/node_modules/protractor/bin/webdriver-manager';
     var args = [
       'update',
@@ -358,16 +354,28 @@ module.exports = function(grunt) {
       __dirname +'/selenium'
     ];
 
-    // grunt.log.writeln('Running '+ managerPath +' '+ args.join(' '));
+    grunt.log.writeln('selenium-install runs: '+ managerPath +' '+ args.join(' '));
 
     var install = spawn(managerPath, args);
 
-    // install.stdout.on('data', function(data) {grunt.log.writeln('stdout data: '+ data);});
-    // install.stderr.on('data', function(data) {grunt.log.writeln('stderr data: '+ data);});
+    install.stdout.on('data', function(data) { stdout += data; });
+    install.stderr.on('data', function(data) { stderr += data; });
 
     install.on('exit', function (code) {
-      // grunt.log.writeln('selenium-install exit with code: '+ code);
-      done(code ? new Error('selenium-install exit with code: '+ code) : null);
+      if (code) {
+        return done(new Error('selenium-install exit with code: '+ code));
+      }
+
+      grunt.log.writeln('selenium standalone server installed');
+
+      // // updates the configuration of protractor
+      // // with the right version of selenium standalone web-driver
+      // var originalProtractorConf = grunt.config.getRaw('protractor');
+      // originalProtractorConf.options.args.seleniumServerJar = standaloneSeleniumJar();
+      // grunt.config('protractor', originalProtractorConf);
+
+      // console.info('grunt', [[grunt.config]], grunt.config('protractor'));
+      done();
     });
   });
 
@@ -395,6 +403,7 @@ module.exports = function(grunt) {
 
       // should use protractor
       case 'e2e':
+        tasks.push('selenium-install');
         tasks.push('protractor');
         break;
 
