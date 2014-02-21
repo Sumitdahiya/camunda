@@ -22,7 +22,8 @@ describe('cockpit dashboard', function() {
 
   function expectLoginFailed() {
     // TODO: check for ERROR-Notification
-
+    // var notification = element(by.css('.notifications [sem-show-login-information]'));
+    // expect(notification.getText()).toEqual("Wrong credentials or missing access rights to application");
   }
 
   function checkPluginHeaderName_h1(headerName) {
@@ -60,9 +61,9 @@ describe('cockpit dashboard', function() {
       };   
     });      
   }
-  
 
   it('should validate credentials', function() {
+    browser.driver.manage().window().maximize();
     browser.get('http://localhost:8080/camunda');
     login('jonny1', 'jonny3', false);
     login('jonny1', 'jonny1', true);
@@ -96,18 +97,44 @@ describe('cockpit dashboard', function() {
 
   it('should select activity in diagram', function() {
     element(by.css('.process-diagram *[data-activity-id="UserTask_2"]')).click();
+
+    //verify that element is highlighted. class="bpmnElement activity-highlight"
+    expect(element(by.css('.process-diagram *[data-activity-id="UserTask_2"]')).getAttribute('class')).toMatch('activity-highlight');
   });
 
   it('should switch tab in instance details view', function() {
     element(by.repeater('tabProvider in processInstanceTabs').row(3).column('label')).click();
 
-/*    items = element(by.repeater('userTask in userTasks').row(0).column('name'));
-    expect(items.getText()).toEqual('Inner Task');*/
-
-
     var tabContent = element(by.css('view[provider=selectedTab]')).findElement(by.repeater('userTask in userTasks').row(0).column('name'));    
     expect(tabContent.getText()).toEqual('Inner Task');
   });
+
+  it('should deselect activity in diagram', function() {
+    var ptor = protractor.getInstance();
+    var userTask = element(by.css('.process-diagram *[data-activity-id="UserTask_2"]'));
+
+    //TODO deselct UserTask_2 by CTRL + Click() 
+
+    //ptor.actions().sendKeys(protractor.Key.CONTROL).perform();
+
+    // ptor.actions().keyDown(protractor.Key.CONTROL);
+    //   .click(userTask)
+    //   .keyUp(protractor.Key.CONTROL)
+    //   .perform()
+
+    //verify that element is not highlighted. class="bpmnElement activity-highlight"
+    expect(element(by.css('.process-diagram *[data-activity-id="UserTask_2"]')).getAttribute('class')).not.toMatch('activity-highlight');
+  });
+
+/*  it('should select Activity in instance details view and highlight element in renderer', function() {
+
+    element(by.css('view[provider=selectedTab]')).findElement(by.repeater('userTask in userTasks').row(0).column('name')).click();
+
+
+    element(by.css('view[provider=selectedTab]')).findElement(by.repeater('userTask in userTasks').row(1).column('name')).click();
+
+    expect(element(by.css('.process-diagram *[data-activity-id="UserTask_3"]')).getAttribute('class')).toMatch('activity-highlight');
+  });  */
 
 });
 
