@@ -70,15 +70,18 @@ grunt test:unit
 
 #### Client Side - _integration_
 
+To test the integration, you will need to have a [running instance](#development-setup) (on, default, port 8080) of the camunda BPM platform.
+
 ```
 grunt test:e2e
 ```
+
 If you want to run a specific set of tests (available sets are: `admin`, `cockpit` and `tasklist`), you can run the following command:
+
 ```
 grunt test:e2e:<set name>
 ```
 
----
 
 ### Packaging
 
