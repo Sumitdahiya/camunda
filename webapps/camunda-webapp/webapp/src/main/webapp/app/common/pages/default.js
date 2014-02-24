@@ -124,7 +124,6 @@ ngDefine('camunda.common.pages', function(module) {
   var AuthenticationController = [
     '$scope', '$window', '$cacheFactory', 'Notifications', 'AuthenticationService', 'Uri',
     function($scope, $window, $cacheFactory, Notifications, AuthenticationService, Uri) {
-      
       $scope.logout = function() {
         AuthenticationService.logout().then(function() {
           $cacheFactory.get('$http').removeAll();

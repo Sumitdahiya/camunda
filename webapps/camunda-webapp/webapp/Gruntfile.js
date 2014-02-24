@@ -1,6 +1,13 @@
-/* global process: false, require: false, module: false, __dirname: false, console: false */
+/* global process: false, require: false, module: false, __dirname: false */
 'use strict';
-/* jshint unused: false */
+
+/**
+  This file is used to configure the [grunt](http://gruntjs.com/) tasks
+  aimed to generate the web frontend of the camunda BPM platform.
+  @author Valentin Vago <valentin.vago@camunda.com>
+  @author Nico Rehwaldt  <nico.rehwaldt@camunda.com>
+ */
+
 var spawn = require('child_process').spawn;
 var path = require('path');
 var fs = require('fs');
@@ -9,10 +16,8 @@ var _ = require('underscore');
 var commentLineExp =  /^[\s]*<!-- (\/|#) (CE|EE)/;
 var htmlFileExp =     /\.html$/;
 var requireConfExp =  /require-conf.js$/;
-// var seleniumJarExp = /\.jar downloaded to (.+)$/gm;
 var seleniumJarNameExp = /selenium-server-standalone/;
-// var seleniumExp = /(.+)\/([^\/]+)/;
-var seleniumServerJarPath;
+
 
 function distFileProcessing(content, srcpath) {
   if (htmlFileExp.test(srcpath)) {
@@ -204,7 +209,7 @@ module.exports = function(grunt) {
         files: [
           // 'src/main/webapp/require-conf.js',
           // 'src/main/webapp/{app,develop,plugin,common}/**/*.{js,html}',
-          'src/test/js/e2e/**/*.js'
+          './../../../qa/integration-tests-webapps/src/test/javascript/e2e/**/*.js'
         ],
         tasks: [
           'newer:jshint:e2eTest',
@@ -279,19 +284,85 @@ module.exports = function(grunt) {
       }
     },
 
+    // https://www.npmjs.org/package/grunt-protractor-runner
     protractor: {
       options: {
         singleRun: true,
+        // config like in *.conf.js
         args: {
           // use a function(!!!) to determine the path of selenium standalone web-driver
           seleniumServerJar: '<%= app.standaloneSeleniumJar() %>',
           specs: [
-            'src/test/js/e2e/**/*Test.js'
-          ]
+            './../../../qa/integration-tests-webapps/src/test/javascript/e2e/**/*.js'
+          ],
+
+          capabilities: {
+            browserName: 'chrome'
+          },
+
+          // // If you would like to run more than one instance of webdriver on the same
+          // // tests, use multiCapabilities, which takes an array of capabilities.
+          // // If this is specified, capabilities will be ignored.
+          // multiCapabilities: [
+          //   {
+          //     browserName: 'chrome'
+          //   },
+          //   {
+          //     browserName: 'phantomjs'
+          //   }
+          // ],
+
+          baseUrl: 'http://localhost:8080',
+
+          // ----- The test framework -----
+          //
+          // Jasmine is fully supported as a test and assertion framework.
+          // Mocha has limited beta support. You will need to include your own
+          // assertion framework if working with mocha.
+          framework: 'jasmine',
+
+          // ----- Options to be passed to minijasminenode -----
+          //
+          // Options to be passed to Jasmine-node.
+          // See the full list at https://github.com/juliemr/minijasminenode
+          jasmineNodeOpts: {
+            defaultTimeoutInterval: 15000, // Default time to wait in ms before a test fails.
+            showColors: true, // Use colors in the command line report.
+            includeStackTrace: true, // If true, include stack traces in failures.
+          }
         }
       },
 
-      e2e: {}
+      admin: {
+        options:{
+          args: {
+            baseUrl: 'http://localhost:8080',
+            specs: [
+              './../../../qa/integration-tests-webapps/src/test/javascript/e2e/admin/**/*.js'
+            ]
+          }
+        }
+      },
+      cockpit: {
+        options:{
+          args: {
+            baseUrl: 'http://localhost:8080',
+            specs: [
+              './../../../qa/integration-tests-webapps/src/test/javascript/e2e/cockpit/**/*.js'
+            ]
+          }
+        }
+      },
+      tasklist: {
+        options:{
+          args: {
+            baseUrl: 'http://localhost:8080',
+            specs: [
+              './../../../qa/integration-tests-webapps/src/test/javascript/e2e/tasklist/**/*.js'
+            ]
+          }
+        }
+      }
     },
 
     jsdoc : {
@@ -393,7 +464,7 @@ module.exports = function(grunt) {
     ]);
   });
 
-  grunt.registerTask('test', 'Run the tests (by default: karma:unit)', function(target) {
+  grunt.registerTask('test', 'Run the tests (by default: karma:unit)', function(target, set) {
     var tasks = [];
 
     switch (target) {
@@ -405,7 +476,7 @@ module.exports = function(grunt) {
       // should use protractor
       case 'e2e':
         tasks.push('selenium-install');
-        tasks.push('protractor');
+        tasks.push('protractor'+ (set ? ':'+ set : ''));
         break;
 
       // unit testing by default

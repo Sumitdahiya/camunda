@@ -32,12 +32,14 @@ grunt auto-build
 This continuously builds the web assets using [Grunt](http://gruntjs.com) and automatically reloads the web application when done.
 If you changed the port Jetty runs on, expose that via the environment variable `APP_PORT=WHICH_PORT`.
 
+
 ### Editor configuration
 
 In order to keep the coding style consistant, we placed a `.editorconfig` file in this directory.
 Download a plugin for the .editorconfig [support in your favourite IDE](http://editorconfig.org/#download).
 
-As described in the `.editorconfig` file, we use an indentation of 2 spaces, UNIX-like new lines (lf) and a new line at the and of file in the **.js**, **.less** and **.html** files.
+As described in the `.editorconfig` file, we use an indentation of 2 spaces,
+UNIX-like new lines (lf) and a new line at the and of file in the **.js**, **.less** and **.html** files.
 
 #### Scripts
 
@@ -50,6 +52,9 @@ The **.less** files are located in the `webapps/camunda-webapp/webapp/assets/sty
 
 
 ### Testing
+
+You may need to expose the location of your browser executable(s) via
+the environment variables `(PHANTOMJS|FIREFOX|CHROME|IE)_BIN` for the testing environement to be set correctly.
 
 #### Server Side
 
@@ -68,9 +73,12 @@ grunt test:unit
 ```
 grunt test:e2e
 ```
+If you want to run a specific set of tests (available sets are: `admin`, `cockpit` and `tasklist`), you can run the following command:
+```
+grunt test:e2e:<set name>
+```
 
-You may need to expose the location of your browser executable(s) via the environment variables `(PHANTOMJS|FIREFOX|CHROME|IE)_BIN`.
-
+---
 
 ### Packaging
 
