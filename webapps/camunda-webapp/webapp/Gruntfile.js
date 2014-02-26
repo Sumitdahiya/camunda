@@ -424,6 +424,65 @@ module.exports = function(grunt) {
 
   grunt.registerTask('selenium-install', 'Automate the selenium webdriver installation', function() {
     var done = this.async();
+    var seleniumInstallDir = path.join(__dirname, '/selenium');
+
+    if (process.platform === 'win32') {
+      var seleniumDownloadURL = packageJSON.setup.seleniumDownloadURL;
+      var seleniumInstallPath = path.join(seleniumInstallDir, path.basename(seleniumDownloadURL));
+
+      // return require('async').map([
+      //   // make the "selenium" directory
+      //   function(cb) {
+      //     fs.mkdir(seleniumInstallDir, function(err) {
+      //       if (err && err.errno !== 47) {
+      //         grunt.log.warn('error while creating the install directory for selenium at '+ seleniumInstallDir, err);
+      //         return cb(err);
+      //       }
+      //       cb();
+      //     });
+      //   },
+
+      //   // download the selenium standalone .jar file
+      //   function(cb) {
+      //     if (fs.existsSync(seleniumInstallPath)) {
+      //       return cb();
+      //     }
+      //     cb();
+      //   },
+
+      //   // download and extract the chrome driver zip file
+      //   function(cb) {
+      //     cb();
+      //   },
+
+      //   // download and extract the IE driver zip file
+      //   function(cb) {
+      //     cb();
+      //   }
+      // ], done);
+
+      if (fs.existsSync(seleniumInstallPath)) {
+        return done();
+      }
+
+      var http = require('http');
+      return fs.mkdir(seleniumInstallDir, function(err) {
+        if (err && err.errno !== 47) {
+          grunt.log.warn('error while creating the install directory for selenium at '+ seleniumInstallDir, err);
+          return done(err);
+        }
+
+        var file = fs.createWriteStream(seleniumInstallPath);
+        http.get(seleniumDownloadURL, function(res) {
+          res.pipe(file);
+          file.on('finish', function() {
+            file.close();
+            return done();
+          });
+        });
+      });
+    }
+
     var stdout = '';
     var stderr = '';
 
