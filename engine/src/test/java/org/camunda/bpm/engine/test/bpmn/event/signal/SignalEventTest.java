@@ -33,6 +33,21 @@ import org.camunda.bpm.engine.test.Deployment;
 public class SignalEventTest extends PluggableProcessEngineTestCase {
 
   @Deployment(resources={
+      "org/camunda/bpm/engine/test/bpmn/event/signal/SignalEventTests.catchStartAlertSignal.bpmn20.xml",
+      "org/camunda/bpm/engine/test/bpmn/event/signal/SignalEventTests.throwAlertSignal.bpmn20.xml"})
+  public void testSignalStartEvent() {
+    assertEquals(1, createEventSubscriptionQuery().count());
+    assertEquals(0, runtimeService.createProcessInstanceQuery().count());
+
+    runtimeService.startProcessInstanceByKey("throwSignal");
+//
+    assertEquals(1, createEventSubscriptionQuery().count());
+    assertEquals(1, runtimeService.createProcessInstanceQuery().count());
+
+    assertEquals(1, taskService.createTaskQuery().taskName("userTask").count());
+  }
+
+  @Deployment(resources={
           "org/camunda/bpm/engine/test/bpmn/event/signal/SignalEventTests.catchAlertSignal.bpmn20.xml",
           "org/camunda/bpm/engine/test/bpmn/event/signal/SignalEventTests.throwAlertSignal.bpmn20.xml"})
   public void testSignalCatchIntermediate() {

@@ -27,6 +27,7 @@ import org.camunda.bpm.engine.impl.el.ExpressionManager;
 import org.camunda.bpm.engine.impl.el.FixedValue;
 import org.camunda.bpm.engine.impl.el.UelExpressionCondition;
 import org.camunda.bpm.engine.impl.event.MessageEventHandler;
+import org.camunda.bpm.engine.impl.event.SignalEventHandler;
 import org.camunda.bpm.engine.impl.form.handler.DefaultStartFormHandler;
 import org.camunda.bpm.engine.impl.form.handler.DefaultTaskFormHandler;
 import org.camunda.bpm.engine.impl.form.handler.StartFormHandler;
@@ -643,7 +644,7 @@ public class BpmnParse extends Parse {
 
   protected void selectInitial(List<ActivityImpl> startEventActivities, ProcessDefinitionEntity processDefinition, Element parentElement) {
     ActivityImpl initial = null;
-    // validate that there is s single none start event / timer start event:
+    // validate that there is a single none start event / timer start event:
     for (ActivityImpl activityImpl : startEventActivities) {
       if(!activityImpl.getProperty("type").equals("messageStartEvent")) {
         if(initial == null) {
@@ -673,6 +674,7 @@ public class BpmnParse extends Parse {
 
     Element timerEventDefinition = startEventElement.element("timerEventDefinition");
     Element messageEventDefinition = startEventElement.element("messageEventDefinition");
+    Element signalEventDefinition = startEventElement.element("signalEventDefinition");
     if (timerEventDefinition != null) {
       parseTimerStartEventDefinition(timerEventDefinition, startEventActivity, processDefinition);
     } else if(messageEventDefinition != null) {
@@ -682,6 +684,13 @@ public class BpmnParse extends Parse {
       // create message event subscription:
       messageDefinition.setStartEvent(true);
       addEventSubscriptionDeclaration(messageDefinition, processDefinition, startEventElement);
+    } else if (signalEventDefinition != null) {
+      EventSubscriptionDeclaration signalDefinition = parseSignalEventDefinition(signalEventDefinition);
+      startEventActivity.setProperty("type", "signalStartEvent");
+      signalDefinition.setActivityId(startEventActivity.getId());
+      // create signal event subscription:
+      signalDefinition.setStartEvent(true);
+      addEventSubscriptionDeclaration(signalDefinition, processDefinition, startEventElement);
     }
   }
 
@@ -835,10 +844,11 @@ public class BpmnParse extends Parse {
 
   @SuppressWarnings("unchecked")
   protected void addEventSubscriptionDeclaration(EventSubscriptionDeclaration subscription, ScopeImpl scope, Element element) {
-    if (subscription.getEventType().equals("message")
+    if ((subscription.getEventType().equals("message")
+         || subscription.getEventType().equals("signal"))
          && (subscription.getEventName() == null
          || "".equalsIgnoreCase(subscription.getEventName().trim()))) {
-      addError("Cannot have a message event subscription with an empty or missing name", element);
+      addError("Cannot have a message or signal event subscription with an empty or missing name", element);
     }
 
     List<EventSubscriptionDeclaration> eventDefinitions = (List<EventSubscriptionDeclaration>) scope.getProperty(PROPERTYNAME_EVENT_SUBSCRIPTION_DECLARATION);
@@ -846,6 +856,7 @@ public class BpmnParse extends Parse {
       eventDefinitions = new ArrayList<EventSubscriptionDeclaration>();
       scope.setProperty(PROPERTYNAME_EVENT_SUBSCRIPTION_DECLARATION, eventDefinitions);
     } else {
+      // TODO: is this valid for signal too?
       // if this is a message event, validate that it is the only one with the provided name for this scope
       if(subscription.getEventType().equals("message")) {
         for (EventSubscriptionDeclaration eventDefinition : eventDefinitions) {
@@ -2338,9 +2349,9 @@ public class BpmnParse extends Parse {
       if (signalDefinition == null) {
         addError("Could not find signal with id '" + signalRef + "'", signalEventDefinitionElement);
       }
-      EventSubscriptionDeclaration signalEventDefinition = new EventSubscriptionDeclaration(signalDefinition.getName(), "signal");
-      boolean asynch = "true".equals(signalEventDefinitionElement.attributeNS(BpmnParser.ACTIVITI_BPMN_EXTENSIONS_NS, "async", "false"));
-      signalEventDefinition.setAsync(asynch);
+      EventSubscriptionDeclaration signalEventDefinition = new EventSubscriptionDeclaration(signalDefinition.getName(), SignalEventHandler.EVENT_HANDLER_TYPE);
+      boolean async = "true".equals(signalEventDefinitionElement.attributeNS(BpmnParser.ACTIVITI_BPMN_EXTENSIONS_NS, "async", "false"));
+      signalEventDefinition.setAsync(async);
 
       return signalEventDefinition;
     }

@@ -34,22 +34,14 @@ import org.camunda.bpm.engine.impl.context.Context;
 import org.camunda.bpm.engine.impl.db.DbSqlSession;
 import org.camunda.bpm.engine.impl.el.ExpressionManager;
 import org.camunda.bpm.engine.impl.event.MessageEventHandler;
+import org.camunda.bpm.engine.impl.event.SignalEventHandler;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.jobexecutor.JobDeclaration;
 import org.camunda.bpm.engine.impl.jobexecutor.TimerDeclarationImpl;
 import org.camunda.bpm.engine.impl.jobexecutor.TimerStartEventJobHandler;
 import org.camunda.bpm.engine.impl.persistence.deploy.Deployer;
 import org.camunda.bpm.engine.impl.persistence.deploy.DeploymentCache;
-import org.camunda.bpm.engine.impl.persistence.entity.DeploymentEntity;
-import org.camunda.bpm.engine.impl.persistence.entity.EventSubscriptionEntity;
-import org.camunda.bpm.engine.impl.persistence.entity.IdentityLinkEntity;
-import org.camunda.bpm.engine.impl.persistence.entity.JobDefinitionEntity;
-import org.camunda.bpm.engine.impl.persistence.entity.JobDefinitionManager;
-import org.camunda.bpm.engine.impl.persistence.entity.MessageEventSubscriptionEntity;
-import org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity;
-import org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionManager;
-import org.camunda.bpm.engine.impl.persistence.entity.ResourceEntity;
-import org.camunda.bpm.engine.impl.persistence.entity.TimerEntity;
+import org.camunda.bpm.engine.impl.persistence.entity.*;
 import org.camunda.bpm.engine.impl.util.IoUtil;
 import org.camunda.bpm.engine.management.JobDefinition;
 import org.camunda.bpm.engine.repository.ProcessDefinition;
@@ -244,8 +236,9 @@ public class BpmnDeployer implements Deployer {
 
   /**
    * adjust all event subscriptions responsible to start process instances
-   * (timer start event, message start event). The default behavior is to remove the old
-   * subscriptions and add new ones for the new deployed process definitions.
+   * (timer start event, message start event, signal start event).
+   * The default behavior is to remove the old subscriptions and add new
+   * ones for the new deployed process definitions.
    */
   protected void adjustStartEventSubscriptions(ProcessDefinitionEntity newLatestProcessDefinition, ProcessDefinitionEntity oldLatestProcessDefinition) {
   	removeObsoleteTimers(newLatestProcessDefinition);
@@ -253,6 +246,9 @@ public class BpmnDeployer implements Deployer {
 
   	removeObsoleteMessageEventSubscriptions(newLatestProcessDefinition, oldLatestProcessDefinition);
   	addMessageEventSubscriptions(newLatestProcessDefinition);
+
+    removeObsoleteSignalEventSubscriptions(newLatestProcessDefinition, oldLatestProcessDefinition);
+    addSignalEventSubscriptions(newLatestProcessDefinition);
   }
 
   /**
@@ -310,13 +306,21 @@ public class BpmnDeployer implements Deployer {
   }
 
   protected void removeObsoleteMessageEventSubscriptions(ProcessDefinitionEntity processDefinition, ProcessDefinitionEntity latestProcessDefinition) {
+    removeEventSubscription(MessageEventHandler.EVENT_HANDLER_TYPE, processDefinition, latestProcessDefinition);
+  }
+
+  protected void removeObsoleteSignalEventSubscriptions(ProcessDefinitionEntity processDefinition, ProcessDefinitionEntity latestProcessDefinition) {
+    removeEventSubscription(SignalEventHandler.EVENT_HANDLER_TYPE, processDefinition, latestProcessDefinition);
+  }
+
+  protected void removeEventSubscription(String eventHandlerType, ProcessDefinitionEntity processDefinition, ProcessDefinitionEntity latestProcessDefinition) {
     // remove all subscriptions for the previous version
     if(latestProcessDefinition != null) {
       CommandContext commandContext = Context.getCommandContext();
 
       List<EventSubscriptionEntity> subscriptionsToDelete = commandContext
         .getEventSubscriptionManager()
-        .findEventSubscriptionsByConfiguration(MessageEventHandler.EVENT_HANDLER_TYPE, latestProcessDefinition.getId());
+        .findEventSubscriptionsByConfiguration(eventHandlerType, latestProcessDefinition.getId());
 
       for (EventSubscriptionEntity eventSubscriptionEntity : subscriptionsToDelete) {
         eventSubscriptionEntity.delete();
@@ -328,20 +332,21 @@ public class BpmnDeployer implements Deployer {
   @SuppressWarnings("unchecked")
   protected void addMessageEventSubscriptions(ProcessDefinitionEntity processDefinition) {
     CommandContext commandContext = Context.getCommandContext();
-    List<EventSubscriptionDeclaration> messageEventDefinitions = (List<EventSubscriptionDeclaration>) processDefinition.getProperty(BpmnParse.PROPERTYNAME_EVENT_SUBSCRIPTION_DECLARATION);
-    if(messageEventDefinitions != null) {
-      for (EventSubscriptionDeclaration messageEventDefinition : messageEventDefinitions) {
-        if(messageEventDefinition.isStartEvent()) {
+    List<EventSubscriptionDeclaration> eventDefinitions = (List<EventSubscriptionDeclaration>) processDefinition.getProperty(BpmnParse.PROPERTYNAME_EVENT_SUBSCRIPTION_DECLARATION);
+    if(eventDefinitions != null) {
+      for (EventSubscriptionDeclaration eventDefinition : eventDefinitions) {
+        if(MessageEventHandler.EVENT_HANDLER_TYPE.equals(eventDefinition.getEventType())
+              && eventDefinition.isStartEvent()) {
           // look for subscriptions for the same name in db:
           List<EventSubscriptionEntity> subscriptionsForSameMessageName = commandContext
             .getEventSubscriptionManager()
-            .findEventSubscriptionsByName(MessageEventHandler.EVENT_HANDLER_TYPE, messageEventDefinition.getEventName());
+            .findEventSubscriptionsByName(MessageEventHandler.EVENT_HANDLER_TYPE, eventDefinition.getEventName());
           // also look for subscriptions created in the session:
           List<MessageEventSubscriptionEntity> cachedSubscriptions = commandContext
             .getDbSqlSession()
             .findInCache(MessageEventSubscriptionEntity.class);
           for (MessageEventSubscriptionEntity cachedSubscription : cachedSubscriptions) {
-            if(messageEventDefinition.getEventName().equals(cachedSubscription.getEventName())
+            if(eventDefinition.getEventName().equals(cachedSubscription.getEventName())
                     && !subscriptionsForSameMessageName.contains(cachedSubscription)) {
               subscriptionsForSameMessageName.add(cachedSubscription);
             }
@@ -353,12 +358,30 @@ public class BpmnDeployer implements Deployer {
 
           if(!subscriptionsForSameMessageName.isEmpty()) {
             throw new ProcessEngineException("Cannot deploy process definition '" + processDefinition.getResourceName()
-                    + "': there already is a message event subscription for the message with name '" + messageEventDefinition.getEventName() + "'.");
+                    + "': there already is a message event subscription for the message with name '" + eventDefinition.getEventName() + "'.");
           }
 
           MessageEventSubscriptionEntity newSubscription = new MessageEventSubscriptionEntity();
-          newSubscription.setEventName(messageEventDefinition.getEventName());
-          newSubscription.setActivityId(messageEventDefinition.getActivityId());
+          newSubscription.setEventName(eventDefinition.getEventName());
+          newSubscription.setActivityId(eventDefinition.getActivityId());
+          newSubscription.setConfiguration(processDefinition.getId());
+
+          newSubscription.insert();
+        }
+      }
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  protected void addSignalEventSubscriptions(ProcessDefinitionEntity processDefinition) {
+    List<EventSubscriptionDeclaration> eventDefinitions = (List<EventSubscriptionDeclaration>) processDefinition.getProperty(BpmnParse.PROPERTYNAME_EVENT_SUBSCRIPTION_DECLARATION);
+    if(eventDefinitions != null) {
+      for (EventSubscriptionDeclaration eventDefinition : eventDefinitions) {
+        if (SignalEventHandler.EVENT_HANDLER_TYPE.equals(eventDefinition.getEventType())
+            && eventDefinition.isStartEvent()) {
+          SignalEventSubscriptionEntity newSubscription = new SignalEventSubscriptionEntity();
+          newSubscription.setEventName(eventDefinition.getEventName());
+          newSubscription.setActivityId(eventDefinition.getActivityId());
           newSubscription.setConfiguration(processDefinition.getId());
 
           newSubscription.insert();
