@@ -58,7 +58,7 @@ public class FormFieldHandler {
 
     // set default value (evauate expression)
     if(defaultValue != null) {
-      formField.setDefaultValue(defaultValue.getValue(variableScope));
+      formField.setDefaultValue(type.convertFormValueToModelValue(defaultValue.getValue(variableScope)));
     }
 
     // properties

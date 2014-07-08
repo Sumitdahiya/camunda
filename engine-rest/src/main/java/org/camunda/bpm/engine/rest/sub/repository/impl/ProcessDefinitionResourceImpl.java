@@ -19,6 +19,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.Response;
@@ -37,7 +38,9 @@ import org.camunda.bpm.engine.management.ActivityStatistics;
 import org.camunda.bpm.engine.management.ActivityStatisticsQuery;
 import org.camunda.bpm.engine.repository.ProcessDefinition;
 import org.camunda.bpm.engine.rest.ProcessInstanceRestService;
+import org.camunda.bpm.engine.rest.dto.FormVariablesDto;
 import org.camunda.bpm.engine.rest.dto.StatisticsResultDto;
+import org.camunda.bpm.engine.rest.dto.converter.StringSetConverter;
 import org.camunda.bpm.engine.rest.dto.repository.ActivityStatisticsResultDto;
 import org.camunda.bpm.engine.rest.dto.repository.ProcessDefinitionDiagramDto;
 import org.camunda.bpm.engine.rest.dto.repository.ProcessDefinitionDto;
@@ -51,6 +54,7 @@ import org.camunda.bpm.engine.rest.sub.repository.ProcessDefinitionResource;
 import org.camunda.bpm.engine.rest.util.ApplicationContextPathUtil;
 import org.camunda.bpm.engine.rest.util.DtoUtil;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
+import org.camunda.bpm.engine.runtime.VariableInstance;
 
 public class ProcessDefinitionResourceImpl implements ProcessDefinitionResource {
 
@@ -296,5 +300,20 @@ public class ProcessDefinitionResourceImpl implements ProcessDefinitionResource 
       String message = String.format("The suspension state of Process Definition with id %s could not be updated due to: %s", processDefinitionId, e.getMessage());
       throw new InvalidRequestException(Status.BAD_REQUEST, e, message);
     }
+  }
+
+  public FormVariablesDto getFormVariables(String variableNames) {
+
+    final FormService formService = engine.getFormService();
+    Set<String> formVariables = null;
+
+    if(variableNames != null) {
+      StringSetConverter stringSetConverter = new StringSetConverter();
+      formVariables = stringSetConverter.convertQueryParameterToType(variableNames);
+    }
+
+    Map<String, VariableInstance> startFormVariables = formService.getStartFormVariables(processDefinitionId, formVariables);
+
+    return FormVariablesDto.fromVariableInstanceMap(startFormVariables);
   }
 }
