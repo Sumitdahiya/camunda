@@ -9,57 +9,57 @@
 
 exports.config = {
 
-    // ----- How to setup Selenium -----
-    //
-    // The address of a running selenium server.
-    seleniumAddress: 'http://localhost:4444/wd/hub',
+  // ----- How to setup Selenium -----
+  //
+  // The address of a running selenium server.
+  seleniumAddress: 'http://localhost:4444/wd/hub',
 
-    // The timeout for each script run on the browser. This should be longer
-    // than the maximum time your application needs to stabilize between tasks.
-    allScriptsTimeout: 11000,
+  // The timeout for each script run on the browser. This should be longer
+  // than the maximum time your application needs to stabilize between tasks.
+  allScriptsTimeout: 11000,
 
-    // Capabilities to be passed to the webdriver instance.
-    capabilities: {
-        'browserName': 'chrome',
-        'chromeOptions': {
-            'args': ['incognito', 'disable-extensions', 'start-maximized', 'enable-crash-reporter-for-testing']
-        },
-        'loggingPrefs': {
-            'browser': 'ALL'
-        }
+  // Capabilities to be passed to the webdriver instance.
+  capabilities: {
+    'browserName': 'chrome',
+    'chromeOptions': {
+      'args': ['incognito', 'disable-extensions', 'start-maximized', 'enable-crash-reporter-for-testing']
     },
-
-    /*    multiCapabilities: [{
-     'browserName': 'chrome'
-     }, {
-     'browserName': 'firefox'
-     }],
-     */
-
-    // ----- What tests to run -----
-    //
-    // Spec patterns are relative to the location of the spec file. They may
-    // include glob patterns.
-    specs: ['admin/*Spec.js'],
-
-    // A base URL for your application under test. Calls to protractor.get()
-    // with relative paths will be prepended with this.
-    baseUrl: 'http://localhost:8080',
-
-    // ----- The test framework -----
-    //
-    // Jasmine is fully supported as a test and assertion framework.
-    // Mocha has limited beta support. You will need to include your own
-    // assertion framework if working with mocha.
-    framework: 'jasmine',
-
-    // ----- Options to be passed to minijasminenode -----
-    //
-    // Options to be passed to Jasmine-node.
-    // See the full list at https://github.com/juliemr/minijasminenode
-    jasmineNodeOpts: {
-        defaultTimeoutInterval: 15000, // Default time to wait in ms before a test fails.
-        showColors: true, // Use colors in the command line report.
-        includeStackTrace: true // If true, include stack traces in failures.
+    'loggingPrefs': {
+      'browser': 'ALL'
     }
+  },
+
+  /*    multiCapabilities: [{
+   'browserName': 'chrome'
+   }, {
+   'browserName': 'firefox'
+   }],
+   */
+
+  // ----- What tests to run -----
+  //
+  // Spec patterns are relative to the location of the spec file. They may
+  // include glob patterns.
+  specs: ['admin/tests/*Spec.js'],
+
+  // A base URL for your application under test. Calls to protractor.get()
+  // with relative paths will be prepended with this.
+  baseUrl: 'http://localhost:8080',
+
+  // ----- The test framework -----
+  //
+  // Jasmine is fully supported as a test and assertion framework.
+  // Mocha has limited beta support. You will need to include your own
+  // assertion framework if working with mocha.
+  framework: 'jasmine',
+
+  // ----- Options to be passed to minijasminenode -----
+  //
+  // Options to be passed to Jasmine-node.
+  // See the full list at https://github.com/juliemr/minijasminenode
+  jasmineNodeOpts: {
+    defaultTimeoutInterval: 15000, // Default time to wait in ms before a test fails.
+    showColors: true, // Use colors in the command line report.
+    includeStackTrace: true // If true, include stack traces in failures.
+  }
 };
