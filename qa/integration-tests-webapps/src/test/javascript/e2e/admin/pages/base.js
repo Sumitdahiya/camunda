@@ -8,7 +8,7 @@ module.exports = Page.extend({
     return element(by.css('.page-header')).getText();
   },
 
-  selectAdminNavbarItem: function (navbarItem) {
+  selectNavbarItem: function(navbarItem) {
     var index = [
       'Users',
       'Groups',
@@ -25,6 +25,11 @@ module.exports = Page.extend({
 
     item.click();
     return item;
+  },
+
+  logoutWebapp: function() {
+    element(by.css('.navbar [sem-show-user-actions]')).click();
+    element(by.css('.navbar [sem-log-out]')).click();
   }
 
 });
