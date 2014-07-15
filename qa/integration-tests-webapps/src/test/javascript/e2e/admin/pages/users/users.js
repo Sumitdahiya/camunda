@@ -6,15 +6,19 @@ module.exports = Base.extend({
 
   url: '/camunda/app/admin/default/#/users',
 
-  newUserButton: function () {
+  newUserButton: function() {
     return element(by.css('.btn.pull-right'));
   },
 
-  userList: function () {
+  userList: function() {
     return element.all(by.repeater('user in userList'));
   },
 
-  selectUser: function (item) {
+  userFirstNameAndLastName: function(item) {
+    return element(by.repeater('user in userList').row(item).column('{{user.firstName}} {{user.lastName}}')).getText();
+  },
+
+  selectUser: function(item) {
     this.userList().get(item).findElement(by.linkText('Edit')).click();
   }
 

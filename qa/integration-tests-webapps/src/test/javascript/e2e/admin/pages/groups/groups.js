@@ -14,8 +14,8 @@ module.exports = Base.extend({
     return element.all(by.repeater('group in groupList'));
   },
 
-  editGroup: function(item) {
-    this.groupList().get(item).findElement(by.linkText('Edit')).click();
+  editGroupButton: function(item) {
+    return this.groupList().get(item).findElement(by.linkText('Edit'));
   }
 
 });

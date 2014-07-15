@@ -1,18 +1,8 @@
 'use strict';
 
-var UsersPage = require('../pages/users/users');
-var EditUserAccountPage = require('../pages/users/editUserAccount');
-var EditUserGroupPage = require('../pages/users/editUserGroups');
-var EditUserSelectGroupsPage = require('../pages/users/editUserSelectGroups');
-var AdminUserSetupPage = require('../pages/users/adminSetup');
+var usersPage = require('../pages/users');
 
-var usersPage = new UsersPage();
-var editUserAccountPage = new EditUserAccountPage();
-var editUserGroupPage = new EditUserGroupPage();
-var editUserSelectGroupsPage = new EditUserSelectGroupsPage();
-var adminUserSetupPage = new AdminUserSetupPage();
-
-describe('admin user - ', function() {
+describe('admin user -', function() {
 
   describe('start test', function() {
 
@@ -26,111 +16,128 @@ describe('admin user - ', function() {
 
   });
 
+
   describe('remove current admin user rights', function() {
 
     it('should select user', function() {
 
+      // when
       usersPage.selectUser(2);
 
-      expect(editUserGroupPage.pageHeader()).toBe('Jonny Prosciutto')
+      // then
+      expect(usersPage.editUserGroups.pageHeader()).toBe('Jonny Prosciutto');
 
     });
 
+
     it('should remove admin group and log out', function() {
 
-      editUserGroupPage.selectUserNavbarItem('Groups');
+      // given
+      usersPage.editUserGroups.selectUserNavbarItem('Groups');
 
-      editUserGroupPage.removeGroup(0);
+      // when
+      usersPage.editUserGroups.removeGroup(0);
 
-      expect(editUserGroupPage.groupList().count()).toEqual(0);
-
-      editUserGroupPage.logoutWebapp();
+      // then
+      expect(usersPage.editUserGroups.groupList().count()).toEqual(0);
 
     });
 
   });
+
 
   describe('validate intial admin setup', function() {
 
     it('should validate Setup page', function() {
 
-      adminUserSetupPage.navigateToWebapp('Admin');
+      // given
+      usersPage.logoutWebapp();
 
-      expect(adminUserSetupPage.pageHeader()).toBe('Setup');
+      // when
+      usersPage.navigateToWebapp('Admin');
 
-      expect(adminUserSetupPage.createNewAdminButton().isEnabled()).toBe(false);
-
+      // then
+      expect(usersPage.adminUserSetup.pageHeader()).toBe('Setup');
+      expect(usersPage.adminUserSetup.createNewAdminButton().isEnabled()).toBe(false);
     });
+
 
     it('should enter new admin profile', function() {
 
-      adminUserSetupPage.userId().sendKeys('Admin');
-      adminUserSetupPage.password().sendKeys('admin123');
-      adminUserSetupPage.passwordRepeat().sendKeys('admin123');
-      adminUserSetupPage.userFirstName().sendKeys('Über');
-      adminUserSetupPage.userLastName().sendKeys('Admin');
-      adminUserSetupPage.userEmail().sendKeys('uea@camundo.org');
+      // when
+      usersPage.adminUserSetup.userId().sendKeys('Admin');
+      usersPage.adminUserSetup.password().sendKeys('admin123');
+      usersPage.adminUserSetup.passwordRepeat().sendKeys('admin123');
+      usersPage.adminUserSetup.userFirstName().sendKeys('Über');
+      usersPage.adminUserSetup.userLastName().sendKeys('Admin');
+      usersPage.adminUserSetup.userEmail().sendKeys('uea@camundo.org');
 
-      adminUserSetupPage.createNewAdminButton().click();
+      usersPage.adminUserSetup.createNewAdminButton().click();
+
+      // then
+      expect(usersPage.adminUserSetup.Status.statusMessage()).toBe('User created You have created an initial user.');
 
     });
+
 
     it('should login page as Admin', function() {
 
+      // when
       usersPage.navigateToWebapp('Admin');
-
       usersPage.login('Admin', 'admin123');
+
+      // then
+      expect(usersPage.userFirstNameAndLastName(0)).toBe('Über Admin');
 
     });
 
   });
+
 
   describe('reassign admin user rights', function() {
 
-    it('should navigate to user groups settings', function() {
-
-      usersPage.selectUser(3);
-
-      editUserGroupPage.selectUserNavbarItem('Groups');
-
-    });
-
     it('should open group select page', function() {
 
-      editUserGroupPage.addGroupButton().click();
+      // given
+      usersPage.selectUser(3);
+      usersPage.editUserGroups.selectUserNavbarItem('Groups');
 
-      expect(editUserSelectGroupsPage.pageHeader()).toBe('Select Groups');
+      // when
+      usersPage.editUserGroups.addGroupButton().click();
+
+      // then
+      expect(usersPage.editUserGroups.selectGroup.pageHeader()).toBe('Select Groups');
 
     });
+
 
     it('should add camunda-admin group', function() {
 
-      editUserSelectGroupsPage.addGroup(1);
+      // when
+      usersPage.editUserGroups.selectGroup.addGroup(1);
 
-      expect(editUserGroupPage.groupList().count()).toEqual(1);
+      // then
+      expect(usersPage.editUserGroups.groupList().count()).toEqual(1);
 
     });
 
   });
 
+
   describe('remove interim admin', function() {
-
-    it('should navigate to user account settings', function() {
-
-      usersPage.navigateTo();
-
-      usersPage.selectUser(0);
-
-      editUserAccountPage.selectUserNavbarItem('Account');
-
-    });
 
     it('should delete user account', function() {
 
-      editUserAccountPage.deleteUserButton().click();
+      // given
+      usersPage.navigateTo();
+      usersPage.selectUser(0);
+      usersPage.editUserAccount.selectUserNavbarItem('Account');
 
-      editUserAccountPage.deleteUserAlert().accept();
+      // when
+      usersPage.editUserAccount.deleteUserButton().click();
+      usersPage.editUserAccount.deleteUserAlert().accept();
 
+      // then
       expect(usersPage.userList().count()).toEqual(5);
 
      });

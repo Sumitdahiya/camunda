@@ -1,10 +1,8 @@
 'use strict';
 
-var Page = require('../../../page');
+var Page = require('./editUserGroups');
 
 module.exports = Page.extend({
-
-  url: '/camunda/app/admin/default/#/users/:user?tab=groups',
 
   pageHeader: function() {
     return element(by.css('.modal-header')).getText();
