@@ -12,7 +12,7 @@ module.exports = Page.extend({
     var index = [
       'Users',
       'Groups',
-      'Authorization',
+      'Authorizations',
       'System'
     ];
     var item;
