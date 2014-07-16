@@ -18,8 +18,12 @@ module.exports = Base.extend({
     return element(by.repeater('user in userList').row(item).column('{{user.firstName}} {{user.lastName}}')).getText();
   },
 
-  selectUser: function(item) {
+  selectUserByEditLink: function(item) {
     this.userList().get(item).findElement(by.linkText('Edit')).click();
+  },
+
+  selectUserByNameLink: function(item) {
+    this.userList().get(item).findElement(by.binding('{{user.firstName}} {{user.lastName}}')).click();
   }
 
 });

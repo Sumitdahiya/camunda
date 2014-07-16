@@ -22,7 +22,7 @@ describe('admin user -', function() {
     it('should select user', function() {
 
       // when
-      usersPage.selectUser(2);
+      usersPage.selectUserByEditLink(2);
 
       // then
       expect(usersPage.editUserGroups.pageHeader()).toBe('Jonny Prosciutto');
@@ -99,7 +99,7 @@ describe('admin user -', function() {
     it('should open group select page', function() {
 
       // given
-      usersPage.selectUser(3);
+      usersPage.selectUserByEditLink(3);
       usersPage.editUserGroups.selectUserNavbarItem('Groups');
 
       // when
@@ -130,7 +130,7 @@ describe('admin user -', function() {
 
       // given
       usersPage.navigateTo();
-      usersPage.selectUser(0);
+      usersPage.selectUserByEditLink(0);
       usersPage.editUserAccount.selectUserNavbarItem('Account');
 
       // when
