@@ -103,7 +103,6 @@ import org.camunda.bpm.engine.impl.util.ReflectUtil;
 import org.camunda.bpm.engine.impl.variable.*;
 import org.camunda.bpm.engine.repository.DeploymentBuilder;
 import org.camunda.spin.DataFormats;
-import org.camunda.spin.impl.json.tree.JsonJacksonTreeDataFormat;
 import org.camunda.spin.spi.DataFormat;
 
 import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
@@ -999,9 +998,18 @@ public abstract class ProcessEngineConfigurationImpl extends ProcessEngineConfig
       variableTypes.addType(new ByteArrayType());
 
       if (defaultSerializationFormat != null) {
-        // TODO look data format by name
-        DataFormat<?> dataFormat = DataFormats.jsonTree();
-        variableTypes.addType(new DefaultSerializationFormatType(dataFormat));
+        defaultSerializationFormat = defaultSerializationFormat.trim();
+        Set<DataFormat<?>> availableDataFormats = new HashSet<DataFormat<?>>();
+        availableDataFormats.add(DataFormats.jsonTree());
+
+        for (DataFormat<?> format : availableDataFormats) {
+          if (defaultSerializationFormat.equals(format.getName())) {
+            variableTypes.addType(new DefaultSerializationFormatType(format));
+            return;
+          }
+        }
+
+        throw new ProcessEngineException("Unrecognized default serialization format " + defaultSerializationFormat);
       } else {
         variableTypes.addType(new SerializableType());
       }
