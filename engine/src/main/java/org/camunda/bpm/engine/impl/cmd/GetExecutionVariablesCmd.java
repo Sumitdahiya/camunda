@@ -1,9 +1,9 @@
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,8 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.camunda.bpm.engine.delegate.VariableScope;
 import org.camunda.bpm.engine.impl.interceptor.Command;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
@@ -26,46 +28,28 @@ import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
 /**
  * @author Tom Baeyens
  */
-public class GetExecutionVariablesCmd implements Command<Map<String, Object>>, Serializable {
+public class GetExecutionVariablesCmd extends AbstractGetVariablesCmd<Map<String, Object>>
+  implements Serializable {
 
   private static final long serialVersionUID = 1L;
-  protected String executionId;
-  protected Collection<String> variableNames;
-  protected boolean isLocal;
 
   public GetExecutionVariablesCmd(String executionId, Collection<String> variableNames, boolean isLocal) {
-    this.executionId = executionId;
-    this.variableNames = variableNames;
-    this.isLocal = isLocal;
+    super(executionId, variableNames, null, isLocal);
   }
 
-  public Map<String, Object> execute(CommandContext commandContext) {
-    ensureNotNull("executionId", executionId);
+  protected VariableScope getVariableScope(CommandContext commandContext) {
+    ensureNotNull("executionId", variableScopeId);
 
     ExecutionEntity execution = commandContext
       .getExecutionManager()
-      .findExecutionById(executionId);
+      .findExecutionById(variableScopeId);
 
-    ensureNotNull("execution " + executionId + " doesn't exist", "execution", execution);
+    ensureNotNull("execution " + variableScopeId + " doesn't exist", "execution", execution);
 
-    Map<String, Object> executionVariables;
-    if (isLocal) {
-      executionVariables = execution.getVariablesLocal();
-    } else {
-      executionVariables = execution.getVariables();
-    }
+    return execution;
+  }
 
-    if (variableNames != null && variableNames.size() > 0) {
-      // if variableNames is not empty, return only variable names mentioned in it
-      Map<String, Object> tempVariables = new HashMap<String, Object>();
-      for (String variableName : variableNames) {
-        if (executionVariables.containsKey(variableName)) {
-          tempVariables.put(variableName, executionVariables.get(variableName));
-        }
-      }
-      executionVariables = tempVariables;
-    }
-
-    return executionVariables;
+  protected Map<String, Object> getVariables(CommandContext commandContext, VariableScope scope) {
+    return getVariablesAsMap(scope);
   }
 }

@@ -12,14 +12,46 @@
  */
 package org.camunda.bpm.engine.impl;
 
-import java.util.*;
+import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.camunda.bpm.engine.RuntimeService;
 import org.camunda.bpm.engine.form.FormData;
-import org.camunda.bpm.engine.impl.cmd.*;
-import org.camunda.bpm.engine.runtime.*;
-
-import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
+import org.camunda.bpm.engine.impl.cmd.ActivateProcessInstanceCmd;
+import org.camunda.bpm.engine.impl.cmd.CorrelateMessageCmd;
+import org.camunda.bpm.engine.impl.cmd.DeleteProcessInstanceCmd;
+import org.camunda.bpm.engine.impl.cmd.FindActiveActivityIdsCmd;
+import org.camunda.bpm.engine.impl.cmd.GetActivityInstanceCmd;
+import org.camunda.bpm.engine.impl.cmd.GetExecutionVariableCmd;
+import org.camunda.bpm.engine.impl.cmd.GetExecutionVariableInstanceCmd;
+import org.camunda.bpm.engine.impl.cmd.GetExecutionVariableInstancesCmd;
+import org.camunda.bpm.engine.impl.cmd.GetExecutionVariablesCmd;
+import org.camunda.bpm.engine.impl.cmd.GetStartFormCmd;
+import org.camunda.bpm.engine.impl.cmd.MessageEventReceivedCmd;
+import org.camunda.bpm.engine.impl.cmd.PatchExecutionVariablesCmd;
+import org.camunda.bpm.engine.impl.cmd.RemoveExecutionVariablesCmd;
+import org.camunda.bpm.engine.impl.cmd.SetExecutionVariablesCmd;
+import org.camunda.bpm.engine.impl.cmd.SignalCmd;
+import org.camunda.bpm.engine.impl.cmd.SignalEventReceivedCmd;
+import org.camunda.bpm.engine.impl.cmd.StartProcessInstanceByMessageCmd;
+import org.camunda.bpm.engine.impl.cmd.StartProcessInstanceCmd;
+import org.camunda.bpm.engine.impl.cmd.SuspendProcessInstanceCmd;
+import org.camunda.bpm.engine.runtime.ActivityInstance;
+import org.camunda.bpm.engine.runtime.EventSubscriptionQuery;
+import org.camunda.bpm.engine.runtime.ExecutionQuery;
+import org.camunda.bpm.engine.runtime.IncidentQuery;
+import org.camunda.bpm.engine.runtime.MessageCorrelationBuilder;
+import org.camunda.bpm.engine.runtime.NativeExecutionQuery;
+import org.camunda.bpm.engine.runtime.NativeProcessInstanceQuery;
+import org.camunda.bpm.engine.runtime.ProcessInstance;
+import org.camunda.bpm.engine.runtime.ProcessInstanceQuery;
+import org.camunda.bpm.engine.runtime.VariableInstance;
+import org.camunda.bpm.engine.runtime.VariableInstanceQuery;
 
 /**
  * @author Tom Baeyens
@@ -100,6 +132,14 @@ public class RuntimeServiceImpl extends ServiceImpl implements RuntimeService {
     return commandExecutor.execute(new GetExecutionVariablesCmd(executionId, null, true));
   }
 
+  public Map<String, VariableInstance> getVariableInstances(String executionId) {
+    return commandExecutor.execute(new GetExecutionVariableInstancesCmd(executionId, null, false));
+  }
+
+  public Map<String, VariableInstance> getVariableInstancesLocal(String executionId) {
+    return commandExecutor.execute(new GetExecutionVariableInstancesCmd(executionId, null, true));
+  }
+
   public Map<String, Object> getVariables(String executionId, Collection<String> variableNames) {
     return commandExecutor.execute(new GetExecutionVariablesCmd(executionId, variableNames, false));
   }
@@ -108,12 +148,28 @@ public class RuntimeServiceImpl extends ServiceImpl implements RuntimeService {
     return commandExecutor.execute(new GetExecutionVariablesCmd(executionId, variableNames, true));
   }
 
+  public Map<String, VariableInstance> getVariableInstances(String executionId, Collection<String> variableNames) {
+    return commandExecutor.execute(new GetExecutionVariableInstancesCmd(executionId, variableNames, false));
+  }
+
+  public Map<String, VariableInstance> getVariableInstancesLocal(String executionId, Collection<String> variableNames) {
+    return commandExecutor.execute(new GetExecutionVariableInstancesCmd(executionId, variableNames, true));
+  }
+
   public Object getVariable(String executionId, String variableName) {
     return commandExecutor.execute(new GetExecutionVariableCmd(executionId, variableName, false));
   }
 
   public Object getVariableLocal(String executionId, String variableName) {
     return commandExecutor.execute(new GetExecutionVariableCmd(executionId, variableName, true));
+  }
+
+  public VariableInstance getVariableInstance(String executionId, String variableName) {
+    return commandExecutor.execute(new GetExecutionVariableInstanceCmd(executionId, variableName, false));
+  }
+
+  public VariableInstance getVariableInstanceLocal(String executionId, String variableName) {
+    return commandExecutor.execute(new GetExecutionVariableInstanceCmd(executionId, variableName, true));
   }
 
   public void setVariable(String executionId, String variableName, Object value) {
@@ -289,5 +345,6 @@ public class RuntimeServiceImpl extends ServiceImpl implements RuntimeService {
       Map<String, Object> processVariables) {
     commandExecutor.execute(new CorrelateMessageCmd(messageName, businessKey, null, processVariables));
   }
+
 
 }

@@ -19,17 +19,14 @@ import java.io.Serializable;
 import org.camunda.bpm.engine.delegate.VariableScope;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
+import org.camunda.bpm.engine.runtime.VariableInstance;
 
-
-/**
- * @author Tom Baeyens
- */
-public class GetExecutionVariableCmd extends AbstractGetVariablesCmd<Object> implements Serializable {
+public class GetExecutionVariableInstanceCmd extends AbstractGetVariablesCmd<VariableInstance> implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  public GetExecutionVariableCmd(String executionId, String variableName, boolean isLocal) {
-    super(executionId, null, variableName, isLocal);
+  public GetExecutionVariableInstanceCmd(String variableScopeId, String singleVariableName, boolean isLocal) {
+    super(variableScopeId, null, singleVariableName, isLocal);
   }
 
   protected VariableScope getVariableScope(CommandContext commandContext) {
@@ -44,7 +41,8 @@ public class GetExecutionVariableCmd extends AbstractGetVariablesCmd<Object> imp
     return execution;
   }
 
-  protected Object getVariables(CommandContext commandContext, VariableScope scope) {
-    return getSingleVariable(scope);
+  protected VariableInstance getVariables(CommandContext commandContext, VariableScope scope) {
+    return getSingleVariableInstance(scope);
   }
+
 }

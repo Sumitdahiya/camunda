@@ -15,21 +15,21 @@ package org.camunda.bpm.engine.impl.cmd;
 import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
 
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.Map;
 
 import org.camunda.bpm.engine.delegate.VariableScope;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
+import org.camunda.bpm.engine.runtime.VariableInstance;
 
-
-/**
- * @author Tom Baeyens
- */
-public class GetExecutionVariableCmd extends AbstractGetVariablesCmd<Object> implements Serializable {
+public class GetExecutionVariableInstancesCmd extends AbstractGetVariablesCmd<Map<String, VariableInstance>>
+  implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  public GetExecutionVariableCmd(String executionId, String variableName, boolean isLocal) {
-    super(executionId, null, variableName, isLocal);
+  public GetExecutionVariableInstancesCmd(String variableScopeId, Collection<String> variableNames, boolean isLocal) {
+    super(variableScopeId, variableNames, null, isLocal);
   }
 
   protected VariableScope getVariableScope(CommandContext commandContext) {
@@ -44,7 +44,8 @@ public class GetExecutionVariableCmd extends AbstractGetVariablesCmd<Object> imp
     return execution;
   }
 
-  protected Object getVariables(CommandContext commandContext, VariableScope scope) {
-    return getSingleVariable(scope);
+  protected Map<String, VariableInstance> getVariables(CommandContext commandContext, VariableScope scope) {
+    return getVariableInstancesAsMap(scope);
   }
+
 }

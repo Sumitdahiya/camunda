@@ -362,6 +362,20 @@ public interface RuntimeService {
    * @throws ProcessEngineException when no execution is found for the given executionId. */
    Map<String, Object> getVariablesLocal(String executionId);
 
+   /** All variables visible from the given execution scope (including parent scopes).
+    * @param executionId id of process instance or execution, cannot be null.
+    * @return the variables or an empty map if no such variables are found.
+    * @throws ProcessEngineException when no execution is found for the given executionId. */
+   Map<String, VariableInstance> getVariableInstances(String executionId);
+
+   /** All variables that are defined in the execution scope, without taking outer scopes into account.
+    * If you have many task local variables and you only need a few, consider using {@link #getVariableInstancesLocal(String, Collection)}
+    * for better performance.
+    * @param executionId id of execution, cannot be null.
+    * @return the variables or an empty map if no such variables are found.
+    * @throws ProcessEngineException when no execution is found for the given executionId. */
+   Map<String, VariableInstance> getVariableInstancesLocal(String executionId);
+
    /** The variable values for all given variableNames, takes all variables into account which are visible from the given execution scope (including parent scopes).
    * @param executionId id of process instance or execution, cannot be null.
    * @param variableNames the collection of variable names that should be retrieved.
@@ -376,6 +390,20 @@ public interface RuntimeService {
    * @throws ProcessEngineException when no execution is found for the given executionId.  */
    Map<String, Object> getVariablesLocal(String executionId, Collection<String> variableNames);
 
+   /** The variable values for all given variableNames, takes all variables into account which are visible from the given execution scope (including parent scopes).
+    * @param executionId id of process instance or execution, cannot be null.
+    * @param variableNames the collection of variable names that should be retrieved.
+    * @return the variables or an empty map if no such variables are found.
+    * @throws ProcessEngineException when no execution is found for the given executionId. */
+   Map<String, VariableInstance> getVariableInstances(String executionId, Collection<String> variableNames);
+
+   /** The variable values for the given variableNames only taking the given execution scope into account, not looking in outer scopes.
+    * @param executionId id of execution, cannot be null.
+    * @param variableNames the collection of variable names that should be retrieved.
+    * @return the variables or an empty map if no such variables are found.
+    * @throws ProcessEngineException when no execution is found for the given executionId.  */
+   Map<String, VariableInstance> getVariableInstancesLocal(String executionId, Collection<String> variableNames);
+
   /** The variable value.  Searching for the variable is done in all scopes that are visible to the given execution (including parent scopes).
    * Returns null when no variable value is found with the given name or when the value is set to null.
    * @param executionId id of process instance or execution, cannot be null.
@@ -387,6 +415,18 @@ public interface RuntimeService {
   /** The variable value for an execution. Returns the value when the variable is set
    * for the execution (and not searching parent scopes). Returns null when no variable value is found with the given name or when the value is set to null.  */
   Object getVariableLocal(String executionId, String variableName);
+
+  /** The variable value.  Searching for the variable is done in all scopes that are visible to the given execution (including parent scopes).
+   * Returns null when no variable value is found with the given name or when the value is set to null.
+   * @param executionId id of process instance or execution, cannot be null.
+   * @param variableName name of variable, cannot be null.
+   * @return the variable value or null if the variable is undefined or the value of the variable is null.
+   * @throws ProcessEngineException when no execution is found for the given executionId. */
+  VariableInstance getVariableInstance(String executionId, String variableName);
+
+  /** The variable value for an execution. Returns the value when the variable is set
+   * for the execution (and not searching parent scopes). Returns null when no variable value is found with the given name or when the value is set to null.  */
+  VariableInstance getVariableInstanceLocal(String executionId, String variableName);
 
   /** Update or create a variable for an execution.  If the variable is not already existing somewhere in the execution hierarchy,
    * it will be created in the process instance (which is the root execution).

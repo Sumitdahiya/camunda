@@ -14,6 +14,7 @@
 package org.camunda.bpm.engine.test.api.runtime;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -30,10 +31,14 @@ import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl;
 import org.camunda.bpm.engine.impl.persistence.entity.HistoricDetailVariableInstanceUpdateEntity;
 import org.camunda.bpm.engine.impl.test.PluggableProcessEngineTestCase;
 import org.camunda.bpm.engine.impl.util.CollectionUtil;
+import org.camunda.bpm.engine.impl.variable.BooleanType;
+import org.camunda.bpm.engine.impl.variable.IntegerType;
+import org.camunda.bpm.engine.impl.variable.StringType;
 import org.camunda.bpm.engine.repository.ProcessDefinition;
 import org.camunda.bpm.engine.runtime.ActivityInstance;
 import org.camunda.bpm.engine.runtime.Execution;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
+import org.camunda.bpm.engine.runtime.VariableInstance;
 import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.engine.test.Deployment;
 import org.camunda.bpm.engine.test.util.TestExecutionListener;
@@ -423,9 +428,141 @@ public class RuntimeServiceTest extends PluggableProcessEngineTestCase {
 
   }
 
+  @Deployment(resources={
+  "org/camunda/bpm/engine/test/api/oneTaskProcess.bpmn20.xml"})
+  public void testGetVariableInstances() {
+    Map<String, Object> variables = new HashMap<String, Object>();
+    variables.put("stringVar", "varValue");
+    variables.put("intVar", 42);
+    variables.put("boolVar", true);
+
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("oneTaskProcess", variables);
+    Map<String, VariableInstance> variableInstances = runtimeService.getVariableInstances(processInstance.getId());
+
+    assertEquals(3, variableInstances.size());
+
+    VariableInstance stringVariable = variableInstances.get("stringVar");
+    assertNotNull(stringVariable);
+    assertEquals("varValue", stringVariable.getValue());
+    assertEquals(StringType.TYPE_NAME, stringVariable.getTypeName());
+
+    VariableInstance intVariable = variableInstances.get("intVar");
+    assertNotNull(intVariable);
+    assertEquals(42, intVariable.getValue());
+    assertEquals(IntegerType.TYPE_NAME, intVariable.getTypeName());
+
+    VariableInstance boolVariable = variableInstances.get("boolVar");
+    assertNotNull(boolVariable);
+    assertEquals(true, boolVariable.getValue());
+    assertEquals(BooleanType.TYPE_NAME, boolVariable.getTypeName());
+
+    Collection<String> varFilter = new ArrayList<String>(2);
+    varFilter.add("intVar");
+    varFilter.add("stringVar");
+
+    Map<String, VariableInstance> selectedVariableInstances = runtimeService.getVariableInstances(processInstance.getId(), varFilter);
+
+    assertEquals(2, selectedVariableInstances.size());
+
+    stringVariable = selectedVariableInstances.get("stringVar");
+    assertNotNull(stringVariable);
+    assertEquals("varValue", stringVariable.getValue());
+    assertEquals(StringType.TYPE_NAME, stringVariable.getTypeName());
+
+    intVariable = selectedVariableInstances.get("intVar");
+    assertNotNull(intVariable);
+    assertEquals(42, intVariable.getValue());
+    assertEquals(IntegerType.TYPE_NAME, intVariable.getTypeName());
+
+  }
+
+  @Deployment(resources={
+  "org/camunda/bpm/engine/test/api/oneSubProcess.bpmn20.xml"})
+  public void testGetVariableInstancesLocal() {
+    Map<String, Object> variables = new HashMap<String, Object>();
+    variables.put("stringVar", "varValue");
+
+    runtimeService.startProcessInstanceByKey("startSimpleSubProcess", variables);
+    Execution subProcessExecution = runtimeService.createExecutionQuery().activityId("task").singleResult();
+    runtimeService.setVariableLocal(subProcessExecution.getId(), "intVar", 42);
+    runtimeService.setVariableLocal(subProcessExecution.getId(), "boolVar", true);
+
+    Map<String, VariableInstance> variableInstances = runtimeService.getVariableInstancesLocal(subProcessExecution.getId());
+    assertEquals(2, variableInstances.size());
+
+    VariableInstance intVariable = variableInstances.get("intVar");
+    assertNotNull(intVariable);
+    assertEquals(42, intVariable.getValue());
+    assertEquals(IntegerType.TYPE_NAME, intVariable.getTypeName());
+
+    VariableInstance boolVariable = variableInstances.get("boolVar");
+    assertNotNull(boolVariable);
+    assertEquals(true, boolVariable.getValue());
+    assertEquals(BooleanType.TYPE_NAME, boolVariable.getTypeName());
+
+    Collection<String> varFilter = new ArrayList<String>(2);
+    varFilter.add("intVar");
+    varFilter.add("boolVar");
+
+    Map<String, VariableInstance> selectedVariableInstances = runtimeService.getVariableInstances(subProcessExecution.getId(), varFilter);
+
+    assertEquals(2, selectedVariableInstances.size());
+
+    boolVariable = selectedVariableInstances.get("boolVar");
+    assertNotNull(boolVariable);
+    assertEquals(true, boolVariable.getValue());
+    assertEquals(BooleanType.TYPE_NAME, boolVariable.getTypeName());
+
+    intVariable = selectedVariableInstances.get("intVar");
+    assertNotNull(intVariable);
+    assertEquals(42, intVariable.getValue());
+    assertEquals(IntegerType.TYPE_NAME, intVariable.getTypeName());
+  }
+
+  @Deployment(resources={
+  "org/camunda/bpm/engine/test/api/oneTaskProcess.bpmn20.xml"})
+  public void testGetVariableInstance() {
+    Map<String, Object> variables = new HashMap<String, Object>();
+    variables.put("stringVar", "varValue");
+
+    ProcessInstance instance = runtimeService.startProcessInstanceByKey("oneTaskProcess", variables);
+    runtimeService.setVariable(instance.getId(), "intVar", 42);
+
+    VariableInstance variableInstance = runtimeService.getVariableInstanceLocal(instance.getId(), "intVar");
+    assertNotNull(variableInstance);
+    assertEquals(42, variableInstance.getValue());
+    assertEquals(IntegerType.TYPE_NAME, variableInstance.getTypeName());
+  }
+
+  @Deployment(resources={
+  "org/camunda/bpm/engine/test/api/oneSubProcess.bpmn20.xml"})
+  public void testGetVariableInstanceLocal() {
+    Map<String, Object> variables = new HashMap<String, Object>();
+    variables.put("stringVar", "varValue");
+
+    runtimeService.startProcessInstanceByKey("startSimpleSubProcess", variables);
+    Execution subProcessExecution = runtimeService.createExecutionQuery().activityId("task").singleResult();
+    runtimeService.setVariableLocal(subProcessExecution.getId(), "intVar", 42);
+
+    VariableInstance variableInstance = runtimeService.getVariableInstanceLocal(subProcessExecution.getId(), "intVar");
+    assertNotNull(variableInstance);
+    assertEquals(42, variableInstance.getValue());
+    assertEquals(IntegerType.TYPE_NAME, variableInstance.getTypeName());
+
+    variableInstance = runtimeService.getVariableInstanceLocal(subProcessExecution.getId(), "stringVar");
+    assertNull(variableInstance);
+  }
+
   public void testGetVariablesUnexistingExecutionId() {
     try {
       runtimeService.getVariables("unexistingExecutionId");
+      fail("ProcessEngineException expected");
+    } catch (ProcessEngineException ae) {
+      assertTextPresent("execution unexistingExecutionId doesn't exist", ae.getMessage());
+    }
+
+    try {
+      runtimeService.getVariableInstances("unexistingExecutionId");
       fail("ProcessEngineException expected");
     } catch (ProcessEngineException ae) {
       assertTextPresent("execution unexistingExecutionId doesn't exist", ae.getMessage());
@@ -439,6 +576,13 @@ public class RuntimeServiceTest extends PluggableProcessEngineTestCase {
     } catch (ProcessEngineException ae) {
       assertTextPresent("executionId is null", ae.getMessage());
     }
+
+    try {
+      runtimeService.getVariableInstances(null);
+      fail("ProcessEngineException expected");
+    } catch (ProcessEngineException ae) {
+      assertTextPresent("executionId is null", ae.getMessage());
+    }
   }
 
   public void testGetVariableUnexistingExecutionId() {
@@ -448,11 +592,25 @@ public class RuntimeServiceTest extends PluggableProcessEngineTestCase {
     } catch (ProcessEngineException ae) {
       assertTextPresent("execution unexistingExecutionId doesn't exist", ae.getMessage());
     }
+
+    try {
+      runtimeService.getVariableInstances("unexistingExecutionId");
+      fail("ProcessEngineException expected");
+    } catch (ProcessEngineException ae) {
+      assertTextPresent("execution unexistingExecutionId doesn't exist", ae.getMessage());
+    }
   }
 
   public void testGetVariableNullExecutionId() {
     try {
-      runtimeService.getVariables(null);
+      runtimeService.getVariable(null, "a Variable Name");
+      fail("ProcessEngineException expected");
+    } catch (ProcessEngineException ae) {
+      assertTextPresent("executionId is null", ae.getMessage());
+    }
+
+    try {
+      runtimeService.getVariableInstance(null, "a Variable Name");
       fail("ProcessEngineException expected");
     } catch (ProcessEngineException ae) {
       assertTextPresent("executionId is null", ae.getMessage());
@@ -465,6 +623,9 @@ public class RuntimeServiceTest extends PluggableProcessEngineTestCase {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("oneTaskProcess");
     Object variableValue = runtimeService.getVariable(processInstance.getId(), "unexistingVariable");
     assertNull(variableValue);
+
+    VariableInstance variableInstance = runtimeService.getVariableInstance(processInstance.getId(), "unexistingVariable");
+    assertNull(variableInstance);
   }
 
   public void testSetVariableUnexistingExecutionId() {

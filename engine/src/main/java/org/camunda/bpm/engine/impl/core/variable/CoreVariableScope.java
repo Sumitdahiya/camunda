@@ -99,12 +99,29 @@ public abstract class CoreVariableScope implements Serializable, VariableScope {
     return null;
   }
 
+  public VariableInstance getVariableInstance(String variableName) {
+    VariableInstance variableInstance = getVariableInstanceLocal(variableName);
+    if (variableInstance!=null) {
+      return variableInstance;
+    }
+    CoreVariableScope parentScope = getParentVariableScope();
+    if (parentScope!=null) {
+      return parentScope.getVariableInstance(variableName);
+    }
+    return null;
+  }
+
   public Object getVariableLocal(String variableName) {
     CoreVariableInstance variableInstance = getVariableStore().getVariableInstance(variableName);
     if (variableInstance!=null) {
       return variableInstance.getValue();
     }
     return null;
+  }
+
+  public VariableInstance getVariableInstanceLocal(String variableName) {
+    VariableInstance variableInstance = (VariableInstance) getVariableStore().getVariableInstance(variableName);
+    return variableInstance;
   }
 
   public boolean hasVariables() {
