@@ -19,6 +19,8 @@ import java.util.Map;
 
 import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.impl.test.PluggableProcessEngineTestCase;
+import org.camunda.bpm.engine.impl.variable.IntegerType;
+import org.camunda.bpm.engine.impl.variable.StringType;
 import org.camunda.bpm.engine.runtime.CaseExecutionCommandBuilder;
 import org.camunda.bpm.engine.runtime.CaseExecutionQuery;
 import org.camunda.bpm.engine.runtime.CaseInstanceQuery;
@@ -1130,6 +1132,7 @@ public class CaseServiceTest extends PluggableProcessEngineTestCase {
 
      // when
      Map<String, Object> variables = caseService.getVariables(caseExecutionId);
+     Map<String, VariableInstance> variableInstances = caseService.getVariableInstances(caseExecutionId);
 
      // then
      assertNotNull(variables);
@@ -1138,6 +1141,18 @@ public class CaseServiceTest extends PluggableProcessEngineTestCase {
 
      assertEquals("abc", variables.get("aVariableName"));
      assertEquals(999, variables.get("anotherVariableName"));
+
+     assertNotNull(variableInstances);
+     assertFalse(variableInstances.isEmpty());
+     assertEquals(2, variableInstances.size());
+
+     VariableInstance instance = variableInstances.get("aVariableName");
+     assertEquals("abc", instance.getValue());
+     assertEquals(StringType.TYPE_NAME, instance.getTypeName());
+
+     instance = variableInstances.get("anotherVariableName");
+     assertEquals(999, instance.getValue());
+     assertEquals(IntegerType.TYPE_NAME, instance.getTypeName());
   }
 
   public void testGetVariablesInvalidCaseExecutionId() {
@@ -1150,7 +1165,21 @@ public class CaseServiceTest extends PluggableProcessEngineTestCase {
     }
 
     try {
+      caseService.getVariableInstances("invalid");
+      fail("The case execution should not be found.");
+    } catch (ProcessEngineException e) {
+
+    }
+
+    try {
       caseService.getVariables(null);
+      fail("The case execution should not be found.");
+    } catch (ProcessEngineException e) {
+
+    }
+
+    try {
+      caseService.getVariableInstances(null);
       fail("The case execution should not be found.");
     } catch (ProcessEngineException e) {
 
@@ -1187,6 +1216,7 @@ public class CaseServiceTest extends PluggableProcessEngineTestCase {
 
      // when
      Map<String, Object> variables = caseService.getVariables(caseExecutionId, names);
+     Map<String, VariableInstance> variableInstances = caseService.getVariableInstances(caseExecutionId, names);
 
      // then
      assertNotNull(variables);
@@ -1195,6 +1225,14 @@ public class CaseServiceTest extends PluggableProcessEngineTestCase {
 
      assertEquals("abc", variables.get("aVariableName"));
      assertEquals(999, variables.get("anotherVariableName"));
+
+     VariableInstance instance = variableInstances.get("aVariableName");
+     assertEquals("abc", instance.getValue());
+     assertEquals(StringType.TYPE_NAME, instance.getTypeName());
+
+     instance = variableInstances.get("anotherVariableName");
+     assertEquals(999, instance.getValue());
+     assertEquals(IntegerType.TYPE_NAME, instance.getTypeName());
   }
 
   public void testGetVariablesWithVariablesNamesInvalidCaseExecutionId() {
@@ -1207,7 +1245,21 @@ public class CaseServiceTest extends PluggableProcessEngineTestCase {
     }
 
     try {
+      caseService.getVariableInstances("invalid", null);
+      fail("The case execution should not be found.");
+    } catch (ProcessEngineException e) {
+
+    }
+
+    try {
       caseService.getVariables(null, null);
+      fail("The case execution should not be found.");
+    } catch (ProcessEngineException e) {
+
+    }
+
+    try {
+      caseService.getVariableInstances(null, null);
       fail("The case execution should not be found.");
     } catch (ProcessEngineException e) {
 
@@ -1243,6 +1295,7 @@ public class CaseServiceTest extends PluggableProcessEngineTestCase {
 
      // when
      Map<String, Object> variables = caseService.getVariablesLocal(caseExecutionId);
+     Map<String, VariableInstance> variableInstances = caseService.getVariableInstancesLocal(caseExecutionId);
 
      // then
      assertNotNull(variables);
@@ -1251,6 +1304,14 @@ public class CaseServiceTest extends PluggableProcessEngineTestCase {
 
      assertEquals("abc", variables.get("aVariableName"));
      assertEquals(999, variables.get("anotherVariableName"));
+
+     VariableInstance instance = variableInstances.get("aVariableName");
+     assertEquals("abc", instance.getValue());
+     assertEquals(StringType.TYPE_NAME, instance.getTypeName());
+
+     instance = variableInstances.get("anotherVariableName");
+     assertEquals(999, instance.getValue());
+     assertEquals(IntegerType.TYPE_NAME, instance.getTypeName());
   }
 
   public void testGetVariablesLocalInvalidCaseExecutionId() {
@@ -1263,7 +1324,21 @@ public class CaseServiceTest extends PluggableProcessEngineTestCase {
     }
 
     try {
+      caseService.getVariableInstancesLocal("invalid");
+      fail("The case execution should not be found.");
+    } catch (ProcessEngineException e) {
+
+    }
+
+    try {
       caseService.getVariablesLocal(null);
+      fail("The case execution should not be found.");
+    } catch (ProcessEngineException e) {
+
+    }
+
+    try {
+      caseService.getVariableInstancesLocal(null);
       fail("The case execution should not be found.");
     } catch (ProcessEngineException e) {
 
@@ -1303,6 +1378,7 @@ public class CaseServiceTest extends PluggableProcessEngineTestCase {
 
      // when
      Map<String, Object> variables = caseService.getVariablesLocal(caseExecutionId, names);
+     Map<String, VariableInstance> variableInstances = caseService.getVariableInstancesLocal(caseExecutionId, names);
 
      // then
      assertNotNull(variables);
@@ -1311,6 +1387,14 @@ public class CaseServiceTest extends PluggableProcessEngineTestCase {
 
      assertEquals("abc", variables.get("aVariableName"));
      assertEquals(999, variables.get("anotherVariableName"));
+
+     VariableInstance instance = variableInstances.get("aVariableName");
+     assertEquals("abc", instance.getValue());
+     assertEquals(StringType.TYPE_NAME, instance.getTypeName());
+
+     instance = variableInstances.get("anotherVariableName");
+     assertEquals(999, instance.getValue());
+     assertEquals(IntegerType.TYPE_NAME, instance.getTypeName());
   }
 
   public void testGetVariablesLocalWithVariablesNamesInvalidCaseExecutionId() {
@@ -1323,7 +1407,21 @@ public class CaseServiceTest extends PluggableProcessEngineTestCase {
     }
 
     try {
+      caseService.getVariableInstancesLocal("invalid", null);
+      fail("The case execution should not be found.");
+    } catch (ProcessEngineException e) {
+
+    }
+
+    try {
       caseService.getVariablesLocal(null, null);
+      fail("The case execution should not be found.");
+    } catch (ProcessEngineException e) {
+
+    }
+
+    try {
+      caseService.getVariableInstancesLocal(null, null);
       fail("The case execution should not be found.");
     } catch (ProcessEngineException e) {
 
@@ -1356,10 +1454,15 @@ public class CaseServiceTest extends PluggableProcessEngineTestCase {
 
      // when
      Object value = caseService.getVariable(caseExecutionId, "aVariableName");
+     VariableInstance variableInstance = caseService.getVariableInstance(caseExecutionId, "aVariableName");
 
      // then
      assertNotNull(value);
      assertEquals("abc", value);
+
+     assertNotNull(variableInstance);
+     assertEquals("abc", variableInstance.getValue());
+     assertEquals(StringType.TYPE_NAME, variableInstance.getTypeName());
   }
 
   public void testGetVariableInvalidCaseExecutionId() {
@@ -1371,7 +1474,21 @@ public class CaseServiceTest extends PluggableProcessEngineTestCase {
     }
 
     try {
+      caseService.getVariableInstance("invalid", "aVariableName");
+      fail("The case execution should not be found.");
+    } catch (ProcessEngineException e) {
+
+    }
+
+    try {
       caseService.getVariable(null, "aVariableName");
+      fail("The case execution should not be found.");
+    } catch (ProcessEngineException e) {
+
+    }
+
+    try {
+      caseService.getVariableInstance(null, "aVariableName");
       fail("The case execution should not be found.");
     } catch (ProcessEngineException e) {
 
@@ -1407,10 +1524,15 @@ public class CaseServiceTest extends PluggableProcessEngineTestCase {
 
      // when
      Object value = caseService.getVariableLocal(caseExecutionId, "aVariableName");
+     VariableInstance variableInstance = caseService.getVariableInstanceLocal(caseExecutionId, "aVariableName");
 
      // then
      assertNotNull(value);
      assertEquals("abc", value);
+
+     assertNotNull(variableInstance);
+     assertEquals("abc", variableInstance.getValue());
+     assertEquals(StringType.TYPE_NAME, variableInstance.getTypeName());
   }
 
   public void testGetVariableLocalInvalidCaseExecutionId() {
@@ -1422,7 +1544,21 @@ public class CaseServiceTest extends PluggableProcessEngineTestCase {
     }
 
     try {
+      caseService.getVariableInstanceLocal("invalid", "aVariableName");
+      fail("The case execution should not be found.");
+    } catch (ProcessEngineException e) {
+
+    }
+
+    try {
       caseService.getVariableLocal(null, "aVariableName");
+      fail("The case execution should not be found.");
+    } catch (ProcessEngineException e) {
+
+    }
+
+    try {
+      caseService.getVariableInstanceLocal(null, "aVariableName");
       fail("The case execution should not be found.");
     } catch (ProcessEngineException e) {
 

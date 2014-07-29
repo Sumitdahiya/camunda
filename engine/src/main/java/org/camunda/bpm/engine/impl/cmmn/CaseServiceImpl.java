@@ -18,6 +18,8 @@ import java.util.Map;
 import org.camunda.bpm.engine.CaseService;
 import org.camunda.bpm.engine.impl.ServiceImpl;
 import org.camunda.bpm.engine.impl.cmmn.cmd.GetCaseExecutionVariableCmd;
+import org.camunda.bpm.engine.impl.cmmn.cmd.GetCaseExecutionVariableInstanceCmd;
+import org.camunda.bpm.engine.impl.cmmn.cmd.GetCaseExecutionVariableInstancesCmd;
 import org.camunda.bpm.engine.impl.cmmn.cmd.GetCaseExecutionVariablesCmd;
 import org.camunda.bpm.engine.impl.cmmn.entity.runtime.CaseExecutionQueryImpl;
 import org.camunda.bpm.engine.impl.cmmn.entity.runtime.CaseInstanceQueryImpl;
@@ -25,6 +27,7 @@ import org.camunda.bpm.engine.runtime.CaseExecutionCommandBuilder;
 import org.camunda.bpm.engine.runtime.CaseExecutionQuery;
 import org.camunda.bpm.engine.runtime.CaseInstanceBuilder;
 import org.camunda.bpm.engine.runtime.CaseInstanceQuery;
+import org.camunda.bpm.engine.runtime.VariableInstance;
 
 /**
  * @author Roman Smirnov
@@ -60,6 +63,14 @@ public class CaseServiceImpl extends ServiceImpl implements CaseService {
     return commandExecutor.execute(new GetCaseExecutionVariablesCmd(caseExecutionId, null, true));
   }
 
+  public Map<String, VariableInstance> getVariableInstances(String caseExecutionId) {
+    return commandExecutor.execute(new GetCaseExecutionVariableInstancesCmd(caseExecutionId, null, false));
+  }
+
+  public Map<String, VariableInstance> getVariableInstancesLocal(String caseExecutionId) {
+    return commandExecutor.execute(new GetCaseExecutionVariableInstancesCmd(caseExecutionId, null, true));
+  }
+
   public Map<String, Object> getVariables(String caseExecutionId, Collection<String> variableNames) {
     return commandExecutor.execute(new GetCaseExecutionVariablesCmd(caseExecutionId, variableNames, false));
   }
@@ -68,12 +79,29 @@ public class CaseServiceImpl extends ServiceImpl implements CaseService {
     return commandExecutor.execute(new GetCaseExecutionVariablesCmd(caseExecutionId, variableNames, true));
   }
 
+  public Map<String, VariableInstance> getVariableInstances(String caseExecutionId, Collection<String> variableNames) {
+    return commandExecutor.execute(new GetCaseExecutionVariableInstancesCmd(caseExecutionId, variableNames, false));
+  }
+
+  public Map<String, VariableInstance> getVariableInstancesLocal(String caseExecutionId, Collection<String> variableNames) {
+    return commandExecutor.execute(new GetCaseExecutionVariableInstancesCmd(caseExecutionId, variableNames, true));
+  }
+
   public Object getVariable(String caseExecutionId, String variableName) {
     return commandExecutor.execute(new GetCaseExecutionVariableCmd(caseExecutionId, variableName, false));
   }
 
   public Object getVariableLocal(String caseExecutionId, String variableName) {
     return commandExecutor.execute(new GetCaseExecutionVariableCmd(caseExecutionId, variableName, true));
+  }
+
+  public VariableInstance getVariableInstance(String caseExecutionId, String variableName) {
+    return commandExecutor.execute(new GetCaseExecutionVariableInstanceCmd(caseExecutionId, variableName, false));
+  }
+
+  public VariableInstance getVariableInstanceLocal(String caseExecutionId, String variableName) {
+    return commandExecutor.execute(new GetCaseExecutionVariableInstanceCmd(caseExecutionId, variableName, true));
+
   }
 
 }

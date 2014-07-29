@@ -21,6 +21,7 @@ import org.camunda.bpm.engine.runtime.CaseExecutionQuery;
 import org.camunda.bpm.engine.runtime.CaseInstance;
 import org.camunda.bpm.engine.runtime.CaseInstanceBuilder;
 import org.camunda.bpm.engine.runtime.CaseInstanceQuery;
+import org.camunda.bpm.engine.runtime.VariableInstance;
 
 /**
  * Service which provides access to {@link CaseInstance case instances}
@@ -98,6 +99,31 @@ public interface CaseService {
   Map<String, Object> getVariablesLocal(String caseExecutionId);
 
   /**
+   * <p>All variable instances visible from the given execution scope (including parent scopes).</p>
+   *
+   * <p>If you have many local variables and you only need a few, consider
+   * using {@link #getVariableInstances(String, Collection)} for better performance.</p>
+   *
+   * @param caseExecutionId the id of a case instance or case execution, cannot be null
+   * @return the variables or an empty map if no such variables are found
+   * @throws ProcessEngineException when no case execution is found for the given case execution id
+   */
+  Map<String, VariableInstance> getVariableInstances(String caseExecutionId);
+
+  /**
+   * <p>All variable instances that are defined in the case execution scope, without
+   * taking outer scopes into account.</p>
+   *
+   * <p>If you have many local variables and you only need a few, consider
+   * using {@link #getVariablesLocal(String, Collection)} for better performance.</p>
+   *
+   * @param caseExecutionId the id of a case execution, cannot be null
+   * @return the variables or an empty map if no such variables are found
+   * @throws ProcessEngineException when no case execution is found for the given case execution id
+   */
+  Map<String, VariableInstance> getVariableInstancesLocal(String caseExecutionId);
+
+  /**
    * <p>The variable values for all given variableNames, takes all variables
    * into account which are visible from the given case execution scope
    * (including parent scopes).</p>
@@ -119,6 +145,29 @@ public interface CaseService {
    * @throws ProcessEngineException when no case execution is found for the given case execution id
    */
   Map<String, Object> getVariablesLocal(String caseExecutionId, Collection<String> variableNames);
+
+  /**
+   * <p>The variable instances for all given variableNames, takes all variables
+   * into account which are visible from the given case execution scope
+   * (including parent scopes).</p>
+   *
+   * @param caseExecutionId the id of a case instance or case execution, cannot be null
+   * @param variableNames the collection of variable names that should be retrieved
+   * @return the variables or an empty map if no such variables are found
+   * @throws ProcessEngineException when no case execution is found for the given case execution id
+   */
+  Map<String, VariableInstance> getVariableInstances(String caseExecutionId, Collection<String> variableNames);
+
+  /**
+   * <p>The variable instances for the given variableNames only taking the given case
+   * execution scope into account, not looking in outer scopes.</p>
+   *
+   * @param caseExecutionId the id of a case execution, cannot be null
+   * @param variableNames the collection of variable names that should be retrieved
+   * @return the variables or an empty map if no such variables are found
+   * @throws ProcessEngineException when no case execution is found for the given case execution id
+   */
+  Map<String, VariableInstance> getVariableInstancesLocal(String caseExecutionId, Collection<String> variableNames);
 
   /**
    * <p>Searching for the variable is done in all scopes that are visible
@@ -148,4 +197,33 @@ public interface CaseService {
    * @throws ProcessEngineException when no case execution is found for the given case execution id
    */
   Object getVariableLocal(String caseExecutionId, String variableName);
+
+  /**
+   * <p>Searching for the variable is done in all scopes that are visible
+   * to the given case execution (including parent scopes).</p>
+   *
+   * <p>Returns null when no variable value is found with the given name or
+   * when the value is set to null.</p>
+   *
+   * @param caseExecutionId the id of a case instance or case execution, cannot be null
+   * @param variableName the name of a variable, cannot be null
+   * @return the variable value or null if the variable is undefined or the value of the variable is null
+   * @throws ProcessEngineException when no case execution is found for the given case execution id
+   */
+  VariableInstance getVariableInstance(String caseExecutionId, String variableName);
+
+  /**
+   * <p>The variable value for an case execution. Returns the value when the variable is set
+   * for the case execution (and not searching parent scopes).</p>
+   *
+   * <p>Returns null when no variable value is found with the given name or when the value is
+   * set to null.</p>
+   *
+   * @param caseExecutionId the id of a case instance or case execution, cannot be null
+   * @param variableName the name of a variable, cannot be null
+   *
+   * @return the variable value or null if the variable is undefined or the value of the variable is null
+   * @throws ProcessEngineException when no case execution is found for the given case execution id
+   */
+  VariableInstance getVariableInstanceLocal(String caseExecutionId, String variableName);
 }
