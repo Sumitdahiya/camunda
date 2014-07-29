@@ -1,9 +1,9 @@
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,50 +13,42 @@
 
 package org.camunda.bpm.engine.impl.cmd;
 
+import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
+
 import java.io.Serializable;
+
+import org.camunda.bpm.engine.delegate.VariableScope;
 import org.camunda.bpm.engine.impl.context.Context;
-import org.camunda.bpm.engine.impl.interceptor.Command;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.persistence.entity.TaskEntity;
-
-import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
 
 
 /**
  * @author Tom Baeyens
  */
-public class GetTaskVariableCmd implements Command<Object>, Serializable {
+public class GetTaskVariableCmd extends AbstractGetVariablesCmd<Object> implements Serializable {
 
   private static final long serialVersionUID = 1L;
-  protected String taskId;
-  protected String variableName;
-  protected boolean isLocal;
 
   public GetTaskVariableCmd(String taskId, String variableName, boolean isLocal) {
-    this.taskId = taskId;
-    this.variableName = variableName;
-    this.isLocal = isLocal;
+    super(taskId, null, variableName, isLocal);
   }
 
-  public Object execute(CommandContext commandContext) {
-    ensureNotNull("taskId", taskId);
-    ensureNotNull("variableName", variableName);
+  protected VariableScope getVariableScope(CommandContext commandContext) {
+    ensureNotNull("taskId", variableScopeId);
+    ensureNotNull("variableName", singleVariableName);
 
     TaskEntity task = Context
       .getCommandContext()
       .getTaskManager()
-      .findTaskById(taskId);
+      .findTaskById(variableScopeId);
 
-    ensureNotNull("task " + taskId + " doesn't exist", "task", task);
+    ensureNotNull("task " + variableScopeId + " doesn't exist", "task", task);
 
-    Object value;
+    return task;
+  }
 
-    if (isLocal) {
-      value = task.getVariableLocal(variableName);
-    } else {
-      value = task.getVariable(variableName);
-    }
-
-    return value;
+  protected Object getVariables(CommandContext commandContext, VariableScope scope) {
+    return getSingleVariable(scope);
   }
 }

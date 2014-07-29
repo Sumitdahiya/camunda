@@ -34,6 +34,7 @@ public class GetExecutionVariableCmd extends AbstractGetVariablesCmd<Object> imp
 
   protected VariableScope getVariableScope(CommandContext commandContext) {
     ensureNotNull("executionId", variableScopeId);
+    ensureNotNull("variableName", singleVariableName);
 
     ExecutionEntity execution = commandContext
       .getExecutionManager()

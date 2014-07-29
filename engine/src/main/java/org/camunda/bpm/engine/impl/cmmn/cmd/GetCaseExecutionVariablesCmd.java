@@ -12,65 +12,44 @@
  */
 package org.camunda.bpm.engine.impl.cmmn.cmd;
 
+import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
+
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
-import org.camunda.bpm.engine.impl.cmmn.entity.runtime.CaseExecutionEntity;
-import org.camunda.bpm.engine.impl.interceptor.Command;
-import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 
-import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
+import org.camunda.bpm.engine.delegate.VariableScope;
+import org.camunda.bpm.engine.impl.cmd.AbstractGetVariablesCmd;
+import org.camunda.bpm.engine.impl.cmmn.entity.runtime.CaseExecutionEntity;
+import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 
 /**
  * @author Roman Smirnov
  *
  */
-public class GetCaseExecutionVariablesCmd implements Command<Map<String, Object>>, Serializable {
+public class GetCaseExecutionVariablesCmd extends AbstractGetVariablesCmd<Map<String, Object>>
+  implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  protected String caseExecutionId;
-  protected Collection<String> variableNames;
-  protected boolean isLocal;
-
   public GetCaseExecutionVariablesCmd(String caseExecutionId, Collection<String> variableNames, boolean isLocal) {
-    this.caseExecutionId = caseExecutionId;
-    this.variableNames = variableNames;
-    this.isLocal = isLocal;
+    super(caseExecutionId, variableNames, null, isLocal);
   }
 
-  public Map<String, Object> execute(CommandContext commandContext) {
-    ensureNotNull("caseExecutionId", caseExecutionId);
+  protected VariableScope getVariableScope(CommandContext commandContext) {
+    ensureNotNull("caseExecutionId", variableScopeId);
 
     CaseExecutionEntity caseExecution = commandContext
       .getCaseExecutionManager()
-      .findCaseExecutionById(caseExecutionId);
+      .findCaseExecutionById(variableScopeId);
 
-    ensureNotNull("case execution " + caseExecutionId + " doesn't exist", "caseExecution", caseExecution);
+    ensureNotNull("case execution " + variableScopeId + " doesn't exist", "caseExecution", caseExecution);
 
-    Map<String, Object> caseExecutionVariables;
+    return caseExecution;
+  }
 
-    if (isLocal) {
-      caseExecutionVariables = caseExecution.getVariablesLocal();
-    } else {
-      caseExecutionVariables = caseExecution.getVariables();
-    }
-
-    if (variableNames != null && variableNames.size() > 0) {
-      // if variableNames is not empty, return only variable names mentioned in it
-      Map<String, Object> tempVariables = new HashMap<String, Object>();
-
-      for (String variableName : variableNames) {
-        if (caseExecutionVariables.containsKey(variableName)) {
-          tempVariables.put(variableName, caseExecutionVariables.get(variableName));
-        }
-      }
-
-      caseExecutionVariables = tempVariables;
-    }
-
-    return caseExecutionVariables;
+  protected Map<String, Object> getVariables(CommandContext commandContext, VariableScope scope) {
+    return getVariablesAsMap(scope);
   }
 
 }

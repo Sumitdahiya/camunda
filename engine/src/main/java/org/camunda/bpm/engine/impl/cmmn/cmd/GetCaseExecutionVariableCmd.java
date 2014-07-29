@@ -12,50 +12,43 @@
  */
 package org.camunda.bpm.engine.impl.cmmn.cmd;
 
-import java.io.Serializable;
-import org.camunda.bpm.engine.impl.cmmn.entity.runtime.CaseExecutionEntity;
-import org.camunda.bpm.engine.impl.interceptor.Command;
-import org.camunda.bpm.engine.impl.interceptor.CommandContext;
-
 import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
+
+import java.io.Serializable;
+
+import org.camunda.bpm.engine.delegate.VariableScope;
+import org.camunda.bpm.engine.impl.cmd.AbstractGetVariablesCmd;
+import org.camunda.bpm.engine.impl.cmmn.entity.runtime.CaseExecutionEntity;
+import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 
 /**
  * @author Roman Smirnov
  *
  */
-public class GetCaseExecutionVariableCmd implements Command<Object>, Serializable {
+public class GetCaseExecutionVariableCmd extends AbstractGetVariablesCmd<Object>
+  implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  protected String caseExecutionId;
-  protected String variableName;
-  protected boolean isLocal;
-
   public GetCaseExecutionVariableCmd(String caseExecutionId, String variableName, boolean isLocal) {
-    this.caseExecutionId = caseExecutionId;
-    this.variableName = variableName;
-    this.isLocal = isLocal;
+    super(caseExecutionId, null, variableName, isLocal);
   }
 
-  public Object execute(CommandContext commandContext) {
-    ensureNotNull("caseExecutionId", caseExecutionId);
-    ensureNotNull("variableName", variableName);
+  protected VariableScope getVariableScope(CommandContext commandContext) {
+    ensureNotNull("caseExecutionId", variableScopeId);
+    ensureNotNull("variableName", singleVariableName);
 
     CaseExecutionEntity caseExecution = commandContext
       .getCaseExecutionManager()
-      .findCaseExecutionById(caseExecutionId);
+      .findCaseExecutionById(variableScopeId);
 
-    ensureNotNull("case execution " + caseExecutionId + " doesn't exist", "caseExecution", caseExecution);
+    ensureNotNull("case execution " + variableScopeId + " doesn't exist", "caseExecution", caseExecution);
 
-    Object value;
+    return caseExecution;
+  }
 
-    if (isLocal) {
-      value = caseExecution.getVariableLocal(variableName);
-    } else {
-      value = caseExecution.getVariable(variableName);
-    }
-
-    return value;
+  protected Object getVariables(CommandContext commandContext, VariableScope scope) {
+    return getSingleVariable(scope);
   }
 
 }
