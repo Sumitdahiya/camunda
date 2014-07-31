@@ -27,7 +27,13 @@ import static javax.ws.rs.core.UriBuilder.fromResource;
  */
 public class HalTaskList extends HalResource<HalTaskList> {
 
-  public static HalTaskList fromTaskList(List<Task> tasks) {
+  protected long count = 0;
+
+  public long getCount() {
+    return count;
+  }
+
+  public static HalTaskList fromTaskList(List<Task> tasks, long count) {
 
     HalTaskList taskList = new HalTaskList();
 
@@ -41,6 +47,8 @@ public class HalTaskList extends HalResource<HalTaskList> {
 
     // links
     taskList.addLink("self", fromResource(TaskRestService.class).build());
+
+    taskList.count = count;
 
     return taskList;
   }
