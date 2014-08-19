@@ -17,13 +17,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.camunda.bpm.engine.delegate.VariableScope;
+
 /**
  * @author Daniel Meyer
  * @author Roman Smirnov
  * @author Sebastian Menski
  *
  */
-public class SimpleVariableStore implements CoreVariableStore {
+public class SimpleVariableStore implements PersistentVariableStore {
 
   public static class SimpleVariableInstance implements CoreVariableInstance {
 
@@ -45,6 +47,10 @@ public class SimpleVariableStore implements CoreVariableStore {
 
     public boolean isAbleToStore(Object value) {
       return true;
+    }
+
+    public boolean isAbleToStoreSerialized(Object value, String datatypeName) {
+      return false;
     }
   }
 
@@ -71,15 +77,15 @@ public class SimpleVariableStore implements CoreVariableStore {
     return variables.containsKey(variableName);
   }
 
-  public CoreVariableInstance removeVariableInstance(String variableName, CoreVariableScope sourceActivityExecution) {
+  public CoreVariableInstance removeVariableInstance(String variableName, VariableScope sourceActivityExecution) {
     return variables.remove(variableName);
   }
 
-  public void setVariableInstanceValue(CoreVariableInstance variableInstance, Object value, CoreVariableScope sourceActivityExecution) {
+  public void setVariableInstanceValue(CoreVariableInstance variableInstance, Object value, VariableScope sourceActivityExecution) {
     ((SimpleVariableInstance)variableInstance).value = value;
   }
 
-  public CoreVariableInstance createVariableInstance(String variableName, Object value, CoreVariableScope sourceActivityExecution) {
+  public CoreVariableInstance createVariableInstance(String variableName, Object value, VariableScope sourceActivityExecution) {
     SimpleVariableInstance variableInstance = new SimpleVariableInstance(variableName, value);
     variables.put(variableName, variableInstance);
     return variableInstance;
@@ -92,6 +98,20 @@ public class SimpleVariableStore implements CoreVariableStore {
   @SuppressWarnings({ "rawtypes", "unchecked" })
   public Map<String, CoreVariableInstance> getVariableInstances() {
     return (Map) variables;
+  }
+
+  public void setVariableInstanceValueSerialized(CoreVariableInstance variableInstance, Object value, String datatypeName, Map<String, Object> configuration,
+      VariableScope sourceActivityVariableScope) {
+    throw new UnsupportedOperationException("SimpleVariableStore does not support serialized variabled");
+  }
+
+  public CoreVariableInstance createVariableInstanceSerialized(String variableName, Object value, String datatypeName, Map<String, Object> configuration,
+      VariableScope sourceActivityVariableScope) {
+    throw new UnsupportedOperationException("SimpleVariableStore does not support serialized variabled");
+  }
+
+  public void clearForNewValueSerialized(CoreVariableInstance variableInstance, String datatypeName) {
+    throw new UnsupportedOperationException("SimpleVariableStore does not support serialized variabled");
   }
 
 }

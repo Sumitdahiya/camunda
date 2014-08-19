@@ -17,8 +17,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.camunda.bpm.engine.delegate.VariableScope;
 import org.camunda.bpm.engine.impl.core.variable.CoreVariableInstance;
-import org.camunda.bpm.engine.impl.core.variable.CoreVariableScope;
 import org.camunda.bpm.engine.impl.core.variable.CoreVariableStore;
 
 /**
@@ -48,6 +48,10 @@ public class ConnectorVariableStore implements CoreVariableStore {
     public boolean isAbleToStore(Object value) {
       return true;
     }
+
+    public boolean isAbleToStoreSerialized(Object value, String datatypeName) {
+      return false;
+    }
   }
 
   protected Map<String, ConnectorParamVariable> variables = new HashMap<String, ConnectorParamVariable>();
@@ -73,15 +77,15 @@ public class ConnectorVariableStore implements CoreVariableStore {
     return variables.containsKey(variableName);
   }
 
-  public CoreVariableInstance removeVariableInstance(String variableName, CoreVariableScope sourceActivityExecution) {
+  public CoreVariableInstance removeVariableInstance(String variableName, VariableScope sourceActivityExecution) {
     return variables.remove(variableName);
   }
 
-  public void setVariableInstanceValue(CoreVariableInstance variableInstance, Object value, CoreVariableScope sourceActivityExecution) {
+  public void setVariableInstanceValue(CoreVariableInstance variableInstance, Object value, VariableScope sourceActivityExecution) {
     ((ConnectorParamVariable)variableInstance).value = value;
   }
 
-  public CoreVariableInstance createVariableInstance(String variableName, Object value, CoreVariableScope sourceActivityExecution) {
+  public CoreVariableInstance createVariableInstance(String variableName, Object value, VariableScope sourceActivityExecution) {
     ConnectorParamVariable variableInstance = new ConnectorParamVariable(variableName, value);
     variables.put(variableName, variableInstance);
     return variableInstance;

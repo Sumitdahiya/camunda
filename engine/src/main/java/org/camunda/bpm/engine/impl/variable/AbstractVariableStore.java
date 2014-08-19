@@ -22,11 +22,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.camunda.bpm.engine.delegate.VariableScope;
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl;
 import org.camunda.bpm.engine.impl.context.Context;
 import org.camunda.bpm.engine.impl.core.variable.CoreVariableInstance;
-import org.camunda.bpm.engine.impl.core.variable.CoreVariableScope;
 import org.camunda.bpm.engine.impl.core.variable.CoreVariableStore;
+import org.camunda.bpm.engine.impl.core.variable.PersistentVariableStore;
 import org.camunda.bpm.engine.impl.history.event.HistoryEvent;
 import org.camunda.bpm.engine.impl.history.handler.HistoryEventHandler;
 import org.camunda.bpm.engine.impl.history.producer.HistoryEventProducer;
@@ -36,7 +37,7 @@ import org.camunda.bpm.engine.impl.persistence.entity.VariableInstanceEntity;
 /**
  * @author Sebastian Menski
  */
-public abstract class AbstractVariableStore implements Serializable, CoreVariableStore {
+public abstract class AbstractVariableStore implements Serializable, CoreVariableStore, PersistentVariableStore {
 
   private static final long serialVersionUID = 1L;
 
@@ -93,7 +94,7 @@ public abstract class AbstractVariableStore implements Serializable, CoreVariabl
     return variableInstances.containsKey(variableName);
   }
 
-  public CoreVariableInstance removeVariableInstance(String variableName, CoreVariableScope sourceActivityExecution) {
+  public CoreVariableInstance removeVariableInstance(String variableName, VariableScope sourceActivityExecution) {
     ensureVariableInstancesInitialized();
     VariableInstanceEntity variable = variableInstances.remove(variableName);
     if(variable != null) {
@@ -107,7 +108,7 @@ public abstract class AbstractVariableStore implements Serializable, CoreVariabl
     return variable;
   }
 
-  public void setVariableInstanceValue(CoreVariableInstance variableInstance, Object value, CoreVariableScope sourceActivityExecution) {
+  public void setVariableInstanceValue(CoreVariableInstance variableInstance, Object value, VariableScope sourceActivityExecution) {
     VariableInstanceEntity variableInstanceEntity = (VariableInstanceEntity) variableInstance;
     variableInstanceEntity.setValue(value);
 
@@ -117,7 +118,20 @@ public abstract class AbstractVariableStore implements Serializable, CoreVariabl
     }
   }
 
-  public VariableInstanceEntity createVariableInstance(String variableName, Object value, CoreVariableScope sourceActivityExecution) {
+  public void setVariableInstanceValueSerialized(CoreVariableInstance variableInstance, Object value, String datatypeName, Map<String, Object> configuration,
+      VariableScope sourceActivityVariableScope) {
+    VariableInstanceEntity variableInstanceEntity = (VariableInstanceEntity) variableInstance;
+
+    // TODO: set serialized value
+    variableInstanceEntity.setValue(value);
+
+    // fire UPDATE event
+    if(isAutoFireHistoryEvents()) {
+      fireHistoricVariableInstanceUpdate(variableInstanceEntity, sourceActivityVariableScope);
+    }
+  }
+
+  public VariableInstanceEntity createVariableInstance(String variableName, Object value, VariableScope sourceActivityExecution) {
     VariableType type = getNewVariableType(value);
 
     // create variable instance
@@ -128,6 +142,23 @@ public abstract class AbstractVariableStore implements Serializable, CoreVariabl
     // fire CREATE event
     if(isAutoFireHistoryEvents()) {
       fireHistoricVariableInstanceCreate(variableInstance, sourceActivityExecution);
+    }
+
+    return variableInstance;
+  }
+
+  public CoreVariableInstance createVariableInstanceSerialized(String variableName, Object value, String variableTypeName, Map<String, Object> configuration,
+      VariableScope sourceActivityVariableScope) {
+    VariableType type = getNewSerializableVariableType(variableTypeName);
+
+    // TODO create variable instance serialized
+    VariableInstanceEntity variableInstance = VariableInstanceEntity.createAndInsert(variableName, type, value);
+    initializeVariableInstanceBackPointer(variableInstance);
+    variableInstances.put(variableName, variableInstance);
+
+    // fire CREATE event
+    if(isAutoFireHistoryEvents()) {
+      fireHistoricVariableInstanceCreate(variableInstance, sourceActivityVariableScope);
     }
 
     return variableInstance;
@@ -147,14 +178,36 @@ public abstract class AbstractVariableStore implements Serializable, CoreVariabl
     return variableTypes.findVariableType(newValue);
   }
 
+  protected VariableType getNewSerializableVariableType(String variableTypeName) {
+    // fetch available variable types
+    VariableTypes variableTypes = Context
+        .getProcessEngineConfiguration()
+        .getVariableTypes();
+
+    return variableTypes.getVariableType(variableTypeName);
+  }
+
   public void clearForNewValue(CoreVariableInstance variableInstance, Object newValue) {
     VariableInstanceEntity variableInstanceEntity = (VariableInstanceEntity) variableInstance;
 
-    VariableType oldType = variableInstanceEntity.getType();
+    VariableType previousType = variableInstanceEntity.getType();
     VariableType newType = getNewVariableType(newValue);
 
+    changeVariableType(variableInstanceEntity, previousType, newType);
+  }
+
+  public void clearForNewValueSerialized(CoreVariableInstance variableInstance, String variableTypeName) {
+    VariableInstanceEntity variableInstanceEntity = (VariableInstanceEntity) variableInstance;
+
+    VariableType previousType = variableInstanceEntity.getType();
+    VariableType newType = getNewVariableType(variableTypeName);
+
+    changeVariableType(variableInstanceEntity, previousType, newType);
+  }
+
+  protected void changeVariableType(VariableInstanceEntity variableInstanceEntity, VariableType previousType, VariableType newType) {
     // clear the variable only if the types are different
-    if (oldType.getTypeName().equals(newType.getTypeName())) {
+    if (previousType.getTypeName().equals(newType.getTypeName())) {
       return;
     }
 
@@ -185,7 +238,7 @@ public abstract class AbstractVariableStore implements Serializable, CoreVariabl
     variableInstances.clear();
   }
 
-  public void fireHistoricVariableInstanceDelete(VariableInstanceEntity variableInstance, CoreVariableScope sourceActivityExecution) {
+  public void fireHistoricVariableInstanceDelete(VariableInstanceEntity variableInstance, VariableScope sourceActivityExecution) {
 
     int historyLevel = Context.getProcessEngineConfiguration().getHistoryLevel();
     if (historyLevel >=ProcessEngineConfigurationImpl.HISTORYLEVEL_AUDIT) {
@@ -201,7 +254,7 @@ public abstract class AbstractVariableStore implements Serializable, CoreVariabl
 
   }
 
-  public void fireHistoricVariableInstanceCreate(VariableInstanceEntity variableInstance, CoreVariableScope sourceActivityExecution) {
+  public void fireHistoricVariableInstanceCreate(VariableInstanceEntity variableInstance, VariableScope sourceActivityExecution) {
 
     int historyLevel = Context.getProcessEngineConfiguration().getHistoryLevel();
     if (historyLevel >=ProcessEngineConfigurationImpl.HISTORYLEVEL_AUDIT) {
@@ -217,7 +270,7 @@ public abstract class AbstractVariableStore implements Serializable, CoreVariabl
 
   }
 
-  public void fireHistoricVariableInstanceUpdate(VariableInstanceEntity variableInstance, CoreVariableScope sourceActivityExecution) {
+  public void fireHistoricVariableInstanceUpdate(VariableInstanceEntity variableInstance, VariableScope sourceActivityExecution) {
 
     int historyLevel = Context.getProcessEngineConfiguration().getHistoryLevel();
     if (historyLevel >=ProcessEngineConfigurationImpl.HISTORYLEVEL_AUDIT) {

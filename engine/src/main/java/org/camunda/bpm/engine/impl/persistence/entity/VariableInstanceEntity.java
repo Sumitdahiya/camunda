@@ -246,6 +246,11 @@ public class VariableInstanceEntity implements CoreVariableInstance, VariableIns
     return getType().isAbleToStore(value);
   }
 
+  public boolean isAbleToStoreSerialized(Object value, String datatypeName) {
+    return datatypeName.equals(getType().getTypeName() &&
+      getType().isAbleToStoreSerialized(value);
+  }
+
   // getters and setters //////////////////////////////////////////////////////
 
   public String getId() {

@@ -15,7 +15,7 @@ package org.camunda.bpm.engine.impl.core.mapping.value;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.camunda.bpm.engine.impl.core.variable.CoreVariableScope;
+import org.camunda.bpm.engine.delegate.VariableScope;
 
 /**
  * @author Daniel Meyer
@@ -29,7 +29,7 @@ public class ListValueProvider implements ParameterValueProvider {
     this.providerList = providerList;
   }
 
-  public Object getValue(CoreVariableScope variableScope) {
+  public Object getValue(VariableScope variableScope) {
     List<Object> valueList = new ArrayList<Object>();
     for (ParameterValueProvider provider : providerList) {
       valueList.add(provider.getValue(variableScope));

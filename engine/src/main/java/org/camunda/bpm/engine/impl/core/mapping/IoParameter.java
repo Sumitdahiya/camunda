@@ -51,7 +51,7 @@ public abstract class IoParameter {
    * @param innerScope
    * @param outerScope
    */
-  protected abstract void execute(CoreVariableScope innerScope, CoreVariableScope outerScope);
+  protected abstract void execute(VariableScope innerScope, VariableScope outerScope);
 
   // getters / setters ///////////////////////////
 

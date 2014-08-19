@@ -22,7 +22,6 @@ import org.camunda.bpm.engine.impl.cmmn.entity.repository.CaseDefinitionEntity;
 import org.camunda.bpm.engine.impl.cmmn.execution.CmmnActivityExecution;
 import org.camunda.bpm.engine.impl.cmmn.execution.CmmnExecution;
 import org.camunda.bpm.engine.impl.cmmn.model.CmmnCaseDefinition;
-import org.camunda.bpm.engine.impl.core.variable.CoreVariableScope;
 
 /**
  * @author Roman Smirnov
@@ -49,7 +48,7 @@ public abstract class ProcessOrCaseTaskActivityBehavior extends TaskActivityBeha
   }
 
   public void transferVariables(VariableScope from, VariableScope to) {
-    CoreVariableScope fromVariableScope = (CoreVariableScope) from;
+    VariableScope fromVariableScope = (VariableScope) from;
 
     List<CallableElementParameter> outputs = callableElement.getOutputs();
     Map<String, Object> variables = getVariables(outputs, fromVariableScope);
@@ -57,7 +56,7 @@ public abstract class ProcessOrCaseTaskActivityBehavior extends TaskActivityBeha
     to.setVariables(variables);
   }
 
-  protected Map<String, Object> getVariables(List<CallableElementParameter> params, CoreVariableScope variableScope) {
+  protected Map<String, Object> getVariables(List<CallableElementParameter> params, VariableScope variableScope) {
     Map<String, Object> result = new HashMap<String, Object>();
 
     for (CallableElementParameter param : params) {

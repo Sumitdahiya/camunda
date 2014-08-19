@@ -16,6 +16,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import org.camunda.bpm.engine.delegate.VariableScope;
+
 /**
  * @author Daniel Meyer
  * @author Roman Smirnov
@@ -34,11 +36,11 @@ public interface CoreVariableStore {
 
   boolean containsVariableInstance(String variableName);
 
-  CoreVariableInstance removeVariableInstance(String variableName, CoreVariableScope sourceActivityExecution);
+  CoreVariableInstance removeVariableInstance(String variableName, VariableScope sourceActivityExecution);
 
-  void setVariableInstanceValue(CoreVariableInstance variableInstance, Object value, CoreVariableScope sourceActivityExecution);
+  void setVariableInstanceValue(CoreVariableInstance variableInstance, Object value, VariableScope sourceActivityExecution);
 
-  CoreVariableInstance createVariableInstance(String variableName, Object value, CoreVariableScope sourceActivityExecution);
+  CoreVariableInstance createVariableInstance(String variableName, Object value, VariableScope sourceActivityExecution);
 
   void clearForNewValue(CoreVariableInstance variableInstance, Object newValue);
 

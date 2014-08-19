@@ -16,8 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.camunda.bpm.engine.ProcessEngineException;
+import org.camunda.bpm.engine.delegate.VariableScope;
 import org.camunda.bpm.engine.impl.core.mapping.value.ParameterValueProvider;
-import org.camunda.bpm.engine.impl.core.variable.CoreVariableScope;
 
 /**
  * @author Roman Smirnov
@@ -55,7 +55,7 @@ public class CallableElement {
 
   // definitionKey ////////////////////////////////////////////////////////////////
 
-  public String getDefinitionKey(CoreVariableScope variableScope) {
+  public String getDefinitionKey(VariableScope variableScope) {
     Object result = definitionKeyValueProvider.getValue(variableScope);
 
     if (result != null && !(result instanceof String)) {
@@ -85,7 +85,7 @@ public class CallableElement {
 
   // version //////////////////////////////////////////////////////////////////////
 
-  public Integer getVersion(CoreVariableScope variableScope) {
+  public Integer getVersion(VariableScope variableScope) {
     Object result = versionValueProvider.getValue(variableScope);
 
     if (result != null) {
@@ -111,7 +111,7 @@ public class CallableElement {
 
   // businessKey /////////////////////////////////////////////////////////////////
 
-  public String getBusinessKey(CoreVariableScope variableScope) {
+  public String getBusinessKey(VariableScope variableScope) {
     if (businessKeyValueProvider == null) {
       return null;
     }

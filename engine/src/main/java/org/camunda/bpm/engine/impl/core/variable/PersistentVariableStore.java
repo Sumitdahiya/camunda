@@ -10,7 +10,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.camunda.bpm.engine.impl.core.mapping.value;
+package org.camunda.bpm.engine.impl.core.variable;
+
+import java.util.Map;
 
 import org.camunda.bpm.engine.delegate.VariableScope;
 
@@ -18,10 +20,14 @@ import org.camunda.bpm.engine.delegate.VariableScope;
  * @author Daniel Meyer
  *
  */
-public class NullValueProvider implements ParameterValueProvider {
+public interface PersistentVariableStore extends CoreVariableStore {
 
-  public Object getValue(VariableScope variableScope) {
-    return null;
-  }
+  void setVariableInstanceValueSerialized(CoreVariableInstance variableInstance, Object value, String datatypeName, Map<String, Object> configuration,
+      VariableScope sourceActivityVariableScope);
+
+  CoreVariableInstance createVariableInstanceSerialized(String variableName, Object value, String datatypeName, Map<String, Object> configuration,
+      VariableScope sourceActivityVariableScope);
+
+  void clearForNewValueSerialized(CoreVariableInstance variableInstance, String datatypeName);
 
 }

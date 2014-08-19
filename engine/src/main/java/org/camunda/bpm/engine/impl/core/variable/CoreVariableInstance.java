@@ -26,4 +26,11 @@ public interface CoreVariableInstance {
 
   boolean isAbleToStore(Object value);
 
+  /**
+   * @param value the value to test for
+   * @param datatypeName the name of the datatype in which the serialized value is provided
+   * @return true if the variable instance is able to store the provided value
+   */
+  boolean isAbleToStoreSerialized(Object value, String datatypeName);
+
 }
