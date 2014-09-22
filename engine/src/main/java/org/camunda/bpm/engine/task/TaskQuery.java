@@ -60,6 +60,9 @@ public interface TaskQuery extends Query<TaskQuery, Task>{
   /** Only select tasks which are assigned to the given user. */
   TaskQuery taskAssignee(String assignee);
 
+  /** Only select tasks which are assigned to the user described by the given expression. */
+  TaskQuery taskAssigneeExpression(String assigneeExpression);
+
   /** Only select tasks which are matching the given user.
    *  The syntax is that of SQL: for example usage: nameLike(%activiti%)*/
   TaskQuery taskAssigneeLike(String assignee);

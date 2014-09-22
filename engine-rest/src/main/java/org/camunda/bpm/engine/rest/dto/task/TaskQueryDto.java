@@ -20,6 +20,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response.Status;
 
 import org.camunda.bpm.engine.ProcessEngine;
+import org.camunda.bpm.engine.impl.util.StringUtil;
 import org.camunda.bpm.engine.rest.dto.AbstractQueryDto;
 import org.camunda.bpm.engine.rest.dto.CamundaQueryParam;
 import org.camunda.bpm.engine.rest.dto.VariableQueryParameterDto;
@@ -176,7 +177,12 @@ public class TaskQueryDto extends AbstractQueryDto<TaskQuery> {
 
   @CamundaQueryParam("assignee")
   public void setAssignee(String assignee) {
-    this.assignee = assignee;
+    if (StringUtil.isExpression(assignee)) {
+      this.expressions.put("assignee", assignee);
+    }
+    else {
+      this.assignee = assignee;
+    }
   }
 
   @CamundaQueryParam("assigneeLike")
@@ -606,6 +612,11 @@ public class TaskQueryDto extends AbstractQueryDto<TaskQuery> {
         }
 
       }
+    }
+
+    // expressions
+    if (expressions.containsKey("assignee")) {
+      query.taskAssigneeExpression(expressions.get("assignee"));
     }
   }
 

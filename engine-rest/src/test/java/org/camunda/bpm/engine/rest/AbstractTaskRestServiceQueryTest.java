@@ -8,6 +8,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -1199,6 +1200,40 @@ public abstract class AbstractTaskRestServiceQueryTest extends AbstractRestServi
       .when().post(TASK_COUNT_QUERY_URL);
 
     verify(mockQuery).count();
+  }
+
+  @Test
+  public void testQueryForAssigneeExpression() {
+    Map<String, String> json = new HashMap<String, String>();
+
+    json.put("assignee", "johnny1");
+
+    given()
+      .contentType(POST_JSON_CONTENT_TYPE)
+      .header("Accept", MediaType.APPLICATION_JSON)
+      .body(json)
+    .expect()
+      .statusCode(Status.OK.getStatusCode())
+    .when()
+      .post(TASK_QUERY_URL);
+
+    verify(mockQuery).taskAssignee("johnny1");
+
+    reset(mockQuery);
+    json.clear();
+
+    json.put("assignee", "${'johnny1'}");
+
+    given()
+      .contentType(POST_JSON_CONTENT_TYPE)
+      .header("Accept", MediaType.APPLICATION_JSON)
+      .body(json)
+    .expect()
+      .statusCode(Status.OK.getStatusCode())
+    .when()
+      .post(TASK_QUERY_URL);
+
+    verify(mockQuery).taskAssigneeExpression("${'johnny1'}");
   }
 
 }

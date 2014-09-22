@@ -252,6 +252,29 @@ public class TaskQueryTest extends PluggableProcessEngineTestCase {
     assertNull(query.singleResult());
   }
 
+  public void testQueryByAssigneeExpression() {
+    TaskQuery query = taskService.createTaskQuery().taskAssigneeExpression("${'gonzo'}");
+    assertEquals(1, query.count());
+    assertEquals(1, query.list().size());
+    assertNotNull(query.singleResult());
+
+    query = taskService.createTaskQuery().taskAssignee("${'kermit'}");
+    assertEquals(0, query.count());
+    assertEquals(0, query.list().size());
+    assertNull(query.singleResult());
+
+    // FINDME
+    //processEngineConfiguration.setAuthorizationEnabled(true);
+    //identityService.setAuthenticatedUserId("gonzo");
+
+    //query = taskService.createTaskQuery().taskAssigneeExpression("${userId}");
+    //assertEquals(1, query.count());
+    //assertEquals(1, query.list().size());
+    //assertNotNull(query.singleResult());
+
+    //processEngineConfiguration.setAuthorizationEnabled(false);
+  }
+
   public void testQueryByAssigneeLike() {
     TaskQuery query = taskService.createTaskQuery().taskAssigneeLike("gonz%");
     assertEquals(1, query.count());

@@ -158,6 +158,12 @@ public class TaskQueryImpl extends AbstractQuery<TaskQuery, Task> implements Tas
     return this;
   }
 
+  public TaskQuery taskAssigneeExpression(String assigneeExpression) {
+    ensureNotNull("Assignee expression", assigneeExpression);
+    this.expressions.put("assignee", assigneeExpression);
+    return this;
+  }
+
   public TaskQuery taskAssigneeLike(String assignee) {
     ensureNotNull("Assignee", assignee);
     this.assigneeLike = assignee;
