@@ -49,7 +49,18 @@ public class JobRetryCmdWithDefaultPropertyTest extends ResourceProcessEngineTes
     assertNotNull(job);
     assertEquals(pi.getProcessInstanceId(), job.getProcessInstanceId());
 
+    // let the job fail once
+    try {
+      managementService.executeJob(job.getId());
+      fail("Exception expected");
+    }catch(Exception e) {
+      // expected
+    }
+
+    job = managementService.createJobQuery().processInstanceId(pi.getProcessInstanceId()).singleResult();
+    //now it should have 4 retries
     assertEquals(4, job.getRetries());
 
   }
+
 }

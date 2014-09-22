@@ -18,7 +18,6 @@ import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.impl.ProcessEngineImpl;
 import org.camunda.bpm.engine.impl.cmd.AcquireJobsCmd;
 import org.camunda.bpm.engine.impl.interceptor.CommandExecutor;
-import org.camunda.bpm.engine.impl.persistence.entity.JobEntity;
 import org.camunda.bpm.engine.impl.test.PluggableProcessEngineTestCase;
 import org.camunda.bpm.engine.impl.util.ClockUtil;
 import org.camunda.bpm.engine.management.JobDefinition;
@@ -137,7 +136,7 @@ public class ManagementServiceTest extends PluggableProcessEngineTestCase {
       .singleResult();
 
     assertNotNull("No job found for process instance", timerJob);
-    assertEquals(JobEntity.DEFAULT_RETRIES, timerJob.getRetries());
+    assertEquals(3, timerJob.getRetries());
 
     managementService.setJobRetries(timerJob.getId(), 5);
 
@@ -162,7 +161,7 @@ public class ManagementServiceTest extends PluggableProcessEngineTestCase {
       .singleResult();
 
     assertNotNull("No job found for process instance", timerJob);
-    assertEquals(JobEntity.DEFAULT_RETRIES, timerJob.getRetries());
+    assertEquals(3, timerJob.getRetries());
 
     managementService.setJobRetries(timerJob.getId(), 0);
 

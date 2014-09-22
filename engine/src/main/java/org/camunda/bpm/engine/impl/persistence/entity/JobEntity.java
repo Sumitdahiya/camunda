@@ -46,13 +46,13 @@ import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
  */
 public abstract class JobEntity implements Serializable, Job, DbEntity, HasDbRevision {
 
+  private static final long serialVersionUID = 1L;
+
   private final static Logger LOG = Logger.getLogger(JobEntity.class.getName());
 
-  public static final boolean DEFAULT_EXCLUSIVE = true;
-  public static final int DEFAULT_RETRIES = 3;
-  private static final int MAX_EXCEPTION_MESSAGE_LENGTH = 255;
+  public static boolean DEFAULT_EXCLUSIVE = true;
+  private static int MAX_EXCEPTION_MESSAGE_LENGTH = 255;
 
-  private static final long serialVersionUID = 1L;
 
   protected String id;
   protected int revision;
@@ -70,7 +70,7 @@ public abstract class JobEntity implements Serializable, Job, DbEntity, HasDbRev
 
   protected boolean isExclusive = DEFAULT_EXCLUSIVE;
 
-  protected int retries = DEFAULT_RETRIES;
+  protected int retries;
 
   // entity is active by default
   protected int suspensionState = SuspensionState.ACTIVE.getStateCode();
@@ -86,15 +86,6 @@ public abstract class JobEntity implements Serializable, Job, DbEntity, HasDbRev
   protected String deploymentId;
 
   protected String jobDefinitionId;
-
-  public JobEntity() {
-    // set default number of retries if property is set
-    int retries = Context.getProcessEngineConfiguration().getDefaultNumberOfRetries();
-    if(retries > 0) {
-      this.retries = retries;
-    }
-  }
-
 
   public void execute(CommandContext commandContext) {
     ExecutionEntity execution = null;

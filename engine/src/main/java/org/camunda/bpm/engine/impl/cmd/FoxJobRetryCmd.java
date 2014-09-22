@@ -60,7 +60,7 @@ public class FoxJobRetryCmd implements Command<Object> {
     return null;
   }
 
-  private void executeCustomStrategy(CommandContext commandContext, JobEntity job, ActivityImpl activity) throws Exception {
+  protected void executeCustomStrategy(CommandContext commandContext, JobEntity job, ActivityImpl activity) throws Exception {
     String failedJobRetryTimeCycle = (String) activity.getProperty(FoxFailedJobParseListener.FOX_FAILED_JOB_CONFIGURATION);
 
     if(failedJobRetryTimeCycle == null) {

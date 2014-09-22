@@ -39,17 +39,10 @@ public abstract class JobDeclaration<T extends JobEntity> implements Serializabl
   protected String jobConfiguration;
 
   protected boolean exclusive = JobEntity.DEFAULT_EXCLUSIVE;
-  protected int retries = JobEntity.DEFAULT_RETRIES;
 
   protected String activityId;
 
   public JobDeclaration(String jobHandlerType) {
-    // set default number of retries if property is set
-    int retries = Context.getProcessEngineConfiguration().getDefaultNumberOfRetries();
-    if(retries > 0) {
-      this.retries = retries;
-    }
-
     this.jobHandlerType = jobHandlerType;
   }
 
@@ -86,6 +79,8 @@ public abstract class JobDeclaration<T extends JobEntity> implements Serializabl
     job.setJobHandlerType(jobHandlerType);
     job.setJobHandlerConfiguration(jobHandlerConfiguration);
     job.setExclusive(exclusive);
+
+    int retries = Context.getProcessEngineConfiguration().getDefaultNumberOfRetries();
     job.setRetries(retries);
 
     return job;
@@ -121,14 +116,6 @@ public abstract class JobDeclaration<T extends JobEntity> implements Serializabl
 
   public void setExclusive(boolean exclusive) {
     this.exclusive = exclusive;
-  }
-
-  public int getRetries() {
-    return retries;
-  }
-
-  public void setRetries(int retries) {
-    this.retries = retries;
   }
 
   public void setJobHandlerType(String jobHandlerType) {
