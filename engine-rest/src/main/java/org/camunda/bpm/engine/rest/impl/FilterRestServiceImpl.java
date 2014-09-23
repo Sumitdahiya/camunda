@@ -92,7 +92,7 @@ public class FilterRestServiceImpl extends AbstractRestProcessEngineAware implem
     Filter filter = filterService.newFilter();
 
     try {
-      filterDto.updateFilter(filter);
+      filterDto.updateFilter(filter, getProcessEngine());
     }
     catch (NotValidException e) {
       throw new InvalidRequestException(Response.Status.BAD_REQUEST, e, "Unable to create filter with invalid content");

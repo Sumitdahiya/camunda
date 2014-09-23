@@ -18,8 +18,14 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response.Status;
 
+import org.camunda.bpm.engine.EntityTypes;
+import org.camunda.bpm.engine.ProcessEngine;
 import org.camunda.bpm.engine.filter.Filter;
+import org.camunda.bpm.engine.rest.dto.AbstractQueryDto;
+import org.camunda.bpm.engine.rest.dto.task.TaskQueryDto;
 import org.camunda.bpm.engine.rest.exception.InvalidRequestException;
+import org.codehaus.jackson.annotate.JsonSubTypes;
+import org.codehaus.jackson.annotate.JsonTypeInfo;
 import org.codehaus.jackson.map.ObjectMapper;
 
 public class FilterDto {
@@ -30,7 +36,7 @@ public class FilterDto {
   protected String resourceType;
   protected String name;
   protected String owner;
-  protected Map<String, Object> query;
+  protected AbstractQueryDto<?> query;
   protected Map<String, Object> properties;
 
   public String getId() {
@@ -65,11 +71,14 @@ public class FilterDto {
     this.owner = owner;
   }
 
-  public Map<String, Object> getQuery() {
+  public AbstractQueryDto<?> getQuery() {
     return query;
   }
 
-  public void setQuery(Map<String, Object> query) {
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXTERNAL_PROPERTY, property = "resourceType")
+  @JsonSubTypes(value = {
+    @JsonSubTypes.Type(value = TaskQueryDto.class, name = EntityTypes.TASK)})
+  public void setQuery(AbstractQueryDto<?> query) {
     this.query = query;
   }
 
@@ -87,12 +96,16 @@ public class FilterDto {
     dto.resourceType = filter.getResourceType();
     dto.name = filter.getName();
     dto.owner = filter.getOwner();
-    dto.query = stringToJsonMap(filter.getQuery());
-    dto.properties = stringToJsonMap(filter.getProperties());
+
+    if (EntityTypes.TASK.equals(filter.getResourceType())) {
+      dto.query = TaskQueryDto.fromQuery(filter.getTypeQuery());
+    }
+
+    dto.properties = filter.getPropertiesMap();
     return dto;
   }
 
-  public void updateFilter(Filter filter) {
+  public void updateFilter(Filter filter, ProcessEngine engine) {
     if (filter.getResourceType() == null) {
       filter.setResourceType(getResourceType());
     }
@@ -101,8 +114,8 @@ public class FilterDto {
     }
     filter.setName(getName());
     filter.setOwner(getOwner());
-    filter.setQuery(jsonToString(getQuery()));
-    filter.setProperties(jsonToString(getProperties()));
+    filter.setQuery(getQuery().toQuery(engine));
+    filter.setProperties(getProperties());
   }
 
   protected static String jsonToString(Object json) {

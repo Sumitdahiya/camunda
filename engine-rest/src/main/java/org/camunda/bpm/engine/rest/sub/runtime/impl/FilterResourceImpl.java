@@ -90,7 +90,7 @@ public class FilterResourceImpl implements FilterResource {
     Filter filter = getDbFilter();
 
     try {
-      filterDto.updateFilter(filter);
+      filterDto.updateFilter(filter, engine);
     }
     catch (NotValidException e) {
       throw new InvalidRequestException(Status.BAD_REQUEST, e, "Unable to update filter with invalid content");

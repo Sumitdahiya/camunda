@@ -30,20 +30,16 @@ public class FilterPropertiesTest extends PluggableProcessEngineTestCase {
 
 
   public void setUp() {
-    filter = filterService.newTaskFilter("name").setOwner("owner").setQuery("{}").setProperties("properties");
+    filter = filterService.newTaskFilter("name").setOwner("owner").setProperties(new HashMap<String, Object>());
   }
 
-  public void testPropertiesFromString() {
-    filter.setProperties(propertiesString);
-    assertTestProperties();
-  }
 
   public void testPropertiesFromNull() {
-    filter.setProperties((String) null);
-    assertNull(filter.getProperties());
+    filter.setProperties(null);
+    assertNull(filter.getPropertiesMap());
 
     filter.setProperties((Map<String, Object>) null);
-    assertNull(filter.getProperties());
+    assertNull(filter.getPropertiesMap());
   }
 
   public void testPropertiesFromMap() {

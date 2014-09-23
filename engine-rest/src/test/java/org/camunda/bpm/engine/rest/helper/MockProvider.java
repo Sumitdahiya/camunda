@@ -1428,9 +1428,7 @@ public abstract class MockProvider {
     when(mock.getResourceType()).thenReturn(EXAMPLE_FILTER_RESOURCE_TYPE);
     when(mock.getName()).thenReturn(EXAMPLE_FILTER_NAME);
     when(mock.getOwner()).thenReturn(EXAMPLE_FILTER_OWNER);
-    when(mock.getQuery()).thenReturn(EXAMPLE_FILTER_QUERY);
     when(mock.getTypeQuery()).thenReturn(EXAMPLE_FILTER_TYPE_QUERY);
-    when(mock.getProperties()).thenReturn(EXAMPLE_FILTER_PROPERTIES);
     when(mock.getPropertiesMap()).thenReturn(EXAMPLE_FILTER_PROPERTIES_MAP);
 
     doThrow(new NotValidException("Resource type must not be null"))
@@ -1442,9 +1440,7 @@ public abstract class MockProvider {
     doThrow(new NotValidException("Name must not be empty"))
       .when(mock).setName("");
     doThrow(new NotValidException("Query must not be null"))
-      .when(mock).setQuery((String) null);
-    doThrow(new NotValidException("Query must not be empty"))
-      .when(mock).setQuery("");
+      .when(mock).setQuery(null);
 
     return mock;
   }
