@@ -20,6 +20,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response.Status;
 
 import org.camunda.bpm.engine.ProcessEngine;
+import org.camunda.bpm.engine.impl.calendar.DateTimeUtil;
 import org.camunda.bpm.engine.impl.util.StringUtil;
 import org.camunda.bpm.engine.rest.dto.AbstractQueryDto;
 import org.camunda.bpm.engine.rest.dto.CamundaQueryParam;
@@ -275,9 +276,14 @@ public class TaskQueryDto extends AbstractQueryDto<TaskQuery> {
     this.dueAfter = dueAfter;
   }
 
-  @CamundaQueryParam(value = "dueBefore", converter = DateConverter.class)
-  public void setDueBefore(Date dueBefore) {
-    this.dueBefore = dueBefore;
+  @CamundaQueryParam(value = "dueBefore")
+  public void setDueBefore(String dueBefore) {
+    if (StringUtil.isExpression(dueBefore)) {
+      this.expressions.put("dueBefore", dueBefore);
+    }
+    else {
+      this.dueBefore = DateTimeUtil.parseDate(dueBefore);
+    }
   }
 
   @CamundaQueryParam(value = "due", converter = DateConverter.class)
@@ -615,8 +621,15 @@ public class TaskQueryDto extends AbstractQueryDto<TaskQuery> {
     }
 
     // expressions
+    applyExpressions(query);
+  }
+
+  protected void applyExpressions(TaskQuery query) {
     if (expressions.containsKey("assignee")) {
       query.taskAssigneeExpression(expressions.get("assignee"));
+    }
+    if (expressions.containsKey("dueBefore")) {
+      query.dueBeforeExpression(expressions.get("dueBefore"));
     }
   }
 

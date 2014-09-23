@@ -475,6 +475,11 @@ public class TaskQueryImpl extends AbstractQuery<TaskQuery, Task> implements Tas
     return this;
   }
 
+  public TaskQuery dueBeforeExpression(String dueDateExpression) {
+    this.expressions.put("dueBefore", dueDateExpression);
+    return this;
+  }
+
   public TaskQuery dueAfter(Date dueAfter) {
     this.dueAfter = dueAfter;
     return this;

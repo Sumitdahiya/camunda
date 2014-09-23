@@ -24,14 +24,13 @@ import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.delegate.VariableScope;
 import org.camunda.bpm.engine.exception.NotValidException;
 import org.camunda.bpm.engine.impl.context.Context;
-import org.camunda.bpm.engine.impl.core.variable.SimpleVariableStore;
 import org.camunda.bpm.engine.impl.db.ListQueryParameterObject;
-import org.camunda.bpm.engine.impl.el.ExpressionManager;
 import org.camunda.bpm.engine.impl.interceptor.Command;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.interceptor.CommandExecutor;
 import org.camunda.bpm.engine.query.Query;
 import org.camunda.bpm.engine.query.QueryProperty;
+import org.joda.time.DateTime;
 
 
 /**
@@ -49,7 +48,7 @@ public abstract class AbstractQuery<T extends Query<?,?>, U> extends ListQueryPa
 
 
   private static enum ResultType {
-    LIST, LIST_PAGE, SINGLE_RESULT, COUNT;
+    LIST, LIST_PAGE, SINGLE_RESULT, COUNT
   }
   protected transient CommandExecutor commandExecutor;
   protected transient CommandContext commandContext;
@@ -57,7 +56,6 @@ public abstract class AbstractQuery<T extends Query<?,?>, U> extends ListQueryPa
 
   protected ResultType resultType;
   protected QueryProperty orderProperty;
-  protected ExpressionManager expressionManager;
 
   protected Map<String, String> expressions = new HashMap<String, String>();
 
@@ -205,24 +203,33 @@ public abstract class AbstractQuery<T extends Query<?,?>, U> extends ListQueryPa
     for (Map.Entry<String, String> entry : expressions.entrySet()) {
       String fieldName = entry.getKey();
       String expression = entry.getValue();
-      Object value = getExpressionManager().createExpression(expression).getValue(null);
+
+      Object value;
+
+      try {
+        value = Context.getProcessEngineConfiguration()
+          .getExpressionManager()
+          .createExpression(expression)
+          .getValue(null);
+      }
+      catch (ProcessEngineException e) {
+        throw new ProcessEngineException("Unable to resolve expression '" + expression + "' for field '" + fieldName + "' on class '" + getClass().getCanonicalName() + "'", e);
+      }
+
+      // automatically convert DateTime to date
+      if (value instanceof DateTime) {
+        value = ((DateTime) value).toDate();
+      }
+
       try {
         Field field = getClass().getDeclaredField(fieldName);
-        getAuthUserId();
         field.set(this, value);
       } catch (NoSuchFieldException e) {
-        throw new ProcessEngineException("Unable to find field '" + fieldName + "' on class " + getClass().getCanonicalName());
+        throw new ProcessEngineException("Unable to find field '" + fieldName + "' on class '" + getClass().getCanonicalName() + "'");
       } catch (IllegalAccessException e) {
-        throw new ProcessEngineException("Unable to access field '" + fieldName + "' on class " + getClass().getCanonicalName());
+        throw new ProcessEngineException("Unable to access field '" + fieldName + "' on class '" + getClass().getCanonicalName() + "'");
       }
     }
-  }
-
-  protected ExpressionManager getExpressionManager() {
-    if (expressionManager == null) {
-      expressionManager = new ExpressionManager();
-    }
-    return expressionManager;
   }
 
 }

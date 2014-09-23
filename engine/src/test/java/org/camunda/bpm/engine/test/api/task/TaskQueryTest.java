@@ -263,16 +263,15 @@ public class TaskQueryTest extends PluggableProcessEngineTestCase {
     assertEquals(0, query.list().size());
     assertNull(query.singleResult());
 
-    // FINDME
-    //processEngineConfiguration.setAuthorizationEnabled(true);
-    //identityService.setAuthenticatedUserId("gonzo");
+    processEngineConfiguration.setAuthorizationEnabled(true);
+    identityService.setAuthenticatedUserId("gonzo");
 
-    //query = taskService.createTaskQuery().taskAssigneeExpression("${userId}");
-    //assertEquals(1, query.count());
-    //assertEquals(1, query.list().size());
-    //assertNotNull(query.singleResult());
+    query = taskService.createTaskQuery().taskAssigneeExpression("${currentUser()}");
+    assertEquals(1, query.count());
+    assertEquals(1, query.list().size());
+    assertNotNull(query.singleResult());
 
-    //processEngineConfiguration.setAuthorizationEnabled(false);
+    processEngineConfiguration.setAuthorizationEnabled(false);
   }
 
   public void testQueryByAssigneeLike() {
@@ -1030,6 +1029,34 @@ public class TaskQueryTest extends PluggableProcessEngineTestCase {
 
     assertEquals(0, taskService.createTaskQuery().dueBefore(oneHourLater.getTime()).count());
     assertEquals(0, taskService.createTaskQuery().dueBefore(oneHourAgo.getTime()).count());
+  }
+
+  public void testTaskDueBeforeExpression() {
+    Date now = ClockUtil.getCurrentTime();
+
+    Task task = taskService.newTask("test");
+    task.setDueDate(now);
+    taskService.saveTask(task);
+
+    ClockUtil.setCurrentTime(new Date(now.getTime() + 1000));
+
+    long count = taskService.createTaskQuery().dueBeforeExpression("${now()}").count();
+    assertEquals(1, count);
+
+    ClockUtil.setCurrentTime(new Date(now.getTime() - 1000));
+
+    count = taskService.createTaskQuery().dueBeforeExpression("${now()}").count();
+    assertEquals(0, count);
+
+    ClockUtil.setCurrentTime(now);
+
+    count = taskService.createTaskQuery().dueBeforeExpression("${dateTime().plusMonths(2)}").count();
+    assertEquals(1, count);
+
+    count = taskService.createTaskQuery().dueBeforeExpression("${dateTime().minusYears(1)}").count();
+    assertEquals(0, count);
+
+    taskService.deleteTask(task.getId(), true);
   }
 
   @Deployment(resources={"org/camunda/bpm/engine/test/api/task/TaskQueryTest.testProcessDefinition.bpmn20.xml"})

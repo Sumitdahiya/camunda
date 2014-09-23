@@ -387,6 +387,11 @@ public interface TaskQuery extends Query<TaskQuery, Task>{
   TaskQuery dueBefore(Date dueDate);
 
   /**
+   * Only select tasks which have a due date before the described date by the given expression.
+   */
+  TaskQuery dueBeforeExpression(String dueDateExpression);
+
+  /**
    * Only select tasks which have a due date after the given date.
    */
   TaskQuery dueAfter(Date dueDate);
@@ -417,7 +422,7 @@ public interface TaskQuery extends Query<TaskQuery, Task>{
   TaskQuery active();
 
   /**
-   * If called, the form keys of the fetched tasks are initialized and
+   * If called, the form keys of the fetched tasks are initialized an
    * {@link Task#getFormKey()} will return a value (in case the task has a form key).
    *
    * @return the query itself

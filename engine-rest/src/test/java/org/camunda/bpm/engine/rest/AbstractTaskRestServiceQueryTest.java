@@ -14,6 +14,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -1204,36 +1205,60 @@ public abstract class AbstractTaskRestServiceQueryTest extends AbstractRestServi
 
   @Test
   public void testQueryForAssigneeExpression() {
-    Map<String, String> json = new HashMap<String, String>();
-
-    json.put("assignee", "johnny1");
-
+    // get
     given()
-      .contentType(POST_JSON_CONTENT_TYPE)
       .header("Accept", MediaType.APPLICATION_JSON)
-      .body(json)
+      .queryParam("assignee", "${userId}")
     .expect()
       .statusCode(Status.OK.getStatusCode())
     .when()
-      .post(TASK_QUERY_URL);
+      .get(TASK_QUERY_URL);
 
-    verify(mockQuery).taskAssignee("johnny1");
+    verify(mockQuery).taskAssigneeExpression("${userId}");
 
+    // reset mock
     reset(mockQuery);
-    json.clear();
 
-    json.put("assignee", "${'johnny1'}");
-
+    // post
     given()
       .contentType(POST_JSON_CONTENT_TYPE)
       .header("Accept", MediaType.APPLICATION_JSON)
-      .body(json)
+      .body(Collections.singletonMap("assignee", "${userId}"))
     .expect()
       .statusCode(Status.OK.getStatusCode())
     .when()
       .post(TASK_QUERY_URL);
 
-    verify(mockQuery).taskAssigneeExpression("${'johnny1'}");
+    verify(mockQuery).taskAssigneeExpression("${userId}");
+  }
+
+  @Test
+  public void testQueryForDueBeforeExpression() {
+    // get
+    given()
+      .header("Accept", MediaType.APPLICATION_JSON)
+      .queryParam("dueBefore", "${now}")
+    .expect()
+      .statusCode(Status.OK.getStatusCode())
+    .when()
+      .get(TASK_QUERY_URL);
+
+    verify(mockQuery).dueBeforeExpression("${now}");
+
+    // reset mock
+    reset(mockQuery);
+
+    // post
+    given()
+      .header("Accept", MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON)
+      .body(Collections.singletonMap("dueBefore", "${now}"))
+    .expect()
+      .statusCode(Status.OK.getStatusCode())
+    .when()
+      .post(TASK_QUERY_URL);
+
+    verify(mockQuery).dueBeforeExpression("${now}");
   }
 
 }
