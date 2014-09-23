@@ -104,7 +104,21 @@ public class FilterEntity implements Filter, Serializable, DbEntity, HasDbRevisi
 
   public <T extends Query<?, ?>> T getTypeQuery() {
     JsonObjectConverter<T> converter = getConverter();
-    return converter.toObject(query);
+    return converter.toObject(new JSONObject(query));
+  }
+
+  public Filter setQuery(Map<String, Object> query) {
+    ensureNotEmpty(NotValidException.class, "Query must not be null or empty. Has to be a JSON object", "query", query);
+
+    try {
+      JSONObject jsonObject = new JSONObject(query);
+      setQuery(jsonObject.toString());
+    }
+    catch (JSONException e) {
+      throw new NotValidException("Query has to be a JSON object", e);
+    }
+
+    return this;
   }
 
   public Filter setQuery(String query) {
@@ -136,10 +150,11 @@ public class FilterEntity implements Filter, Serializable, DbEntity, HasDbRevisi
     return extendQuery(extendingQueryJson);
   }
 
-  public Filter extend(String extendingQuery) {
+  public Filter extend(Map<String, Object> extendingQuery) {
     ensureNotEmpty(NotValidException.class, "extendingQuery", extendingQuery);
     try {
-      Query<?, ?> query  = (Query<?, ?>) getConverter().toObject(extendingQuery);
+      JSONObject json = new JSONObject(extendingQuery);
+      Query<?, ?> query  = (Query<?, ?>) getConverter().toObject(json);
       return extend(query);
     }
     catch (JSONException e) {
@@ -167,39 +182,37 @@ public class FilterEntity implements Filter, Serializable, DbEntity, HasDbRevisi
     }
 
     // create copy of the filter with the new query
-    Filter copy = copyFilter();
+    FilterEntity copy = copyFilter();
     copy.setQuery(queryJson.toString());
 
     return copy;
   }
 
-  public String getProperties() {
-    return properties;
-  }
-
-  @SuppressWarnings("unchecked")
   public Map<String, Object> getPropertiesMap() {
     if (properties != null) {
-      Map<String, Object> map = new HashMap<String, Object>();
-      JSONObject json = new JSONObject(properties);
-      Iterator<String> keys = json.keys();
-      while (keys.hasNext()) {
-        String key = keys.next();
-        if (json.optJSONObject(key) != null) {
-          map.put(key, json.getJSONObject(key).toString());
-        }
-        else if (json.optJSONArray(key) != null) {
-          map.put(key, json.getJSONArray(key).toString());
-        }
-        else {
-          map.put(key, json.get(key));
-        }
-      }
-      return map;
+      return jsonAsMap(new JSONObject(properties));
     }
     else {
       return null;
     }
+  }
+
+  protected Map<String, Object> jsonAsMap(JSONObject json) {
+    Map<String, Object> map = new HashMap<String, Object>();
+    Iterator<String> keys = json.keys();
+    while (keys.hasNext()) {
+      String key = keys.next();
+      if (json.optJSONObject(key) != null) {
+        map.put(key, json.getJSONObject(key).toString());
+      }
+      else if (json.optJSONArray(key) != null) {
+        map.put(key, json.getJSONArray(key).toString());
+      }
+      else {
+        map.put(key, json.get(key));
+      }
+    }
+    return map;
   }
 
   public Filter setProperties(String properties) {
@@ -209,6 +222,10 @@ public class FilterEntity implements Filter, Serializable, DbEntity, HasDbRevisi
 
     this.properties = properties;
     return this;
+  }
+
+  public String getProperties() {
+    return this.properties;
   }
 
   public Filter setProperties(Map<String, Object> properties) {
@@ -242,13 +259,13 @@ public class FilterEntity implements Filter, Serializable, DbEntity, HasDbRevisi
     }
   }
 
-  protected Filter copyFilter() {
+  protected FilterEntity copyFilter() {
     FilterEntity copy = new FilterEntity();
     copy.setResourceType(getResourceType());
     copy.setName(getName());
     copy.setOwner(getOwner());
     copy.setQuery(getQuery());
-    copy.setProperties(getProperties());
+    copy.setProperties(getPropertiesMap());
     return copy;
   }
 

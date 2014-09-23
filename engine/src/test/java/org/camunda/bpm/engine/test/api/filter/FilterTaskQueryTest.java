@@ -15,6 +15,7 @@ package org.camunda.bpm.engine.test.api.filter;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 import org.camunda.bpm.engine.ProcessEngineException;
@@ -29,6 +30,7 @@ import org.camunda.bpm.engine.impl.TaskQueryImpl;
 import org.camunda.bpm.engine.impl.TaskQueryProperty;
 import org.camunda.bpm.engine.impl.TaskQueryVariableValue;
 import org.camunda.bpm.engine.impl.json.JsonTaskQueryConverter;
+import org.camunda.bpm.engine.impl.persistence.entity.FilterEntity;
 import org.camunda.bpm.engine.impl.persistence.entity.SuspensionState;
 import org.camunda.bpm.engine.impl.test.PluggableProcessEngineTestCase;
 import org.camunda.bpm.engine.query.Query;
@@ -64,7 +66,7 @@ public class FilterTaskQueryTest extends PluggableProcessEngineTestCase {
   protected JsonTaskQueryConverter queryConverter;
 
   public void setUp() {
-    filter = filterService.newTaskFilter("name").setOwner("owner").setQuery("{}").setProperties("properties");
+    filter = filterService.newTaskFilter("name").setOwner("owner").setQuery(taskService.createTaskQuery()).setProperties(new HashMap<String, Object>());
     testUser = identityService.newUser("user");
     testGroup = identityService.newGroup("group");
     identityService.saveUser(testUser);
@@ -102,12 +104,7 @@ public class FilterTaskQueryTest extends PluggableProcessEngineTestCase {
 
     filter.setQuery(emptyQuery);
 
-    assertEquals("{}", filter.getQuery());
-    assertNotNull(filter.getTypeQuery());
-
-    filter.setQuery(emptyQueryJson);
-
-    assertEquals("{}", filter.getQuery());
+    assertEquals(emptyQueryJson, ((FilterEntity) filter).getQuery());
     assertNotNull(filter.getTypeQuery());
   }
 
@@ -501,7 +498,8 @@ public class FilterTaskQueryTest extends PluggableProcessEngineTestCase {
     assertEquals(sortByNameAsc, orderBy);
 
     // extend query by new json query with sorting
-    extendedFilter = extendedFilter.extend(sortByAssigneeDescJson);
+    TaskQuery extendingQuery = taskService.createTaskQuery().orderByTaskAssignee().desc();
+    extendedFilter = extendedFilter.extend(extendingQuery);
     query = extendedFilter.getTypeQuery();
     orderBy = query.getOrderBy();
 
@@ -517,7 +515,8 @@ public class FilterTaskQueryTest extends PluggableProcessEngineTestCase {
 
     // extend query with invalid order attribute
     try {
-      extendedFilter.extend("{\"sortOrder\": \"abc\"}");
+      extendingQuery = taskService.createTaskQuery().orderByTaskAssignee();
+      extendedFilter.extend(extendingQuery);
       fail("Exception expected");
     }
     catch (NotValidException e) {
@@ -526,7 +525,8 @@ public class FilterTaskQueryTest extends PluggableProcessEngineTestCase {
 
     // extend query with missing sortBy attribute
     try {
-      extendedFilter.extend("{\"sortOrder\": \"asc\"}");
+      extendingQuery = taskService.createTaskQuery().asc();
+      extendedFilter.extend(extendingQuery);
       fail("Exception expected");
     }
     catch (NotValidException e) {

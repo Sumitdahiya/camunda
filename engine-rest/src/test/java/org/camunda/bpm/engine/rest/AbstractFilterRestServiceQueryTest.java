@@ -14,7 +14,6 @@
 package org.camunda.bpm.engine.rest;
 
 import static javax.ws.rs.core.Response.Status;
-
 import static com.jayway.restassured.RestAssured.expect;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.path.json.JsonPath.from;
@@ -26,9 +25,12 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.jayway.restassured.response.Response;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.camunda.bpm.engine.EntityTypes;
 import org.camunda.bpm.engine.filter.FilterQuery;
 import org.camunda.bpm.engine.impl.AbstractQuery;
 import org.camunda.bpm.engine.rest.dto.runtime.FilterQueryDto;
@@ -186,7 +188,7 @@ public abstract class AbstractFilterRestServiceQueryTest extends AbstractRestSer
     Map<String, Object> returnedProperties = from(content).getJsonObject("[0].properties");
 
     assertThat(returnedFilterId).isEqualTo(MockProvider.EXAMPLE_FILTER_ID);
-    assertThat(returnedResourceType).isEqualTo(MockProvider.EXAMPLE_FILTER_RESOURCE_TYPE);
+    assertThat(returnedResourceType).isEqualTo(EntityTypes.TASK);
     assertThat(returnedName).isEqualTo(MockProvider.EXAMPLE_FILTER_NAME);
     assertThat(returnedOwner).isEqualTo(MockProvider.EXAMPLE_FILTER_OWNER);
     assertThat(returnedQuery).isEqualTo(MockProvider.EXAMPLE_FILTER_QUERY_MAP);
