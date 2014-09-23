@@ -15,7 +15,8 @@ package org.camunda.bpm.engine.impl;
 import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -155,14 +156,14 @@ public abstract class AbstractQuery<T extends Query<?,?>, U> extends ListQueryPa
   }
 
   public long evaluateExpressionsAndExecuteCount(CommandContext commandContext) {
-    evaluateExpressions(commandContext);
+    evaluateExpressions();
     return executeCount(commandContext);
   }
 
   public abstract long executeCount(CommandContext commandContext);
 
   public List<U> evaluateExpressionsAndExecuteList(CommandContext commandContext, Page page) {
-    evaluateExpressions(commandContext);
+    evaluateExpressions();
     return executeList(commandContext, page);
   }
 
@@ -199,9 +200,9 @@ public abstract class AbstractQuery<T extends Query<?,?>, U> extends ListQueryPa
     }
   }
 
-  protected void evaluateExpressions(CommandContext commandContext) {
+  protected void evaluateExpressions() {
     for (Map.Entry<String, String> entry : expressions.entrySet()) {
-      String fieldName = entry.getKey();
+      String methodName = entry.getKey();
       String expression = entry.getValue();
 
       Object value;
@@ -213,7 +214,7 @@ public abstract class AbstractQuery<T extends Query<?,?>, U> extends ListQueryPa
           .getValue(null);
       }
       catch (ProcessEngineException e) {
-        throw new ProcessEngineException("Unable to resolve expression '" + expression + "' for field '" + fieldName + "' on class '" + getClass().getCanonicalName() + "'", e);
+        throw new ProcessEngineException("Unable to resolve expression '" + expression + "' for method '" + methodName + "' on class '" + getClass().getCanonicalName() + "'", e);
       }
 
       // automatically convert DateTime to date
@@ -222,14 +223,23 @@ public abstract class AbstractQuery<T extends Query<?,?>, U> extends ListQueryPa
       }
 
       try {
-        Field field = getClass().getDeclaredField(fieldName);
-        field.set(this, value);
-      } catch (NoSuchFieldException e) {
-        throw new ProcessEngineException("Unable to find field '" + fieldName + "' on class '" + getClass().getCanonicalName() + "'");
+        Method method = getMethod(methodName);
+        method.invoke(this, value);
+      } catch (InvocationTargetException e) {
+        throw new ProcessEngineException("Unable to invoke method '" + methodName + "' on class '" + getClass().getCanonicalName() + "'", e);
       } catch (IllegalAccessException e) {
-        throw new ProcessEngineException("Unable to access field '" + fieldName + "' on class '" + getClass().getCanonicalName() + "'");
+        throw new ProcessEngineException("Unable to access method '" + methodName + "' on class '" + getClass().getCanonicalName() + "'", e);
       }
     }
+  }
+
+  protected Method getMethod(String methodName) {
+    for (Method method : getClass().getDeclaredMethods()) {
+      if (method.getName().equals(methodName)) {
+        return method;
+      }
+    }
+    throw new ProcessEngineException("Unable to find method '" + methodName + "' on class '" + getClass().getCanonicalName() + "'");
   }
 
 }

@@ -52,6 +52,10 @@ public class TaskDefinition {
     this.taskFormHandler = taskFormHandler;
   }
 
+  public TaskDefinition() {
+
+  }
+
   // getters and setters //////////////////////////////////////////////////////
 
   public Expression getNameExpression() {
