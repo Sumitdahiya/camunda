@@ -1206,25 +1206,25 @@ public abstract class AbstractTaskRestServiceQueryTest extends AbstractRestServi
     String testExpression = "${'test'}";
 
     Map<String, String> params = new HashMap<String, String>();
-    params.put("assignee", testExpression);
-    params.put("assigneeLike", testExpression);
-    params.put("owner", testExpression);
-    params.put("involvedUser", testExpression);
-    params.put("candidateUser", testExpression);
-    params.put("candidateGroup", testExpression);
+    params.put("assigneeExpression", testExpression);
+    params.put("assigneeLikeExpression", testExpression);
+    params.put("ownerExpression", testExpression);
+    params.put("involvedUserExpression", testExpression);
+    params.put("candidateUserExpression", testExpression);
+    params.put("candidateGroupExpression", testExpression);
     params.put("candidateGroupsExpression", testExpression);
-    params.put("createdBefore", testExpression);
-    params.put("created", testExpression);
-    params.put("createdOn", testExpression);
-    params.put("createdAfter", testExpression);
-    params.put("dueBefore", testExpression);
-    params.put("due", testExpression);
-    params.put("dueDate", testExpression);
-    params.put("dueAfter", testExpression);
-    params.put("followUpBefore", testExpression);
-    params.put("followUp", testExpression);
-    params.put("followUpDate", testExpression);
-    params.put("followUpAfter", testExpression);
+    params.put("createdBeforeExpression", testExpression);
+    params.put("createdExpression", testExpression);
+    params.put("createdOnExpression", testExpression);
+    params.put("createdAfterExpression", testExpression);
+    params.put("dueBeforeExpression", testExpression);
+    params.put("dueExpression", testExpression);
+    params.put("dueDateExpression", testExpression);
+    params.put("dueAfterExpression", testExpression);
+    params.put("followUpBeforeExpression", testExpression);
+    params.put("followUpExpression", testExpression);
+    params.put("followUpDateExpression", testExpression);
+    params.put("followUpAfterExpression", testExpression);
 
     // get
     given()

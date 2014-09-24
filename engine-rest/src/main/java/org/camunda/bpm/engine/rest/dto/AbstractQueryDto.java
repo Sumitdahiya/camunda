@@ -157,7 +157,6 @@ public abstract class AbstractQueryDto<T extends Query<?, ?>> {
   public T toQuery(ProcessEngine engine) {
     T query = createNewQuery(engine);
     applyFilters(query);
-    applyExpressions(query);
     
     if (!sortOptionsValid()) {
       throw new InvalidRequestException(Status.BAD_REQUEST, "Only a single sorting parameter specified. sortBy and sortOrder required");
@@ -171,9 +170,6 @@ public abstract class AbstractQueryDto<T extends Query<?, ?>> {
   protected abstract T createNewQuery(ProcessEngine engine);
   
   protected abstract void applyFilters(T query);
-
-  protected void applyExpressions(T query) { }
-
+  
   protected abstract void applySortingOptions(T query);
-
 }
