@@ -17,6 +17,7 @@ import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -201,7 +202,11 @@ public abstract class AbstractQuery<T extends Query<?,?>, U> extends ListQueryPa
   }
 
   protected void evaluateExpressions() {
-    for (Map.Entry<String, String> entry : expressions.entrySet()) {
+    // we cannot iterate directly on the entry set cause the expressions
+    // are removed by the setter methods during the iteration
+    ArrayList<Map.Entry<String, String>> entries = new ArrayList<Map.Entry<String, String>>(expressions.entrySet());
+
+    for (Map.Entry<String, String> entry : entries) {
       String methodName = entry.getKey();
       String expression = entry.getValue();
 

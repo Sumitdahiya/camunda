@@ -13,16 +13,21 @@
 
 package org.camunda.bpm.engine.test.api.task;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.identity.Group;
 import org.camunda.bpm.engine.identity.User;
+import org.camunda.bpm.engine.impl.TaskQueryImpl;
 import org.camunda.bpm.engine.impl.test.PluggableProcessEngineTestCase;
 import org.camunda.bpm.engine.impl.util.ClockUtil;
 import org.camunda.bpm.engine.query.Query;
 import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.engine.task.TaskQuery;
+import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 
@@ -34,232 +39,414 @@ public class TaskQueryExpressionTest extends PluggableProcessEngineTestCase {
   protected Task task;
   protected User user;
   protected User anotherUser;
-  protected TaskQuery taskQuery;
-  private String groupId;
+  protected User userWithoutGroups;
+  protected Group group1;
 
   @Before
   public void setUp() {
-    groupId = "group1";
+    group1 = createGroup("group1");
+    Group group2 = createGroup("group2");
+    Group group3 = createGroup("group3");
 
-    user = createTestUser("user", groupId, "group2");
-    anotherUser = createTestUser("anotherUser", "group3");
+    user = createUser("user", group1.getId(), group2.getId());
+    anotherUser = createUser("anotherUser", group3.getId());
+    userWithoutGroups = createUser("userWithoutGroups");
 
-    task = createTestTask("task", user);
-    taskService.addCandidateUser(task.getId(), user.getId());
-    taskService.addCandidateGroup(task.getId(), groupId);
+    task = createTestTask("task");
+    Task anotherTask = createTestTask("anotherTask");
 
-    taskQuery = taskService.createTaskQuery();
+    taskService.setOwner(task.getId(), user.getId());
+    taskService.setAssignee(task.getId(), user.getId());
+
+    taskService.addCandidateUser(anotherTask.getId(), user.getId());
+    taskService.addCandidateGroup(anotherTask.getId(), group1.getId());
   }
 
   public void testQueryByAssigneeExpression() {
-    assertOne(taskQuery.taskAssigneeExpression("${'" + user.getId() + "'}"));
-    assertNone(taskQuery.taskAssigneeExpression("${'" + anotherUser.getId() + "'}"));
+    assertCount(taskQuery().taskAssigneeExpression("${'" + user.getId() + "'}"), 1);
+    assertCount(taskQuery().taskAssigneeExpression("${'" + anotherUser.getId() + "'}"), 0);
 
     setCurrentUser(user);
-    assertOne(taskQuery.taskAssigneeExpression("${currentUser()}"));
+    assertCount(taskQuery().taskAssigneeExpression("${currentUser()}"), 1);
 
     setCurrentUser(anotherUser);
-    assertNone(taskQuery.taskAssigneeExpression("${currentUser()}"));
+    assertCount(taskQuery().taskAssigneeExpression("${currentUser()}"), 0);
   }
 
   public void testQueryByAssigneeLikeExpression() {
-    assertOne(taskQuery.taskAssigneeLikeExpression("${'%" + user.getId().substring(2) + "'}"));
-    assertNone(taskQuery.taskAssigneeLikeExpression("${'%" + anotherUser.getId().substring(2) + "'}"));
+    assertCount(taskQuery().taskAssigneeLikeExpression("${'%" + user.getId().substring(2) + "'}"), 1);
+    assertCount(taskQuery().taskAssigneeLikeExpression("${'%" + anotherUser.getId().substring(2) + "'}"), 0);
 
     setCurrentUser(user);
-    assertOne(taskQuery.taskAssigneeLikeExpression("${'%'.concat(currentUser())}"));
+    assertCount(taskQuery().taskAssigneeLikeExpression("${'%'.concat(currentUser())}"), 1);
 
     setCurrentUser(anotherUser);
-    assertNone(taskQuery.taskAssigneeLikeExpression("${'%'.concat(currentUser())}"));
+    assertCount(taskQuery().taskAssigneeLikeExpression("${'%'.concat(currentUser())}"), 0);
   }
 
   public void testQueryByOwnerExpression() {
-    assertOne(taskQuery.taskOwnerExpression("${'" + user.getId() + "'}"));
-    assertNone(taskQuery.taskOwnerExpression("${'" + anotherUser.getId() + "'}"));
+    assertCount(taskQuery().taskOwnerExpression("${'" + user.getId() + "'}"), 1);
+    assertCount(taskQuery().taskOwnerExpression("${'" + anotherUser.getId() + "'}"), 0);
 
     setCurrentUser(user);
-    assertOne(taskQuery.taskOwnerExpression("${currentUser()}"));
+    assertCount(taskQuery().taskOwnerExpression("${currentUser()}"), 1);
 
     setCurrentUser(anotherUser);
-    assertNone(taskQuery.taskOwnerExpression("${currentUser()}"));
+    assertCount(taskQuery().taskOwnerExpression("${currentUser()}"), 0);
   }
 
   public void testQueryByInvolvedUserExpression() {
-    assertOne(taskQuery.taskInvolvedUserExpression("${'" + user.getId() + "'}"));
-    assertNone(taskQuery.taskInvolvedUserExpression("${'" + anotherUser.getId() + "'}"));
+    assertCount(taskQuery().taskInvolvedUserExpression("${'" + user.getId() + "'}"), 1);
+    assertCount(taskQuery().taskInvolvedUserExpression("${'" + anotherUser.getId() + "'}"), 0);
 
     setCurrentUser(user);
-    assertOne(taskQuery.taskInvolvedUserExpression("${currentUser()}"));
+    assertCount(taskQuery().taskInvolvedUserExpression("${currentUser()}"), 1);
 
     setCurrentUser(anotherUser);
-    assertNone(taskQuery.taskInvolvedUserExpression("${currentUser()}"));
+    assertCount(taskQuery().taskInvolvedUserExpression("${currentUser()}"), 0);
   }
 
   public void testQueryByCandidateUserExpression() {
-    assertOne(taskQuery.taskCandidateUserExpression("${'" + user.getId() + "'}"));
-    assertNone(taskQuery.taskCandidateUserExpression("${'" + anotherUser.getId() + "'}"));
+    assertCount(taskQuery().taskCandidateUserExpression("${'" + user.getId() + "'}"), 1);
+    assertCount(taskQuery().taskCandidateUserExpression("${'" + anotherUser.getId() + "'}"), 0);
 
     setCurrentUser(user);
-    assertOne(taskQuery.taskCandidateUserExpression("${currentUser()}"));
+    assertCount(taskQuery().taskCandidateUserExpression("${currentUser()}"), 1);
 
     setCurrentUser(anotherUser);
-    assertNone(taskQuery.taskCandidateUserExpression("${currentUser()}"));
+    assertCount(taskQuery().taskCandidateUserExpression("${currentUser()}"), 0);
   }
 
   public void testQueryByCandidateGroupExpression() {
-    assertOne(taskQuery.taskCandidateGroupExpression("${'" + groupId + "'}"));
-    assertNone(taskQuery.taskCandidateGroupExpression("${'unknown'}"));
+    assertCount(taskQuery().taskCandidateGroupExpression("${'" + group1.getId() + "'}"), 1);
+    assertCount(taskQuery().taskCandidateGroupExpression("${'unknown'}"), 0);
 
     setCurrentUser(user);
-    assertOne(taskQuery.taskCandidateGroupExpression("${currentUserGroups()[0]}"));
+    assertCount(taskQuery().taskCandidateGroupExpression("${currentUserGroups()[0]}"), 1);
 
     setCurrentUser(anotherUser);
-    assertNone(taskQuery.taskCandidateGroupExpression("${currentUserGroups()[0]}"));
+    assertCount(taskQuery().taskCandidateGroupExpression("${currentUserGroups()[0]}"), 0);
   }
 
   public void testQueryByCandidateGroupsExpression() {
     setCurrentUser(user);
-    assertOne(taskQuery.taskCandidateGroupInExpression("${currentUserGroups()}"));
+    assertCount(taskQuery().taskCandidateGroupInExpression("${currentUserGroups()}"), 1);
 
     setCurrentUser(anotherUser);
 
+    assertCount(taskQuery().taskCandidateGroupInExpression("${currentUserGroups()}"), 0);
+
+    setCurrentUser(userWithoutGroups);
     try {
-      // currentUserGroups returns null
-      taskQuery.taskCandidateGroupInExpression("${currentUserGroups()}");
+      taskQuery().taskCandidateGroupInExpression("${currentUserGroups()}").count();
       fail("Exception expected");
     }
     catch (ProcessEngineException e) {
-      // expected
+      // expected because currentUserGroups will return null
     }
   }
 
   public void testQueryByTaskCreatedBeforeExpression() {
     adjustTime(1);
 
-    assertOne(taskQuery.taskCreatedBeforeExpression("${now()}"));
+    assertCount(taskQuery().taskCreatedBeforeExpression("${now()}"), 2);
 
     adjustTime(-60);
 
-    assertNone(taskQuery.taskCreatedBeforeExpression("${now()}"));
+    assertCount(taskQuery().taskCreatedBeforeExpression("${now()}"), 0);
 
     setTime(task.getCreateTime());
 
-    assertOne(taskQuery.taskCreatedBeforeExpression("${dateTime().plusMonths(2)}"));
+    assertCount(taskQuery().taskCreatedBeforeExpression("${dateTime().plusMonths(2)}"), 2);
 
-    assertNone(taskQuery.taskCreatedBeforeExpression("${dateTime().minusYears(1)}"));
+    assertCount(taskQuery().taskCreatedBeforeExpression("${dateTime().minusYears(1)}"), 0);
   }
 
   public void testQueryByTaskCreatedOnExpression() {
     setTime(task.getCreateTime());
-    assertOne(taskQuery.taskCreatedOnExpression("${now()}"));
+    assertCount(taskQuery().taskCreatedOnExpression("${now()}"), 1);
 
     adjustTime(10);
 
-    assertOne(taskQuery.taskCreatedOnExpression("${dateTime().minusSeconds(10)}"));
+    assertCount(taskQuery().taskCreatedOnExpression("${dateTime().minusSeconds(10)}"), 1);
 
-    assertNone(taskQuery.taskCreatedOnExpression("${now()}"));
+    assertCount(taskQuery().taskCreatedOnExpression("${now()}"), 0);
   }
 
   public void testQueryByTaskCreatedAfterExpression() {
     adjustTime(1);
 
-    assertNone(taskQuery.taskCreatedAfterExpression("${now()}"));
+    assertCount(taskQuery().taskCreatedAfterExpression("${now()}"), 0);
 
     adjustTime(-60);
 
-    assertOne(taskQuery.taskCreatedAfterExpression("${now()}"));
+    assertCount(taskQuery().taskCreatedAfterExpression("${now()}"), 2);
 
     setTime(task.getCreateTime());
 
-    assertNone(taskQuery.taskCreatedAfterExpression("${dateTime().plusMonths(2)}"));
+    assertCount(taskQuery().taskCreatedAfterExpression("${dateTime().plusMonths(2)}"), 0);
 
-    assertOne(taskQuery.taskCreatedAfterExpression("${dateTime().minusYears(1)}"));
+    assertCount(taskQuery().taskCreatedAfterExpression("${dateTime().minusYears(1)}"), 2);
   }
 
   public void testQueryByDueBeforeExpression() {
     adjustTime(1);
 
-    assertOne(taskQuery.dueBeforeExpression("${now()}"));
+    assertCount(taskQuery().dueBeforeExpression("${now()}"), 2);
 
     adjustTime(-60);
 
-    assertNone(taskQuery.dueBeforeExpression("${now()}"));
+    assertCount(taskQuery().dueBeforeExpression("${now()}"), 0);
 
     setTime(task.getCreateTime());
 
-    assertOne(taskQuery.dueBeforeExpression("${dateTime().plusMonths(2)}"));
+    assertCount(taskQuery().dueBeforeExpression("${dateTime().plusMonths(2)}"), 2);
 
-    assertNone(taskQuery.dueBeforeExpression("${dateTime().minusYears(1)}"));
+    assertCount(taskQuery().dueBeforeExpression("${dateTime().minusYears(1)}"), 0);
   }
 
   public void testQueryByDueDateExpression() {
     setTime(task.getDueDate());
-    assertOne(taskQuery.dueDateExpression("${now()}"));
+    assertCount(taskQuery().dueDateExpression("${now()}"), 1);
 
     adjustTime(10);
 
-    assertOne(taskQuery.dueDateExpression("${dateTime().minusSeconds(10)}"));
+    assertCount(taskQuery().dueDateExpression("${dateTime().minusSeconds(10)}"), 1);
 
-    assertNone(taskQuery.dueDateExpression("${now()}"));
+    assertCount(taskQuery().dueDateExpression("${now()}"), 0);
   }
 
   public void testQueryByDueAfterExpression() {
     adjustTime(1);
 
-    assertNone(taskQuery.dueAfterExpression("${now()}"));
+    assertCount(taskQuery().dueAfterExpression("${now()}"), 0);
 
     adjustTime(-60);
 
-    assertOne(taskQuery.dueAfterExpression("${now()}"));
+    assertCount(taskQuery().dueAfterExpression("${now()}"), 2);
 
     setTime(task.getCreateTime());
 
-    assertNone(taskQuery.dueAfterExpression("${dateTime().plusMonths(2)}"));
+    assertCount(taskQuery().dueAfterExpression("${dateTime().plusMonths(2)}"), 0);
 
-    assertOne(taskQuery.dueAfterExpression("${dateTime().minusYears(1)}"));
+    assertCount(taskQuery().dueAfterExpression("${dateTime().minusYears(1)}"), 2);
   }
 
   public void testQueryByFollowUpBeforeExpression() {
     adjustTime(1);
 
-    assertOne(taskQuery.followUpBeforeExpression("${now()}"));
+    assertCount(taskQuery().followUpBeforeExpression("${now()}"), 2);
 
     adjustTime(-60);
 
-    assertNone(taskQuery.followUpBeforeExpression("${now()}"));
+    assertCount(taskQuery().followUpBeforeExpression("${now()}"), 0);
 
     setTime(task.getCreateTime());
 
-    assertOne(taskQuery.followUpBeforeExpression("${dateTime().plusMonths(2)}"));
+    assertCount(taskQuery().followUpBeforeExpression("${dateTime().plusMonths(2)}"), 2);
 
-    assertNone(taskQuery.followUpBeforeExpression("${dateTime().minusYears(1)}"));
+    assertCount(taskQuery().followUpBeforeExpression("${dateTime().minusYears(1)}"), 0);
   }
 
   public void testQueryByFollowUpDateExpression() {
     setTime(task.getFollowUpDate());
-    assertOne(taskQuery.followUpDateExpression("${now()}"));
+    assertCount(taskQuery().followUpDateExpression("${now()}"), 1);
 
     adjustTime(10);
 
-    assertOne(taskQuery.followUpDateExpression("${dateTime().minusSeconds(10)}"));
+    assertCount(taskQuery().followUpDateExpression("${dateTime().minusSeconds(10)}"), 1);
 
-    assertNone(taskQuery.followUpDateExpression("${now()}"));
+    assertCount(taskQuery().followUpDateExpression("${now()}"), 0);
   }
 
   public void testQueryByFollowUpAfterExpression() {
     adjustTime(1);
 
-    assertNone(taskQuery.followUpAfterExpression("${now()}"));
+    assertCount(taskQuery().followUpAfterExpression("${now()}"), 0);
 
     adjustTime(-60);
 
-    assertOne(taskQuery.followUpAfterExpression("${now()}"));
+    assertCount(taskQuery().followUpAfterExpression("${now()}"), 2);
 
     setTime(task.getCreateTime());
 
-    assertNone(taskQuery.followUpAfterExpression("${dateTime().plusMonths(2)}"));
+    assertCount(taskQuery().followUpAfterExpression("${dateTime().plusMonths(2)}"), 0);
 
-    assertOne(taskQuery.followUpAfterExpression("${dateTime().minusYears(1)}"));
+    assertCount(taskQuery().followUpAfterExpression("${dateTime().minusYears(1)}"), 2);
+  }
+
+  public void testExpressionOverrideQuery() {
+    String queryString = "query";
+    String expressionString = "expression";
+    String testStringExpression = "${'" + expressionString + "'}";
+
+    Date queryDate = new DateTime(now()).minusYears(1).toDate();
+    String testDateExpression = "${now()}";
+
+    TaskQueryImpl taskQuery = (TaskQueryImpl) taskQuery()
+      .taskAssignee(queryString)
+      .taskAssigneeExpression(testStringExpression)
+      .taskAssigneeLike(queryString)
+      .taskAssigneeLikeExpression(testStringExpression)
+      .taskOwnerExpression(queryString)
+      .taskOwnerExpression(expressionString)
+      .taskInvolvedUser(queryString)
+      .taskInvolvedUserExpression(expressionString)
+      .taskCreatedBefore(queryDate)
+      .taskCreatedBeforeExpression(testDateExpression)
+      .taskCreatedOn(queryDate)
+      .taskCreatedOnExpression(testDateExpression)
+      .taskCreatedAfter(queryDate)
+      .taskCreatedAfterExpression(testDateExpression)
+      .dueBefore(queryDate)
+      .dueBeforeExpression(testDateExpression)
+      .dueDate(queryDate)
+      .dueDateExpression(testDateExpression)
+      .dueAfter(queryDate)
+      .dueAfterExpression(testDateExpression)
+      .followUpBefore(queryDate)
+      .followUpBeforeExpression(testDateExpression)
+      .followUpDate(queryDate)
+      .followUpDateExpression(testDateExpression)
+      .followUpAfter(queryDate)
+      .followUpAfterExpression(testDateExpression);
+
+    // execute query so expression will be evaluated
+    taskQuery.count();
+
+    assertEquals(expressionString, taskQuery.getAssignee());
+    assertEquals(expressionString, taskQuery.getAssigneeLike());
+    assertEquals(expressionString, taskQuery.getOwner());
+    assertEquals(expressionString, taskQuery.getInvolvedUser());
+    assertTrue(taskQuery.getCreateTimeBefore().after(queryDate));
+    assertTrue(taskQuery.getCreateTime().after(queryDate));
+    assertTrue(taskQuery.getCreateTimeAfter().after(queryDate));
+    assertTrue(taskQuery.getDueBefore().after(queryDate));
+    assertTrue(taskQuery.getDueDate().after(queryDate));
+    assertTrue(taskQuery.getDueAfter().after(queryDate));
+    assertTrue(taskQuery.getFollowUpBefore().after(queryDate));
+    assertTrue(taskQuery.getFollowUpDate().after(queryDate));
+    assertTrue(taskQuery.getFollowUpAfter().after(queryDate));
+
+    // candidates has to be tested separately cause they have to be set exclusively
+
+    taskQuery = (TaskQueryImpl) taskQuery()
+      .taskCandidateGroup(queryString)
+      .taskCandidateGroupExpression(testStringExpression);
+
+    // execute query so expression will be evaluated
+    taskQuery.count();
+
+    assertEquals(expressionString, taskQuery.getCandidateGroup());
+
+    taskQuery = (TaskQueryImpl) taskQuery()
+      .taskCandidateUser(queryString)
+      .taskCandidateUserExpression(testStringExpression);
+
+    // execute query so expression will be evaluated
+    taskQuery.count();
+
+    assertEquals(expressionString, taskQuery.getCandidateUser());
+
+    setCurrentUser(user);
+    List<String> queryList = Arrays.asList("query");
+    String testGroupsExpression = "${currentUserGroups()}";
+
+    taskQuery = (TaskQueryImpl) taskQuery()
+      .taskCandidateGroupIn(queryList)
+      .taskCandidateGroupInExpression(testGroupsExpression);
+
+    // execute query so expression will be evaluated
+    taskQuery.count();
+
+    assertEquals(2, taskQuery.getCandidateGroups().size());
+  }
+
+  public void testQueryOverrideExpression() {
+    String queryString = "query";
+    String expressionString = "expression";
+    String testStringExpression = "${'" + expressionString + "'}";
+
+    Date queryDate = new DateTime(now()).minusYears(1).toDate();
+    String testDateExpression = "${now()}";
+
+    TaskQueryImpl taskQuery = (TaskQueryImpl) taskQuery()
+      .taskAssigneeExpression(testStringExpression)
+      .taskAssignee(queryString)
+      .taskAssigneeLikeExpression(testStringExpression)
+      .taskAssigneeLike(queryString)
+      .taskOwnerExpression(expressionString)
+      .taskOwnerExpression(queryString)
+      .taskInvolvedUserExpression(expressionString)
+      .taskInvolvedUser(queryString)
+      .taskCreatedBeforeExpression(testDateExpression)
+      .taskCreatedBefore(queryDate)
+      .taskCreatedOnExpression(testDateExpression)
+      .taskCreatedOn(queryDate)
+      .taskCreatedAfterExpression(testDateExpression)
+      .taskCreatedAfter(queryDate)
+      .dueBeforeExpression(testDateExpression)
+      .dueBefore(queryDate)
+      .dueDateExpression(testDateExpression)
+      .dueDate(queryDate)
+      .dueAfterExpression(testDateExpression)
+      .dueAfter(queryDate)
+      .followUpBeforeExpression(testDateExpression)
+      .followUpBefore(queryDate)
+      .followUpDateExpression(testDateExpression)
+      .followUpDate(queryDate)
+      .followUpAfterExpression(testDateExpression)
+      .followUpAfter(queryDate);
+
+    // execute query so expression will be evaluated
+    taskQuery.count();
+
+    assertEquals(queryString, taskQuery.getAssignee());
+    assertEquals(queryString, taskQuery.getAssigneeLike());
+    assertEquals(queryString, taskQuery.getOwner());
+    assertEquals(queryString, taskQuery.getInvolvedUser());
+    assertTrue(taskQuery.getCreateTimeBefore().equals(queryDate));
+    assertTrue(taskQuery.getCreateTime().equals(queryDate));
+    assertTrue(taskQuery.getCreateTimeAfter().equals(queryDate));
+    assertTrue(taskQuery.getDueBefore().equals(queryDate));
+    assertTrue(taskQuery.getDueDate().equals(queryDate));
+    assertTrue(taskQuery.getDueAfter().equals(queryDate));
+    assertTrue(taskQuery.getFollowUpBefore().equals(queryDate));
+    assertTrue(taskQuery.getFollowUpDate().equals(queryDate));
+    assertTrue(taskQuery.getFollowUpAfter().equals(queryDate));
+
+    // candidates has to be tested separately cause they have to be set exclusively
+
+    taskQuery = (TaskQueryImpl) taskQuery()
+      .taskCandidateGroupExpression(testStringExpression)
+      .taskCandidateGroup(queryString);
+
+    // execute query so expression will be evaluated
+    taskQuery.count();
+
+    assertEquals(queryString, taskQuery.getCandidateGroup());
+
+    taskQuery = (TaskQueryImpl) taskQuery()
+      .taskCandidateUserExpression(testStringExpression)
+      .taskCandidateUser(queryString);
+
+    // execute query so expression will be evaluated
+    taskQuery.count();
+
+    assertEquals(queryString, taskQuery.getCandidateUser());
+
+    setCurrentUser(user);
+    List<String> queryList = Arrays.asList("query");
+    String testGroupsExpression = "${currentUserGroups()}";
+
+    taskQuery = (TaskQueryImpl) taskQuery()
+      .taskCandidateGroupInExpression(testGroupsExpression)
+      .taskCandidateGroupIn(queryList);
+
+    // execute query so expression will be evaluated
+    taskQuery.count();
+
+    assertEquals(1, taskQuery.getCandidateGroups().size());
   }
 
   @After
@@ -276,64 +463,53 @@ public class TaskQueryExpressionTest extends PluggableProcessEngineTestCase {
     }
   }
 
-  protected void assertOne(Query query) {
-    assertEquals(1, query.count());
+
+  protected TaskQuery taskQuery() {
+    return taskService.createTaskQuery();
   }
 
-  protected void assertNone(Query query) {
-    assertEquals(0, query.count());
+  protected void assertCount(Query query, long count) {
+    assertEquals(count, query.count());
   }
 
   protected void setCurrentUser(User user) {
+    processEngineConfiguration.setAuthorizationEnabled(false);
+
+    List<Group> groups = identityService.createGroupQuery().groupMember(user.getId()).list();
+    List<String> groupIds = new ArrayList<String>();
+    for (Group group : groups) {
+      groupIds.add(group.getId());
+    }
+
     processEngineConfiguration.setAuthorizationEnabled(true);
-    identityService.setAuthenticatedUserId(user.getId());
+    identityService.setAuthentication(user.getId(), groupIds);
   }
 
-  protected Task createTestTask(String taskId, User user) {
-    Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
-
-    if (task == null) {
-      task = taskService.newTask(taskId);
-      task.setDueDate(now());
-      task.setFollowUpDate(now());
-
-      if (user != null) {
-        task.setAssignee(user.getId());
-        task.setOwner(user.getId());
-      }
-
-      taskService.saveTask(task);
-    }
-
-    return task;
+  protected Group createGroup(String groupId) {
+    Group group = identityService.newGroup(groupId);
+    identityService.saveGroup(group);
+    return group;
   }
 
-  protected User createTestUser(String userId, String... groupIds) {
-    User user = identityService.createUserQuery().userId(userId).singleResult();
-    if (user == null) {
-      user = identityService.newUser(userId);
-      identityService.saveUser(user);
-    }
+  protected User createUser(String userId, String... groupIds) {
+    User user = identityService.newUser(userId);
+    identityService.saveUser(user);
 
     if (groupIds != null) {
       for (String groupId : groupIds) {
-        Group group = createTestGroup(groupId);
-        identityService.createMembership(user.getId(), group.getId());
+        identityService.createMembership(userId, groupId);
       }
     }
 
     return user;
   }
 
-  protected Group createTestGroup(String groupId) {
-    Group group = identityService.createGroupQuery().groupId(groupId).singleResult();
-
-    if (group == null) {
-      group = identityService.newGroup(groupId);
-      identityService.saveGroup(group);
-    }
-
-    return group;
+  protected Task createTestTask(String taskId) {
+    Task task = taskService.newTask(taskId);
+    task.setDueDate(task.getCreateTime());
+    task.setFollowUpDate(task.getCreateTime());
+    taskService.saveTask(task);
+    return task;
   }
 
   protected Date now() {

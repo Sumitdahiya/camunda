@@ -155,7 +155,7 @@ public class TaskQueryImpl extends AbstractQuery<TaskQuery, Task> implements Tas
   public TaskQueryImpl taskAssignee(String assignee) {
     ensureNotNull("Assignee", assignee);
     this.assignee = assignee;
-    expressions.remove("assignee");
+    expressions.remove("taskAssignee");
     return this;
   }
 
@@ -168,7 +168,7 @@ public class TaskQueryImpl extends AbstractQuery<TaskQuery, Task> implements Tas
   public TaskQuery taskAssigneeLike(String assignee) {
     ensureNotNull("Assignee", assignee);
     this.assigneeLike = assignee;
-    expressions.remove("assigneeLike");
+    expressions.remove("taskAssigneeLike");
     return this;
   }
 
@@ -181,7 +181,7 @@ public class TaskQueryImpl extends AbstractQuery<TaskQuery, Task> implements Tas
   public TaskQueryImpl taskOwner(String owner) {
     ensureNotNull("Owner", owner);
     this.owner = owner;
-    expressions.remove("owner");
+    expressions.remove("taskOwner");
     return this;
   }
 
@@ -221,7 +221,7 @@ public class TaskQueryImpl extends AbstractQuery<TaskQuery, Task> implements Tas
       throw new ProcessEngineException("Invalid query usage: cannot set both candidateUser and candidateGroupIn");
     }
     this.candidateUser = candidateUser;
-    expressions.remove("candidateUser");
+    expressions.remove("taskCandidateUser");
     return this;
   }
 
@@ -242,7 +242,7 @@ public class TaskQueryImpl extends AbstractQuery<TaskQuery, Task> implements Tas
   public TaskQueryImpl taskInvolvedUser(String involvedUser) {
     ensureNotNull("Involved user", involvedUser);
     this.involvedUser = involvedUser;
-    expressions.remove("involvedUser");
+    expressions.remove("taskInvolvedUser");
     return this;
   }
 
@@ -262,7 +262,7 @@ public class TaskQueryImpl extends AbstractQuery<TaskQuery, Task> implements Tas
       throw new ProcessEngineException("Invalid query usage: cannot set both candidateGroup and candidateGroupIn");
     }
     this.candidateGroup = candidateGroup;
-    expressions.remove("candidateGroup");
+    expressions.remove("taskCandidateGroup");
     return this;
   }
 
@@ -291,7 +291,7 @@ public class TaskQueryImpl extends AbstractQuery<TaskQuery, Task> implements Tas
     }
 
     this.candidateGroups = candidateGroups;
-    expressions.remove("candidateGroups");
+    expressions.remove("taskCandidateGroupIn");
     return this;
   }
 
@@ -336,7 +336,7 @@ public class TaskQueryImpl extends AbstractQuery<TaskQuery, Task> implements Tas
 
   public TaskQueryImpl taskCreatedOn(Date createTime) {
     this.createTime = createTime;
-    expressions.remove("createTime");
+    expressions.remove("taskCreatedOn");
     return this;
   }
 
@@ -347,7 +347,7 @@ public class TaskQueryImpl extends AbstractQuery<TaskQuery, Task> implements Tas
 
   public TaskQuery taskCreatedBefore(Date before) {
     this.createTimeBefore = before;
-    expressions.remove("createTimeBefore");
+    expressions.remove("taskCreatedBefore");
     return this;
   }
 
@@ -358,7 +358,7 @@ public class TaskQueryImpl extends AbstractQuery<TaskQuery, Task> implements Tas
 
   public TaskQuery taskCreatedAfter(Date after) {
     this.createTimeAfter = after;
-    expressions.remove("createTimeAfter");
+    expressions.remove("taskCreatedAfter");
     return this;
   }
 
