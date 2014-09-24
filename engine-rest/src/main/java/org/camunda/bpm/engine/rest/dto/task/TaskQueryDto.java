@@ -12,16 +12,15 @@
  */
 package org.camunda.bpm.engine.rest.dto.task;
 
+import static org.camunda.bpm.engine.impl.util.StringUtil.isExpression;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response.Status;
 
 import org.camunda.bpm.engine.ProcessEngine;
-import org.camunda.bpm.engine.impl.calendar.DateTimeUtil;
-import org.camunda.bpm.engine.impl.util.StringUtil;
 import org.camunda.bpm.engine.rest.dto.AbstractQueryDto;
 import org.camunda.bpm.engine.rest.dto.CamundaQueryParam;
 import org.camunda.bpm.engine.rest.dto.VariableQueryParameterDto;
@@ -178,8 +177,8 @@ public class TaskQueryDto extends AbstractQueryDto<TaskQuery> {
 
   @CamundaQueryParam("assignee")
   public void setAssignee(String assignee) {
-    if (StringUtil.isExpression(assignee)) {
-      this.expressions.put("assignee", assignee);
+    if (isExpression(assignee)) {
+      expressions.put("assignee", assignee);
     }
     else {
       this.assignee = assignee;
@@ -188,17 +187,32 @@ public class TaskQueryDto extends AbstractQueryDto<TaskQuery> {
 
   @CamundaQueryParam("assigneeLike")
   public void setAssigneeLike(String assigneeLike) {
-    this.assigneeLike = assigneeLike;
+    if (isExpression(assigneeLike)) {
+      expressions.put("assigneeLike", assigneeLike);
+    }
+    else {
+      this.assigneeLike = assigneeLike;
+    }
   }
 
   @CamundaQueryParam("candidateGroup")
   public void setCandidateGroup(String candidateGroup) {
-    this.candidateGroup = candidateGroup;
+    if (isExpression(candidateGroup)) {
+      expressions.put("candidateGroup", candidateGroup);
+    }
+    else {
+      this.candidateGroup = candidateGroup;
+    }
   }
 
   @CamundaQueryParam("candidateUser")
   public void setCandidateUser(String candidateUser) {
-    this.candidateUser = candidateUser;
+    if (isExpression(candidateUser)) {
+      expressions.put("candidateUser", candidateUser);
+    }
+    else {
+      this.candidateUser = candidateUser;
+    }
   }
 
   @CamundaQueryParam("taskDefinitionKey")
@@ -223,7 +237,12 @@ public class TaskQueryDto extends AbstractQueryDto<TaskQuery> {
 
   @CamundaQueryParam("involvedUser")
   public void setInvolvedUser(String involvedUser) {
-    this.involvedUser = involvedUser;
+    if (isExpression(involvedUser)) {
+      expressions.put("involvedUser", involvedUser);
+    }
+    else {
+      this.involvedUser = involvedUser;
+    }
   }
 
   @CamundaQueryParam(value = "maxPriority", converter = IntegerConverter.class)
@@ -248,7 +267,12 @@ public class TaskQueryDto extends AbstractQueryDto<TaskQuery> {
 
   @CamundaQueryParam("owner")
   public void setOwner(String owner) {
-    this.owner = owner;
+    if (isExpression(owner)) {
+      expressions.put("owner", owner);
+    }
+    else {
+      this.owner = owner;
+    }
   }
 
   @CamundaQueryParam(value = "priority", converter = IntegerConverter.class)
@@ -271,54 +295,94 @@ public class TaskQueryDto extends AbstractQueryDto<TaskQuery> {
     this.suspended = suspended;
   }
 
-  @CamundaQueryParam(value = "dueAfter", converter = DateConverter.class)
-  public void setDueAfter(Date dueAfter) {
-    this.dueAfter = dueAfter;
+  @CamundaQueryParam(value = "dueAfter")
+  public void setDueAfter(String dueAfter) {
+    if (isExpression(dueAfter)) {
+      expressions.put("dueAfter", dueAfter);
+    }
+    else {
+      this.dueAfter = DateConverter.convert(dueAfter);
+    }
   }
 
   @CamundaQueryParam(value = "dueBefore")
   public void setDueBefore(String dueBefore) {
-    if (StringUtil.isExpression(dueBefore)) {
-      this.expressions.put("dueBefore", dueBefore);
+    if (isExpression(dueBefore)) {
+      expressions.put("dueBefore", dueBefore);
     }
     else {
-      this.dueBefore = DateTimeUtil.parseDate(dueBefore);
+      this.dueBefore = DateConverter.convert(dueBefore);
     }
   }
 
-  @CamundaQueryParam(value = "due", converter = DateConverter.class)
-  public void setDueDate(Date dueDate) {
-    this.dueDate = dueDate;
+  @CamundaQueryParam(value = "due")
+  public void setDueDate(String dueDate) {
+    if (isExpression(dueDate)) {
+      expressions.put("due", dueDate);
+    }
+    else {
+      this.dueDate = DateConverter.convert(dueDate);
+    }
   }
 
-  @CamundaQueryParam(value = "followUpAfter", converter = DateConverter.class)
-  public void setFollowUpAfter(Date followUpAfter) {
-    this.followUpAfter = followUpAfter;
+  @CamundaQueryParam(value = "followUpAfter")
+  public void setFollowUpAfter(String followUpAfter) {
+    if (isExpression(followUpAfter)) {
+      expressions.put("followUpAfter", followUpAfter);
+    }
+    else {
+      this.followUpAfter = DateConverter.convert(followUpAfter);
+    }
   }
 
-  @CamundaQueryParam(value = "followUpBefore", converter = DateConverter.class)
-  public void setFollowUpBefore(Date followUpBefore) {
-    this.followUpBefore = followUpBefore;
+  @CamundaQueryParam(value = "followUpBefore")
+  public void setFollowUpBefore(String followUpBefore) {
+    if (isExpression(followUpBefore)) {
+      expressions.put("followUpBefore", followUpBefore);
+    }
+    else {
+      this.followUpBefore = DateConverter.convert(followUpBefore);
+    }
   }
 
-  @CamundaQueryParam(value = "followUp", converter = DateConverter.class)
-  public void setFollowUpDate(Date followUp) {
-    this.followUpDate = followUp;
+  @CamundaQueryParam(value = "followUp")
+  public void setFollowUpDate(String followUp) {
+    if (isExpression(followUp)) {
+      expressions.put("followUp", followUp);
+    }
+    else {
+      this.followUpDate = DateConverter.convert(followUp);
+    }
   }
 
-  @CamundaQueryParam(value = "createdAfter", converter = DateConverter.class)
-  public void setCreatedAfter(Date createdAfter) {
-    this.createdAfter = createdAfter;
+  @CamundaQueryParam(value = "createdAfter")
+  public void setCreatedAfter(String createdAfter) {
+    if (isExpression(createdAfter)) {
+      expressions.put("createdAfter", createdAfter);
+    }
+    else {
+      this.createdAfter = DateConverter.convert(createdAfter);
+    }
   }
 
-  @CamundaQueryParam(value = "createdBefore", converter = DateConverter.class)
-  public void setCreatedBefore(Date createdBefore) {
-    this.createdBefore = createdBefore;
+  @CamundaQueryParam(value = "createdBefore")
+  public void setCreatedBefore(String createdBefore) {
+    if (isExpression(createdBefore)) {
+      expressions.put("createdBefore", createdBefore);
+    }
+    else {
+      this.createdBefore = DateConverter.convert(createdBefore);
+    }
   }
 
-  @CamundaQueryParam(value = "created", converter = DateConverter.class)
-  public void setCreatedOn(Date createdOn) {
-    this.createdOn = createdOn;
+  @CamundaQueryParam(value = "created")
+  public void setCreatedOn(String createdOn) {
+    if (isExpression(createdOn)) {
+      expressions.put("created", createdOn);
+    }
+    else {
+      this.createdOn = DateConverter.convert(createdOn);
+    }
   }
 
   @CamundaQueryParam(value = "delegationState")
@@ -329,6 +393,16 @@ public class TaskQueryDto extends AbstractQueryDto<TaskQuery> {
   @CamundaQueryParam(value = "candidateGroups", converter = StringListConverter.class)
   public void setCandidateGroups(List<String> candidateGroups) {
     this.candidateGroups = candidateGroups;
+  }
+
+  @CamundaQueryParam(value = "candidateGroupsExpression")
+  public void setCandidateGroupsExpression(String candidateGroupsExpression) {
+    if (isExpression(candidateGroupsExpression)) {
+      expressions.put("candidateGroups", candidateGroupsExpression);
+    }
+    else {
+      this.candidateGroups = StringListConverter.convert(candidateGroupsExpression);
+    }
   }
 
   @CamundaQueryParam(value = "taskVariables", converter = VariableListConverter.class)
@@ -619,17 +693,58 @@ public class TaskQueryDto extends AbstractQueryDto<TaskQuery> {
 
       }
     }
-
-    // expressions
-    applyExpressions(query);
   }
 
   protected void applyExpressions(TaskQuery query) {
+    super.applyExpressions(query);
+
     if (expressions.containsKey("assignee")) {
       query.taskAssigneeExpression(expressions.get("assignee"));
     }
+    if (expressions.containsKey("assigneeLike")) {
+      query.taskAssigneeLikeExpression(expressions.get("assigneeLike"));
+    }
+    if (expressions.containsKey("owner")) {
+      query.taskOwnerExpression(expressions.get("owner"));
+    }
+    if (expressions.containsKey("involvedUser")) {
+      query.taskInvolvedUserExpression(expressions.get("involvedUser"));
+    }
+    if (expressions.containsKey("candidateUser")) {
+      query.taskCandidateUserExpression(expressions.get("candidateUser"));
+    }
+    if (expressions.containsKey("candidateGroup")) {
+      query.taskCandidateGroupExpression(expressions.get("candidateGroup"));
+    }
+    if (expressions.containsKey("candidateGroups")) {
+      query.taskCandidateGroupInExpression(expressions.get("candidateGroups"));
+    }
+    if (expressions.containsKey("createdBefore")) {
+      query.taskCreatedBeforeExpression(expressions.get("createdBefore"));
+    }
+    if (expressions.containsKey("created")) {
+      query.taskCreatedOnExpression(expressions.get("created"));
+    }
+    if (expressions.containsKey("createdAfter")) {
+      query.taskCreatedAfterExpression(expressions.get("createdAfter"));
+    }
     if (expressions.containsKey("dueBefore")) {
       query.dueBeforeExpression(expressions.get("dueBefore"));
+    }
+    if (expressions.containsKey("due")) {
+      query.dueDateExpression(expressions.get("due"));
+    }
+    if (expressions.containsKey("dueAfter")) {
+      query.dueAfterExpression(expressions.get("dueAfter"));
+    }
+    if (expressions.containsKey("followUpBefore")) {
+      query.followUpBeforeExpression(expressions.get("followUpBefore"));
+    }
+    if (expressions.containsKey("followUp")) {
+      query.followUpDateExpression(expressions.get("followUp"));
+    }
+    if (expressions.containsKey("followUpAfter")) {
+      query.followUpAfterExpression(expressions.get("followUpAfter"));
     }
   }
 

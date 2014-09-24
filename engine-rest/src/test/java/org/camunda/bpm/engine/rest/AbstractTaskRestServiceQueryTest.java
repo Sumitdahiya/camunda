@@ -14,12 +14,10 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
@@ -1204,17 +1202,40 @@ public abstract class AbstractTaskRestServiceQueryTest extends AbstractRestServi
   }
 
   @Test
-  public void testQueryForAssigneeExpression() {
+  public void testQueryWithExpressions() {
+    String testExpression = "${'test'}";
+
+    Map<String, String> params = new HashMap<String, String>();
+    params.put("assignee", testExpression);
+    params.put("assigneeLike", testExpression);
+    params.put("owner", testExpression);
+    params.put("involvedUser", testExpression);
+    params.put("candidateUser", testExpression);
+    params.put("candidateGroup", testExpression);
+    params.put("candidateGroupsExpression", testExpression);
+    params.put("createdBefore", testExpression);
+    params.put("created", testExpression);
+    params.put("createdOn", testExpression);
+    params.put("createdAfter", testExpression);
+    params.put("dueBefore", testExpression);
+    params.put("due", testExpression);
+    params.put("dueDate", testExpression);
+    params.put("dueAfter", testExpression);
+    params.put("followUpBefore", testExpression);
+    params.put("followUp", testExpression);
+    params.put("followUpDate", testExpression);
+    params.put("followUpAfter", testExpression);
+
     // get
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
-      .queryParam("assignee", "${userId}")
+      .queryParams(params)
     .expect()
       .statusCode(Status.OK.getStatusCode())
     .when()
       .get(TASK_QUERY_URL);
 
-    verify(mockQuery).taskAssigneeExpression("${userId}");
+    verifyExpressionMocks(testExpression);
 
     // reset mock
     reset(mockQuery);
@@ -1223,42 +1244,33 @@ public abstract class AbstractTaskRestServiceQueryTest extends AbstractRestServi
     given()
       .contentType(POST_JSON_CONTENT_TYPE)
       .header("Accept", MediaType.APPLICATION_JSON)
-      .body(Collections.singletonMap("assignee", "${userId}"))
+      .body(params)
     .expect()
       .statusCode(Status.OK.getStatusCode())
     .when()
       .post(TASK_QUERY_URL);
 
-    verify(mockQuery).taskAssigneeExpression("${userId}");
+    verifyExpressionMocks(testExpression);
+
   }
 
-  @Test
-  public void testQueryForDueBeforeExpression() {
-    // get
-    given()
-      .header("Accept", MediaType.APPLICATION_JSON)
-      .queryParam("dueBefore", "${now}")
-    .expect()
-      .statusCode(Status.OK.getStatusCode())
-    .when()
-      .get(TASK_QUERY_URL);
-
-    verify(mockQuery).dueBeforeExpression("${now}");
-
-    // reset mock
-    reset(mockQuery);
-
-    // post
-    given()
-      .header("Accept", MediaType.APPLICATION_JSON)
-      .contentType(MediaType.APPLICATION_JSON)
-      .body(Collections.singletonMap("dueBefore", "${now}"))
-    .expect()
-      .statusCode(Status.OK.getStatusCode())
-    .when()
-      .post(TASK_QUERY_URL);
-
-    verify(mockQuery).dueBeforeExpression("${now}");
+  protected void verifyExpressionMocks(String testExpression) {
+    verify(mockQuery).taskAssigneeExpression(testExpression);
+    verify(mockQuery).taskAssigneeLikeExpression(testExpression);
+    verify(mockQuery).taskOwnerExpression(testExpression);
+    verify(mockQuery).taskInvolvedUserExpression(testExpression);
+    verify(mockQuery).taskCandidateUserExpression(testExpression);
+    verify(mockQuery).taskCandidateGroupExpression(testExpression);
+    verify(mockQuery).taskCandidateGroupInExpression(testExpression);
+    verify(mockQuery).taskCreatedBeforeExpression(testExpression);
+    verify(mockQuery).taskCreatedOnExpression(testExpression);
+    verify(mockQuery).taskCreatedAfterExpression(testExpression);
+    verify(mockQuery).dueBeforeExpression(testExpression);
+    verify(mockQuery).dueDateExpression(testExpression);
+    verify(mockQuery).dueAfterExpression(testExpression);
+    verify(mockQuery).followUpBeforeExpression(testExpression);
+    verify(mockQuery).followUpDateExpression(testExpression);
+    verify(mockQuery).followUpAfterExpression(testExpression);
   }
 
 }

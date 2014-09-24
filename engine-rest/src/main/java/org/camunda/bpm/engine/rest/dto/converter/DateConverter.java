@@ -20,6 +20,10 @@ public class DateConverter implements StringToTypeConverter<Date> {
 
   @Override
   public Date convertQueryParameterToType(String value) {
+    return convert(value);
+  }
+
+  public static Date convert(String value) {
     return DateTimeUtil.parseDate(value);
   }
 }
