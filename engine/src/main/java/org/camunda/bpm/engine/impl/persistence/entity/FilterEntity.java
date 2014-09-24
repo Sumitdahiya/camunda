@@ -161,6 +161,15 @@ public class FilterEntity implements Filter, Serializable, DbEntity, HasDbRevisi
         String orderBy = queryJson.getString("orderBy") + ", " + extendingQuery.get(key);
         queryJson.put(key, orderBy);
       }
+      else if (key.equals("expressions") && queryJson.has("expressions")) {
+        JSONObject expressions = extendingQuery.getJSONObject("expressions");
+        Iterator expressionKeys = expressions.keys();
+        while (expressionKeys.hasNext()) {
+          String attribute = (String) expressionKeys.next();
+          String expression = expressions.getString(key);
+          queryJson.getJSONObject("expressions").put(attribute, expression);
+        }
+      }
       else {
         queryJson.put(key, extendingQuery.get(key));
       }

@@ -201,6 +201,14 @@ public abstract class AbstractQuery<T extends Query<?,?>, U> extends ListQueryPa
     }
   }
 
+  public Map<String, String> getExpressions() {
+    return expressions;
+  }
+
+  public void setExpressions(Map<String, String> expressions) {
+    this.expressions = expressions;
+  }
+
   protected void evaluateExpressions() {
     // we cannot iterate directly on the entry set cause the expressions
     // are removed by the setter methods during the iteration
