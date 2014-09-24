@@ -53,6 +53,8 @@ public class TaskQueryExpressionTest extends PluggableProcessEngineTestCase {
     userWithoutGroups = createUser("userWithoutGroups");
 
     task = createTestTask("task");
+    // shift time to force distinguishable create times
+    adjustTime(2 * 60);
     Task anotherTask = createTestTask("anotherTask");
 
     taskService.setOwner(task.getId(), user.getId());
@@ -151,7 +153,7 @@ public class TaskQueryExpressionTest extends PluggableProcessEngineTestCase {
 
     assertCount(taskQuery().taskCreatedBeforeExpression("${now()}"), 2);
 
-    adjustTime(-60);
+    adjustTime(-5 * 60);
 
     assertCount(taskQuery().taskCreatedBeforeExpression("${now()}"), 0);
 
@@ -178,7 +180,7 @@ public class TaskQueryExpressionTest extends PluggableProcessEngineTestCase {
 
     assertCount(taskQuery().taskCreatedAfterExpression("${now()}"), 0);
 
-    adjustTime(-60);
+    adjustTime(-5 * 60);
 
     assertCount(taskQuery().taskCreatedAfterExpression("${now()}"), 2);
 
@@ -194,7 +196,7 @@ public class TaskQueryExpressionTest extends PluggableProcessEngineTestCase {
 
     assertCount(taskQuery().dueBeforeExpression("${now()}"), 2);
 
-    adjustTime(-60);
+    adjustTime(-5 * 60);
 
     assertCount(taskQuery().dueBeforeExpression("${now()}"), 0);
 
@@ -221,7 +223,7 @@ public class TaskQueryExpressionTest extends PluggableProcessEngineTestCase {
 
     assertCount(taskQuery().dueAfterExpression("${now()}"), 0);
 
-    adjustTime(-60);
+    adjustTime(-5 * 60);
 
     assertCount(taskQuery().dueAfterExpression("${now()}"), 2);
 
@@ -237,7 +239,7 @@ public class TaskQueryExpressionTest extends PluggableProcessEngineTestCase {
 
     assertCount(taskQuery().followUpBeforeExpression("${now()}"), 2);
 
-    adjustTime(-60);
+    adjustTime(-5 * 60);
 
     assertCount(taskQuery().followUpBeforeExpression("${now()}"), 0);
 
@@ -264,7 +266,7 @@ public class TaskQueryExpressionTest extends PluggableProcessEngineTestCase {
 
     assertCount(taskQuery().followUpAfterExpression("${now()}"), 0);
 
-    adjustTime(-60);
+    adjustTime(-5 * 60);
 
     assertCount(taskQuery().followUpAfterExpression("${now()}"), 2);
 

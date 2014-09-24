@@ -155,7 +155,9 @@ public class JsonTaskQueryConverter extends JsonObjectConverter<TaskQuery> {
     addDefaultField(json, ORDER_BY, ListQueryParameterObject.DEFAULT_ORDER_BY, query.getOrderBy());
 
     // expressions
-    json.put("expressions", new JSONObject(query.getExpressions()));
+    if (!query.getExpressions().isEmpty()) {
+      json.put("expressions", new JSONObject(query.getExpressions()));
+    }
 
     return json;
   }
