@@ -16,6 +16,7 @@ package org.camunda.bpm.engine.rest;
 import static com.jayway.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -26,17 +27,16 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
-
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
 import org.camunda.bpm.engine.FilterService;
 import org.camunda.bpm.engine.ProcessEngineException;
-import org.camunda.bpm.engine.exception.NotValidException;
 import org.camunda.bpm.engine.exception.NullValueException;
 import org.camunda.bpm.engine.filter.Filter;
 import org.camunda.bpm.engine.filter.FilterQuery;
 import org.camunda.bpm.engine.impl.persistence.entity.TaskEntity;
+import org.camunda.bpm.engine.query.Query;
 import org.camunda.bpm.engine.rest.dto.runtime.FilterDto;
 import org.camunda.bpm.engine.rest.hal.Hal;
 import org.camunda.bpm.engine.rest.helper.MockProvider;
@@ -83,38 +83,14 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
 
     when(filterServiceMock.singleResult(eq(MockProvider.EXAMPLE_FILTER_ID)))
       .thenReturn(mockTasks.get(0));
-    when(filterServiceMock.singleResult(eq(MockProvider.EXAMPLE_FILTER_ID), anyString()))
-      .thenReturn(mockTasks.get(0));
     when(filterServiceMock.list(eq(MockProvider.EXAMPLE_FILTER_ID)))
-      .thenReturn(mockTasks);
-    when(filterServiceMock.list(eq(MockProvider.EXAMPLE_FILTER_ID), anyString()))
       .thenReturn(mockTasks);
     when(filterServiceMock.listPage(eq(MockProvider.EXAMPLE_FILTER_ID), anyInt(), anyInt()))
       .thenReturn(mockTasks);
-    when(filterServiceMock.listPage(eq(MockProvider.EXAMPLE_FILTER_ID), anyString(), anyInt(), anyInt()))
-      .thenReturn(mockTasks);
     when(filterServiceMock.count(eq(MockProvider.EXAMPLE_FILTER_ID))).thenReturn((long) 1);
-    when(filterServiceMock.count(eq(MockProvider.EXAMPLE_FILTER_ID), anyString())).thenReturn((long) 1);
 
     doThrow(new NullValueException("No filter found with given id"))
       .when(filterServiceMock).deleteFilter(eq(MockProvider.NON_EXISTING_ID));
-    doThrow(new NullValueException("No filter found with given id"))
-      .when(filterServiceMock).singleResult(eq(MockProvider.NON_EXISTING_ID), anyString());
-    doThrow(new NullValueException("No filter found with given id"))
-      .when(filterServiceMock).list(eq(MockProvider.NON_EXISTING_ID), anyString());
-    doThrow(new NullValueException("No filter found with given id"))
-      .when(filterServiceMock).listPage(eq(MockProvider.NON_EXISTING_ID), anyString(), anyInt(), anyInt());
-    doThrow(new NullValueException("No filter found with given id"))
-      .when(filterServiceMock).count(eq(MockProvider.NON_EXISTING_ID), anyString());
-
-    doThrow(new NotValidException("Filter cannot be extended by an invalid query"))
-      .when(filterServiceMock).singleResult(eq(MockProvider.EXAMPLE_FILTER_ID), eq(invalidExtendingQuery));
-    doThrow(new NotValidException("Filter cannot be extended by an invalid query"))
-      .when(filterServiceMock).list(eq(MockProvider.EXAMPLE_FILTER_ID), eq(invalidExtendingQuery));
-    doThrow(new NotValidException("Filter cannot be extended by an invalid query"))
-      .when(filterServiceMock).listPage(eq(MockProvider.EXAMPLE_FILTER_ID), eq(invalidExtendingQuery), anyInt(), anyInt());
-    doThrow(new NotValidException("Filter cannot be extended by an invalid query"))
-      .when(filterServiceMock).count(eq(MockProvider.EXAMPLE_FILTER_ID), eq(invalidExtendingQuery));
   }
 
   @Test
@@ -261,12 +237,12 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .get(EXECUTE_SINGLE_RESULT_FILTER_URL);
 
-    verify(filterServiceMock).singleResult(MockProvider.EXAMPLE_FILTER_ID, (String) null);
+    verify(filterServiceMock).singleResult(MockProvider.EXAMPLE_FILTER_ID, null);
   }
 
   @Test
   public void testEmptySingleResult() {
-    when(filterServiceMock.singleResult(anyString(), anyString())).thenReturn(null);
+    when(filterServiceMock.singleResult(anyString(), null)).thenReturn(null);
 
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
@@ -276,13 +252,13 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .get(EXECUTE_SINGLE_RESULT_FILTER_URL);
 
-    verify(filterServiceMock).singleResult(MockProvider.EXAMPLE_FILTER_ID, (String) null);
+    verify(filterServiceMock).singleResult(MockProvider.EXAMPLE_FILTER_ID, null);
   }
 
   @Test
   public void testInvalidSingleResult() {
     doThrow(new ProcessEngineException("More than one result found"))
-      .when(filterServiceMock).singleResult(anyString(), anyString());
+      .when(filterServiceMock).singleResult(anyString(), null);
 
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
@@ -292,7 +268,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .get(EXECUTE_SINGLE_RESULT_FILTER_URL);
 
-    verify(filterServiceMock).singleResult(MockProvider.EXAMPLE_FILTER_ID, (String) null);
+    verify(filterServiceMock).singleResult(MockProvider.EXAMPLE_FILTER_ID, null);
   }
 
   @Test
@@ -305,12 +281,12 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
       .when()
       .get(EXECUTE_SINGLE_RESULT_FILTER_URL);
 
-    verify(filterServiceMock).singleResult(MockProvider.EXAMPLE_FILTER_ID, (String) null);
+    verify(filterServiceMock).singleResult(MockProvider.EXAMPLE_FILTER_ID, null);
   }
 
   @Test
   public void testEmptyHalSingleResult() {
-    when(filterServiceMock.singleResult(anyString(), anyString())).thenReturn(null);
+    when(filterServiceMock.singleResult(anyString(), null)).thenReturn(null);
 
     given()
       .header("Accept", Hal.MEDIA_TYPE_HAL)
@@ -322,13 +298,13 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .get(EXECUTE_SINGLE_RESULT_FILTER_URL);
 
-    verify(filterServiceMock).singleResult(MockProvider.EXAMPLE_FILTER_ID, (String) null);
+    verify(filterServiceMock).singleResult(MockProvider.EXAMPLE_FILTER_ID, null);
   }
 
   @Test
   public void testInvalidHalSingleResult() {
     doThrow(new ProcessEngineException("More than one result found"))
-      .when(filterServiceMock).singleResult(anyString(), anyString());
+      .when(filterServiceMock).singleResult(anyString(), null);
 
     given()
       .header("Accept", Hal.MEDIA_TYPE_HAL)
@@ -338,7 +314,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .get(EXECUTE_SINGLE_RESULT_FILTER_URL);
 
-    verify(filterServiceMock).singleResult(MockProvider.EXAMPLE_FILTER_ID, (String) null);
+    verify(filterServiceMock).singleResult(MockProvider.EXAMPLE_FILTER_ID, null);
   }
 
   @Test
@@ -351,7 +327,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .get(EXECUTE_SINGLE_RESULT_FILTER_URL);
 
-    verify(filterServiceMock).singleResult(MockProvider.NON_EXISTING_ID, (String) null);
+    verify(filterServiceMock).singleResult(MockProvider.NON_EXISTING_ID, null);
   }
 
   @Test
@@ -366,7 +342,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_SINGLE_RESULT_FILTER_URL);
 
-    verify(filterServiceMock).singleResult(MockProvider.EXAMPLE_FILTER_ID, EMPTY_JSON_OBJECT);
+    verify(filterServiceMock).singleResult(MockProvider.EXAMPLE_FILTER_ID, any(Query.class));
   }
 
   @Test
@@ -381,7 +357,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_SINGLE_RESULT_FILTER_URL);
 
-    verify(filterServiceMock).singleResult(MockProvider.EXAMPLE_FILTER_ID, EMPTY_JSON_OBJECT);
+    verify(filterServiceMock).singleResult(MockProvider.EXAMPLE_FILTER_ID, any(Query.class));
   }
 
   @Test
@@ -396,7 +372,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_SINGLE_RESULT_FILTER_URL);
 
-    verify(filterServiceMock).singleResult(MockProvider.EXAMPLE_FILTER_ID, invalidExtendingQuery);
+    verify(filterServiceMock).singleResult(MockProvider.EXAMPLE_FILTER_ID, any(Query.class));
   }
 
   @Test
@@ -411,7 +387,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_SINGLE_RESULT_FILTER_URL);
 
-    verify(filterServiceMock).singleResult(MockProvider.EXAMPLE_FILTER_ID, extendingQuery);
+    verify(filterServiceMock).singleResult(MockProvider.EXAMPLE_FILTER_ID, any(Query.class));
   }
 
   @Test
@@ -425,12 +401,12 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .get(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).list(MockProvider.EXAMPLE_FILTER_ID, (String) null);
+    verify(filterServiceMock).list(MockProvider.EXAMPLE_FILTER_ID, null);
   }
 
   @Test
   public void testEmptyList() {
-    when(filterServiceMock.list(anyString(), anyString())).thenReturn(Collections.emptyList());
+    when(filterServiceMock.list(anyString(), any(Query.class))).thenReturn(Collections.emptyList());
 
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
@@ -441,7 +417,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .get(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).list(MockProvider.EXAMPLE_FILTER_ID, (String) null);
+    verify(filterServiceMock).list(MockProvider.EXAMPLE_FILTER_ID, null);
   }
 
   @Test
@@ -455,12 +431,12 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .get(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).list(MockProvider.EXAMPLE_FILTER_ID, (String) null);
+    verify(filterServiceMock).list(MockProvider.EXAMPLE_FILTER_ID, null);
   }
 
   @Test
   public void testEmptyHalList() {
-    when(filterServiceMock.list(anyString(), anyString())).thenReturn(Collections.emptyList());
+    when(filterServiceMock.list(anyString(), any(Query.class))).thenReturn(Collections.emptyList());
 
     given()
       .header("Accept", Hal.MEDIA_TYPE_HAL)
@@ -473,7 +449,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .get(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).list(MockProvider.EXAMPLE_FILTER_ID, (String) null);
+    verify(filterServiceMock).list(MockProvider.EXAMPLE_FILTER_ID, null);
   }
 
   @Test
@@ -486,7 +462,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .get(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).list(MockProvider.NON_EXISTING_ID, (String) null);
+    verify(filterServiceMock).list(MockProvider.NON_EXISTING_ID, null);
   }
 
   @Test
@@ -502,7 +478,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .get(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).listPage(MockProvider.EXAMPLE_FILTER_ID, (String) null, 1, 2);
+    verify(filterServiceMock).listPage(MockProvider.EXAMPLE_FILTER_ID, null, 1, 2);
   }
 
   @Test
@@ -518,7 +494,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).list(MockProvider.EXAMPLE_FILTER_ID, EMPTY_JSON_OBJECT);
+    verify(filterServiceMock).list(MockProvider.EXAMPLE_FILTER_ID, any(Query.class));
   }
 
   @Test
@@ -534,7 +510,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).list(MockProvider.EXAMPLE_FILTER_ID, EMPTY_JSON_OBJECT);
+    verify(filterServiceMock).list(MockProvider.EXAMPLE_FILTER_ID, any(Query.class));
   }
 
   @Test
@@ -552,7 +528,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).listPage(MockProvider.EXAMPLE_FILTER_ID, EMPTY_JSON_OBJECT, 1, 2);
+    verify(filterServiceMock).listPage(MockProvider.EXAMPLE_FILTER_ID, any(Query.class), 1, 2);
   }
 
   @Test
@@ -568,7 +544,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).list(MockProvider.EXAMPLE_FILTER_ID, extendingQuery);
+    verify(filterServiceMock).list(MockProvider.EXAMPLE_FILTER_ID, any(Query.class));
   }
 
   @Test
@@ -586,7 +562,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).listPage(MockProvider.EXAMPLE_FILTER_ID, extendingQuery, 1, 2);
+    verify(filterServiceMock).listPage(MockProvider.EXAMPLE_FILTER_ID, any(Query.class), 1, 2);
   }
 
   @Test
@@ -601,7 +577,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).list(MockProvider.EXAMPLE_FILTER_ID, invalidExtendingQuery);
+    verify(filterServiceMock).list(MockProvider.EXAMPLE_FILTER_ID, any(Query.class));
   }
 
   @Test
@@ -615,7 +591,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .get(EXECUTE_COUNT_FILTER_URL);
 
-    verify(filterServiceMock).count(MockProvider.EXAMPLE_FILTER_ID, (String) null);
+    verify(filterServiceMock).count(MockProvider.EXAMPLE_FILTER_ID, null);
   }
 
   @Test
@@ -628,7 +604,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .get(EXECUTE_COUNT_FILTER_URL);
 
-    verify(filterServiceMock).count(MockProvider.NON_EXISTING_ID, (String) null);
+    verify(filterServiceMock).count(MockProvider.NON_EXISTING_ID, null);
   }
 
   @Test
@@ -644,7 +620,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_COUNT_FILTER_URL);
 
-    verify(filterServiceMock).count(MockProvider.EXAMPLE_FILTER_ID, EMPTY_JSON_OBJECT);
+    verify(filterServiceMock).count(MockProvider.EXAMPLE_FILTER_ID, any(Query.class));
   }
 
   @Test
@@ -660,7 +636,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_COUNT_FILTER_URL);
 
-    verify(filterServiceMock).count(MockProvider.EXAMPLE_FILTER_ID, extendingQuery);
+    verify(filterServiceMock).count(MockProvider.EXAMPLE_FILTER_ID, any(Query.class));
   }
 
   @Test
@@ -675,7 +651,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_COUNT_FILTER_URL);
 
-    verify(filterServiceMock).count(MockProvider.EXAMPLE_FILTER_ID, invalidExtendingQuery);
+    verify(filterServiceMock).count(MockProvider.EXAMPLE_FILTER_ID, any(Query.class));
   }
 
 }

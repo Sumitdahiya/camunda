@@ -13,6 +13,7 @@
 
 package org.camunda.bpm.engine.rest.sub.runtime.impl;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -20,7 +21,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.ws.rs.core.Response.Status;
 
 import org.camunda.bpm.engine.FilterService;
@@ -30,9 +30,12 @@ import org.camunda.bpm.engine.exception.NotValidException;
 import org.camunda.bpm.engine.exception.NullValueException;
 import org.camunda.bpm.engine.filter.Filter;
 import org.camunda.bpm.engine.impl.persistence.entity.TaskEntity;
+import org.camunda.bpm.engine.query.Query;
+import org.camunda.bpm.engine.rest.dto.AbstractQueryDto;
 import org.camunda.bpm.engine.rest.dto.CountResultDto;
 import org.camunda.bpm.engine.rest.dto.runtime.FilterDto;
 import org.camunda.bpm.engine.rest.dto.task.TaskDto;
+import org.camunda.bpm.engine.rest.dto.task.TaskQueryDto;
 import org.camunda.bpm.engine.rest.exception.InvalidRequestException;
 import org.camunda.bpm.engine.rest.hal.EmptyHalCollection;
 import org.camunda.bpm.engine.rest.hal.EmptyHalResource;
@@ -40,6 +43,7 @@ import org.camunda.bpm.engine.rest.hal.HalResource;
 import org.camunda.bpm.engine.rest.hal.task.HalTask;
 import org.camunda.bpm.engine.rest.hal.task.HalTaskList;
 import org.camunda.bpm.engine.rest.sub.runtime.FilterResource;
+import org.codehaus.jackson.map.ObjectMapper;
 
 /**
  * @author Sebastian Menski
@@ -47,6 +51,7 @@ import org.camunda.bpm.engine.rest.sub.runtime.FilterResource;
 public class FilterResourceImpl implements FilterResource {
 
   protected ProcessEngine engine;
+  protected ObjectMapper objectMapper;
   protected String filterId;
 
   protected FilterService filterService;
@@ -66,8 +71,9 @@ public class FilterResourceImpl implements FilterResource {
     ENTITY_MAPPING.put(TaskEntity.class, mapping);
   }
 
-  public FilterResourceImpl(ProcessEngine engine, String filterId) {
+  public FilterResourceImpl(ProcessEngine engine, ObjectMapper objectMapper, String filterId) {
     this.engine = engine;
+    this.objectMapper = objectMapper;
     this.filterId = filterId;
     filterService = engine.getFilterService();
   }
@@ -178,7 +184,7 @@ public class FilterResourceImpl implements FilterResource {
 
   protected Object executeFilterSingleResult(String extendingQuery) {
     try {
-      return filterService.singleResult(filterId, extendingQuery);
+      return filterService.singleResult(filterId, convertQuery(extendingQuery));
     }
     catch (NullValueException e) {
       throw new InvalidRequestException(Status.NOT_FOUND, e, "Filter with id '" + filterId + "' does not exist.");
@@ -191,7 +197,8 @@ public class FilterResourceImpl implements FilterResource {
     }
   }
 
-  protected List<Object> executeFilterList(String extendingQuery, Integer firstResult, Integer maxResults) {
+  protected List<Object> executeFilterList(String extendingQueryString, Integer firstResult, Integer maxResults) {
+    Query extendingQuery = convertQuery(extendingQueryString);
     try {
       if (firstResult != null || maxResults != null) {
         if (firstResult == null) {
@@ -215,7 +222,7 @@ public class FilterResourceImpl implements FilterResource {
 
   protected long executeFilterCount(String extendingQuery) {
     try {
-      return filterService.count(filterId, extendingQuery);
+      return filterService.count(filterId, convertQuery(extendingQuery));
     }
     catch (NullValueException e) {
       throw new InvalidRequestException(Status.NOT_FOUND, e, "Filter with id '" + filterId + "' does not exist.");
@@ -265,4 +272,14 @@ public class FilterResourceImpl implements FilterResource {
     }
     return filter;
   }
+
+  protected Query convertQuery(String queryString) {
+    try {
+      AbstractQueryDto queryDto = objectMapper.readValue(queryString, TaskQueryDto.class);
+      return queryDto.toQuery(engine);
+    } catch (IOException e) {
+      throw new InvalidRequestException(Status.BAD_REQUEST, e, "Unable to convert query to query object");
+    }
+  }
+
 }

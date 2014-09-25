@@ -19,7 +19,6 @@ import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNull;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.camunda.bpm.engine.EntityTypes;
@@ -32,7 +31,6 @@ import org.camunda.bpm.engine.impl.db.HasDbRevision;
 import org.camunda.bpm.engine.impl.json.JsonObjectConverter;
 import org.camunda.bpm.engine.impl.json.JsonTaskQueryConverter;
 import org.camunda.bpm.engine.impl.util.JsonUtil;
-import org.camunda.bpm.engine.impl.util.json.JSONException;
 import org.camunda.bpm.engine.impl.util.json.JSONObject;
 import org.camunda.bpm.engine.query.Query;
 
@@ -53,7 +51,7 @@ public class FilterEntity implements Filter, Serializable, DbEntity, HasDbRevisi
   protected String resourceType;
   protected String name;
   protected String owner;
-  protected AbstractQuery<?, ?> query;
+  protected AbstractQuery query;
   protected Map<String, Object> properties;
   protected int revision = 0;
 
@@ -167,50 +165,16 @@ public class FilterEntity implements Filter, Serializable, DbEntity, HasDbRevisi
     return revision + 1;
   }
 
-  public Filter extend(Map<String, Object> extendingQuery) {
-    ensureNotEmpty(NotValidException.class, "extendingQuery", extendingQuery);
-    try {
-      JSONObject json = new JSONObject(extendingQuery);
-      Query<?, ?> query  = (Query<?, ?>) getConverter().toObject(json);
-      return extend(query);
-    }
-    catch (JSONException e) {
-      throw new NotValidException("Query string has to be a JSON object", e);
-    }
-  }
-
+  @SuppressWarnings("unchecked")
   public <T extends Query<?, ?>> Filter extend(T extendingQuery) {
     ensureNotNull(NotValidException.class, "extendingQuery", extendingQuery);
 
-    // convert extendingQuery to JSON
-    JsonObjectConverter<T> converter = getConverter();
-    JSONObject extendingQueryJson = converter.toJsonObject(extendingQuery);
-
-    return extendQuery(extendingQueryJson);
-  }
-
-  @SuppressWarnings("unchecked")
-  protected Filter extendQuery(JSONObject extendingQuery) {
-    // parse query to JSON
-    JSONObject queryJson = new JSONObject(query);
-
-    // merge queries by keys
-    Iterator<String> extendingKeys = extendingQuery.keys();
-    while (extendingKeys.hasNext()) {
-      String key = extendingKeys.next();
-      if (key.equals("orderBy") && queryJson.has("orderBy")) {
-        // if extending query also contains a orderBy attribute we append it to the existing
-        String orderBy = queryJson.getString("orderBy") + ", " + extendingQuery.get(key);
-        queryJson.put(key, orderBy);
-      }
-      else {
-        queryJson.put(key, extendingQuery.get(key));
-      }
+    if (!extendingQuery.getClass().equals(query.getClass())) {
+      throw new NotValidException("Unable to extend a query of class '" + query.getClass() + "' by a query of class '" + extendingQuery.getClass() + "'");
     }
 
-    // create copy of the filter with the new query
     FilterEntity copy = copyFilter();
-    copy.setQueryInternal(queryJson.toString());
+    copy.setQuery(query.extend(extendingQuery));
 
     return copy;
   }

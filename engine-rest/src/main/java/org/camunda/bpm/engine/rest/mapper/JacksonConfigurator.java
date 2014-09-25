@@ -13,20 +13,15 @@
 package org.camunda.bpm.engine.rest.mapper;
 
 import java.text.SimpleDateFormat;
-
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
 import org.camunda.bpm.engine.rest.hal.Hal;
-import org.camunda.bpm.engine.task.TaskQuery;
-import org.codehaus.jackson.Version;
 import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.Module;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.map.module.SimpleModule;
 
 @Provider
 @Produces({MediaType.APPLICATION_JSON, Hal.MEDIA_TYPE_HAL})

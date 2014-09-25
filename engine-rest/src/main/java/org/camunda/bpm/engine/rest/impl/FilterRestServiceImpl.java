@@ -15,9 +15,12 @@ package org.camunda.bpm.engine.rest.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.ext.Providers;
 
 import org.camunda.bpm.engine.EntityTypes;
 import org.camunda.bpm.engine.FilterService;
@@ -32,11 +35,16 @@ import org.camunda.bpm.engine.rest.dto.runtime.FilterQueryDto;
 import org.camunda.bpm.engine.rest.exception.InvalidRequestException;
 import org.camunda.bpm.engine.rest.sub.runtime.FilterResource;
 import org.camunda.bpm.engine.rest.sub.runtime.impl.FilterResourceImpl;
+import org.codehaus.jackson.map.ObjectMapper;
+
 
 /**
  * @author Sebastian Menski
  */
 public class FilterRestServiceImpl extends AbstractRestProcessEngineAware implements FilterRestService {
+
+  @Context
+  protected Providers providers;
 
   public FilterRestServiceImpl() {
     super();
@@ -47,7 +55,8 @@ public class FilterRestServiceImpl extends AbstractRestProcessEngineAware implem
   }
 
   public FilterResource getFilter(String filterId) {
-    return new FilterResourceImpl(getProcessEngine(), filterId);
+    ObjectMapper objectMapper = providers.getContextResolver(ObjectMapper.class, MediaType.APPLICATION_JSON_TYPE).getContext(null);
+    return new FilterResourceImpl(getProcessEngine(), objectMapper, filterId);
   }
 
   public List<FilterDto> getFilters(UriInfo uriInfo, Integer firstResult, Integer maxResults) {

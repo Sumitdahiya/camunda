@@ -330,15 +330,6 @@ public class FilterTaskQueryTest extends PluggableProcessEngineTestCase {
     for (Task task : tasks) {
       assertEquals(DelegationState.RESOLVED, task.getDelegationState());
     }
-
-    String extendingQueryJson = queryConverter.toJson(extendingQuery);
-
-    tasks = filterService.list(filter.getId(), extendingQueryJson);
-    assertEquals(2, tasks.size());
-
-    for (Task task : tasks) {
-      assertEquals(DelegationState.RESOLVED, task.getDelegationState());
-    }
   }
 
   public void testExecuteTaskQueryListPage() {
@@ -370,13 +361,6 @@ public class FilterTaskQueryTest extends PluggableProcessEngineTestCase {
     extendingQuery.taskDelegationState(DelegationState.RESOLVED);
 
     tasks = filterService.listPage(filter.getId(), extendingQuery, 1, 2);
-    assertEquals(1, tasks.size());
-
-    assertEquals(DelegationState.RESOLVED, tasks.get(0).getDelegationState());
-
-    String extendingQueryJson = queryConverter.toJson(extendingQuery);
-
-    tasks = filterService.listPage(filter.getId(), extendingQueryJson, 1, 2);
     assertEquals(1, tasks.size());
 
     assertEquals(DelegationState.RESOLVED, tasks.get(0).getDelegationState());
@@ -431,13 +415,6 @@ public class FilterTaskQueryTest extends PluggableProcessEngineTestCase {
     assertNotNull(task);
     assertEquals("Task 1", task.getName());
     assertEquals("task1", task.getId());
-
-    String extendingQueryJson = queryConverter.toJson(extendingQuery);
-
-    task = filterService.singleResult(filter.getId(), extendingQueryJson);
-    assertNotNull(task);
-    assertEquals("Task 1", task.getName());
-    assertEquals("task1", task.getId());
   }
 
   public void testExecuteTaskQueryCount() {
@@ -476,12 +453,6 @@ public class FilterTaskQueryTest extends PluggableProcessEngineTestCase {
     count = filterService.count(filter.getId(), extendingQuery);
 
     assertEquals(1, count);
-
-    String extendingQueryJson = queryConverter.toJson(extendingQuery);
-
-    count = filterService.count(filter.getId(), extendingQueryJson);
-
-    assertEquals(1, count);
   }
 
   public void testSpecialExtendingQuery() {
@@ -489,22 +460,8 @@ public class FilterTaskQueryTest extends PluggableProcessEngineTestCase {
 
     saveQuery(query);
 
-    long count = filterService.count(filter.getId(), (String) null);
+    long count = filterService.count(filter.getId(), (Query) null);
     assertEquals(3, count);
-
-    count = filterService.count(filter.getId(), (Query) null);
-    assertEquals(3, count);
-
-    count = filterService.count(filter.getId(), "");
-    assertEquals(3, count);
-
-    try {
-      filterService.count(filter.getId(), "abc");
-      fail("Exception expected");
-    }
-    catch (NotValidException e) {
-      // expected
-    }
   }
 
   public void testExtendingSorting() {

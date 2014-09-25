@@ -74,22 +74,12 @@ public class FilterServiceImpl extends ServiceImpl implements FilterService {
   }
 
   @SuppressWarnings("unchecked")
-  public <T> List<T> list(String filterId, String extendingQuery) {
-    return (List<T>) commandExecutor.execute(new ExecuteFilterListCmd(filterId, extendingQuery));
-  }
-
-  @SuppressWarnings("unchecked")
   public <T> List<T> listPage(String filterId, int firstResult, int maxResults) {
     return (List<T>) commandExecutor.execute(new ExecuteFilterListPageCmd(filterId, firstResult, maxResults));
   }
 
   @SuppressWarnings("unchecked")
   public <T> List<T> listPage(String filterId, Query<?, T> extendingQuery, int firstResult, int maxResults) {
-    return (List<T>) commandExecutor.execute(new ExecuteFilterListPageCmd(filterId, extendingQuery, firstResult, maxResults));
-  }
-
-  @SuppressWarnings("unchecked")
-  public <T> List<T> listPage(String filterId, String extendingQuery, int firstResult, int maxResults) {
     return (List<T>) commandExecutor.execute(new ExecuteFilterListPageCmd(filterId, extendingQuery, firstResult, maxResults));
   }
 
@@ -103,20 +93,11 @@ public class FilterServiceImpl extends ServiceImpl implements FilterService {
     return (T) commandExecutor.execute(new ExecuteFilterSingleResultCmd(filterId, extendingQuery));
   }
 
-  @SuppressWarnings("unchecked")
-  public <T> T singleResult(String filterId, String extendingQuery) {
-    return (T) commandExecutor.execute(new ExecuteFilterSingleResultCmd(filterId, extendingQuery));
-  }
-
   public Long count(String filterId) {
     return commandExecutor.execute(new ExecuteFilterCountCmd(filterId));
   }
 
   public Long count(String filterId, Query<?, ?> extendingQuery) {
-    return commandExecutor.execute(new ExecuteFilterCountCmd(filterId, extendingQuery));
-  }
-
-  public Long count(String filterId, String extendingQuery) {
     return commandExecutor.execute(new ExecuteFilterCountCmd(filterId, extendingQuery));
   }
 
