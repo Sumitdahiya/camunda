@@ -82,7 +82,7 @@ public interface Filter {
   /**
    * @return the properties as map
    */
-  Map<String, Object> getPropertiesMap();
+  Map<String, Object> getProperties();
 
   /**
    * @param properties the properties to set as map

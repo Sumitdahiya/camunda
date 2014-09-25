@@ -197,7 +197,7 @@ public class FilterServiceTest extends PluggableProcessEngineTestCase {
     assertEquals(filter1.getName(), filter2.getName());
     assertEquals(filter1.getOwner(), filter2.getOwner());
     assertEquals(((FilterEntity) filter1).getQuery(), ((FilterEntity) filter2).getQuery());
-    assertEquals(filter1.getPropertiesMap(), filter2.getPropertiesMap());
+    assertEquals(filter1.getProperties(), filter2.getProperties());
   }
 
 }

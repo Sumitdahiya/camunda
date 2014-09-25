@@ -101,7 +101,7 @@ public class FilterDto {
       dto.query = TaskQueryDto.fromQuery(filter.getTypeQuery());
     }
 
-    dto.properties = filter.getPropertiesMap();
+    dto.properties = filter.getProperties();
     return dto;
   }
 

@@ -1429,7 +1429,7 @@ public abstract class MockProvider {
     when(mock.getName()).thenReturn(EXAMPLE_FILTER_NAME);
     when(mock.getOwner()).thenReturn(EXAMPLE_FILTER_OWNER);
     when(mock.getTypeQuery()).thenReturn(EXAMPLE_FILTER_TYPE_QUERY);
-    when(mock.getPropertiesMap()).thenReturn(EXAMPLE_FILTER_PROPERTIES_MAP);
+    when(mock.getProperties()).thenReturn(EXAMPLE_FILTER_PROPERTIES_MAP);
 
     doThrow(new NotValidException("Resource type must not be null"))
       .when(mock).setResourceType(null);

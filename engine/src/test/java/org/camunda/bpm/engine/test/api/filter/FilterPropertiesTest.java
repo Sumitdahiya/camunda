@@ -36,10 +36,10 @@ public class FilterPropertiesTest extends PluggableProcessEngineTestCase {
 
   public void testPropertiesFromNull() {
     filter.setProperties(null);
-    assertNull(filter.getPropertiesMap());
+    assertNull(filter.getProperties());
 
     filter.setProperties((Map<String, Object>) null);
-    assertNull(filter.getPropertiesMap());
+    assertNull(filter.getProperties());
   }
 
   public void testPropertiesFromMap() {
@@ -58,7 +58,7 @@ public class FilterPropertiesTest extends PluggableProcessEngineTestCase {
     filterService.saveFilter(filter);
     filter = filterService.getFilter(filter.getId());
 
-    Map<String, Object> properties = filter.getPropertiesMap();
+    Map<String, Object> properties = filter.getProperties();
     assertEquals(5, properties.size());
     assertEquals("#123456", properties.get("color"));
     assertEquals(42, properties.get("priority"));

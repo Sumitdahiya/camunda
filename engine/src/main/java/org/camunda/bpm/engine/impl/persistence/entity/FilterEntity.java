@@ -56,7 +56,7 @@ public class FilterEntity implements Filter, Serializable, DbEntity, HasDbRevisi
   protected int revision = 0;
 
   public FilterEntity() {
-    setQuery("{}");
+    query = "{}";
   }
 
   public void setId(String id) {
@@ -98,10 +98,6 @@ public class FilterEntity implements Filter, Serializable, DbEntity, HasDbRevisi
     return this;
   }
 
-  public String getQuery() {
-    return query;
-  }
-
   public <T extends Query<?, ?>> T getTypeQuery() {
     JsonObjectConverter<T> converter = getConverter();
     return converter.toObject(new JSONObject(query));
@@ -118,18 +114,6 @@ public class FilterEntity implements Filter, Serializable, DbEntity, HasDbRevisi
       throw new NotValidException("Query has to be a JSON object", e);
     }
 
-    return this;
-  }
-
-  public Filter setQuery(String query) {
-    ensureNotEmpty(NotValidException.class, "Query must not be null or empty. Has to be a JSON object", "query", query);
-    try {
-      new JSONObject(query);
-    }
-    catch (JSONException e) {
-      throw new NotValidException("Query string has to be a JSON object", e);
-    }
-    this.query = query;
     return this;
   }
 
@@ -188,7 +172,7 @@ public class FilterEntity implements Filter, Serializable, DbEntity, HasDbRevisi
     return copy;
   }
 
-  public Map<String, Object> getPropertiesMap() {
+  public Map<String, Object> getProperties() {
     if (properties != null) {
       return jsonAsMap(new JSONObject(properties));
     }
@@ -215,23 +199,10 @@ public class FilterEntity implements Filter, Serializable, DbEntity, HasDbRevisi
     return map;
   }
 
-  public Filter setProperties(String properties) {
-    if (properties != null && properties.isEmpty()) {
-      properties = null;
-    }
-
-    this.properties = properties;
-    return this;
-  }
-
-  public String getProperties() {
-    return this.properties;
-  }
-
   public Filter setProperties(Map<String, Object> properties) {
     if (properties != null) {
       JSONObject json = new JSONObject(properties);
-      setProperties(json.toString());
+      this.properties = json.toString();
     }
     else {
       this.properties = null;
@@ -261,11 +232,11 @@ public class FilterEntity implements Filter, Serializable, DbEntity, HasDbRevisi
 
   protected FilterEntity copyFilter() {
     FilterEntity copy = new FilterEntity();
-    copy.setResourceType(getResourceType());
-    copy.setName(getName());
-    copy.setOwner(getOwner());
-    copy.setQuery(getQuery());
-    copy.setProperties(getPropertiesMap());
+    copy.resourceType = resourceType;
+    copy.name = name;
+    copy.owner = owner;
+    copy.query = query;
+    copy.properties = properties;
     return copy;
   }
 
