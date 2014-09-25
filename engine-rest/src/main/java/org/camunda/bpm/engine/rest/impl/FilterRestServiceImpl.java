@@ -18,6 +18,8 @@ import java.util.List;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+
+import org.camunda.bpm.engine.EntityTypes;
 import org.camunda.bpm.engine.FilterService;
 import org.camunda.bpm.engine.ProcessEngine;
 import org.camunda.bpm.engine.exception.NotValidException;
@@ -89,7 +91,16 @@ public class FilterRestServiceImpl extends AbstractRestProcessEngineAware implem
   public FilterDto createFilter(FilterDto filterDto) {
     FilterService filterService = getProcessEngine().getFilterService();
 
-    Filter filter = filterService.newFilter();
+    String resourceType = filterDto.getResourceType();
+
+    Filter filter;
+
+    if (EntityTypes.TASK.equals(resourceType)) {
+      filter = filterService.newTaskFilter();
+    }
+    else {
+      throw new InvalidRequestException(Response.Status.BAD_REQUEST, "Unable to create filter with invalid resource type '" + resourceType + "'");
+    }
 
     try {
       filterDto.updateFilter(filter, getProcessEngine());

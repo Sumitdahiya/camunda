@@ -39,7 +39,7 @@ public class ExecuteFilterCountCmd extends AbstractExecuteFilterCmd implements C
 
   public Long execute(CommandContext commandContext) {
     Filter filter = getFilter(commandContext);
-    return filter.getTypeQuery().count();
+    return filter.getQuery().count();
   }
 
 }

@@ -98,7 +98,7 @@ public class FilterDto {
     dto.owner = filter.getOwner();
 
     if (EntityTypes.TASK.equals(filter.getResourceType())) {
-      dto.query = TaskQueryDto.fromQuery(filter.getTypeQuery());
+      dto.query = TaskQueryDto.fromQuery(filter.getQuery());
     }
 
     dto.properties = filter.getProperties();
@@ -106,12 +106,6 @@ public class FilterDto {
   }
 
   public void updateFilter(Filter filter, ProcessEngine engine) {
-    if (filter.getResourceType() == null) {
-      filter.setResourceType(getResourceType());
-    }
-    else if (getResourceType() != null && !getResourceType().equals(filter.getResourceType())) {
-      throw new InvalidRequestException(Status.BAD_REQUEST, "Unable to update filter from resource type '" + filter.getResourceType() + "' to '" + getResourceType() + "'");
-    }
     filter.setName(getName());
     filter.setOwner(getOwner());
     filter.setQuery(getQuery().toQuery(engine));

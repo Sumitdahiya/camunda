@@ -74,7 +74,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
 
     filterMock = MockProvider.createMockFilter();
 
-    when(filterServiceMock.newFilter()).thenReturn(filterMock);
+    when(filterServiceMock.newTaskFilter()).thenReturn(filterMock);
     when(filterServiceMock.saveFilter(eq(filterMock))).thenReturn(filterMock);
     when(filterServiceMock.getFilter(eq(MockProvider.EXAMPLE_FILTER_ID))).thenReturn(filterMock);
     when(filterServiceMock.getFilter(eq(MockProvider.NON_EXISTING_ID))).thenReturn(null);
@@ -155,7 +155,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(CREATE_FILTER_URL);
 
-    verify(filterServiceMock).newFilter();
+    verify(filterServiceMock).newTaskFilter();
     verify(filterServiceMock).saveFilter(filterMock);
   }
 

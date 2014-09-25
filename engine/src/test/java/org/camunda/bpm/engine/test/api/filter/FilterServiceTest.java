@@ -16,7 +16,6 @@ package org.camunda.bpm.engine.test.api.filter;
 import java.util.HashMap;
 
 import org.camunda.bpm.engine.ProcessEngineException;
-import org.camunda.bpm.engine.exception.NotValidException;
 import org.camunda.bpm.engine.filter.Filter;
 import org.camunda.bpm.engine.impl.TaskQueryImpl;
 import org.camunda.bpm.engine.impl.persistence.entity.FilterEntity;
@@ -82,22 +81,6 @@ public class FilterServiceTest extends PluggableProcessEngineTestCase {
     catch (ProcessEngineException e) {
       // expected
     }
-
-    try {
-      filter.setResourceType(null);
-      fail("Exception expected");
-    }
-    catch (ProcessEngineException e) {
-      // expected
-    }
-
-    try {
-      filter.setResourceType("");
-      fail("Exception expected");
-    }
-    catch (ProcessEngineException e) {
-      // expected
-    }
   }
 
   public void testUpdateFilter() {
@@ -113,17 +96,6 @@ public class FilterServiceTest extends PluggableProcessEngineTestCase {
     compareFilter(filter, filter2);
   }
 
-  public void testCannotUpdateResourceType() {
-    try {
-      filter.setResourceType("another resource type");
-      fail("expected exception");
-    } catch (NotValidException e) {
-      // expected
-    }
-
-    filterService.saveFilter(filter);
-  }
-
   public void testExtendFilter() {
     TaskQuery extendingQuery = taskService.createTaskQuery()
       .taskName("newName")
@@ -131,7 +103,7 @@ public class FilterServiceTest extends PluggableProcessEngineTestCase {
     Filter newFilter = filter.extend(extendingQuery);
     assertNull(newFilter.getId());
 
-    TaskQueryImpl filterQuery = newFilter.getTypeQuery();
+    TaskQueryImpl filterQuery = newFilter.getQuery();
     assertEquals("newName", filterQuery.getName());
     assertEquals("newOwner", filterQuery.getOwner());
   }
@@ -196,7 +168,7 @@ public class FilterServiceTest extends PluggableProcessEngineTestCase {
     assertEquals(filter1.getResourceType(), filter2.getResourceType());
     assertEquals(filter1.getName(), filter2.getName());
     assertEquals(filter1.getOwner(), filter2.getOwner());
-    assertEquals(((FilterEntity) filter1).getQuery(), ((FilterEntity) filter2).getQuery());
+    assertEquals(((FilterEntity) filter1).getQueryInternal(), ((FilterEntity) filter2).getQueryInternal());
     assertEquals(filter1.getProperties(), filter2.getProperties());
   }
 

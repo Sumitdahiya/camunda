@@ -32,12 +32,6 @@ public interface Filter {
   String getResourceType();
 
   /**
-   * @param resourceType the resource type of the filter
-   * @return this filter
-   */
-  Filter setResourceType(String resourceType);
-
-  /**
    * @return the name of the filter
    */
   String getName();
@@ -62,7 +56,7 @@ public interface Filter {
   /**
    * @return the saved query as query object
    */
-  <T extends Query<?, ?>> T getTypeQuery();
+  <T extends Query<?, ?>> T getQuery();
 
   /**
    * @param query the saved query as query object

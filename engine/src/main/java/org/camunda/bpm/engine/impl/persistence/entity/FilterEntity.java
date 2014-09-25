@@ -26,10 +26,12 @@ import org.camunda.bpm.engine.EntityTypes;
 import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.exception.NotValidException;
 import org.camunda.bpm.engine.filter.Filter;
+import org.camunda.bpm.engine.impl.AbstractQuery;
 import org.camunda.bpm.engine.impl.db.DbEntity;
 import org.camunda.bpm.engine.impl.db.HasDbRevision;
 import org.camunda.bpm.engine.impl.json.JsonObjectConverter;
 import org.camunda.bpm.engine.impl.json.JsonTaskQueryConverter;
+import org.camunda.bpm.engine.impl.util.JsonUtil;
 import org.camunda.bpm.engine.impl.util.json.JSONException;
 import org.camunda.bpm.engine.impl.util.json.JSONObject;
 import org.camunda.bpm.engine.query.Query;
@@ -51,12 +53,17 @@ public class FilterEntity implements Filter, Serializable, DbEntity, HasDbRevisi
   protected String resourceType;
   protected String name;
   protected String owner;
-  protected String query;
-  protected String properties;
+  protected AbstractQuery<?, ?> query;
+  protected Map<String, Object> properties;
   protected int revision = 0;
 
-  public FilterEntity() {
-    query = "{}";
+  protected FilterEntity() {
+
+  }
+
+  public FilterEntity(String resourceType) {
+    setResourceType(resourceType);
+    setQueryInternal("{}");
   }
 
   public void setId(String id) {
@@ -67,16 +74,16 @@ public class FilterEntity implements Filter, Serializable, DbEntity, HasDbRevisi
     return id;
   }
 
-  public String getResourceType() {
-    return resourceType;
-  }
-
   public Filter setResourceType(String resourceType) {
     ensureNotEmpty(NotValidException.class, "Filter resource type must not be null or empty", "resourceType", resourceType);
     ensureNull(NotValidException.class, "Cannot overwrite filter resource type", "resourceType", this.resourceType);
 
     this.resourceType = resourceType;
     return this;
+  }
+
+  public String getResourceType() {
+    return resourceType;
   }
 
   public String getName() {
@@ -98,40 +105,66 @@ public class FilterEntity implements Filter, Serializable, DbEntity, HasDbRevisi
     return this;
   }
 
-  public <T extends Query<?, ?>> T getTypeQuery() {
-    JsonObjectConverter<T> converter = getConverter();
-    return converter.toObject(new JSONObject(query));
+  @SuppressWarnings("unchecked")
+  public <T extends Query<?, ?>> T getQuery() {
+    return (T) query;
   }
 
-  public Filter setQuery(Map<String, Object> query) {
-    ensureNotEmpty(NotValidException.class, "Query must not be null or empty. Has to be a JSON object", "query", query);
-
-    try {
-      JSONObject jsonObject = new JSONObject(query);
-      setQuery(jsonObject.toString());
-    }
-    catch (JSONException e) {
-      throw new NotValidException("Query has to be a JSON object", e);
-    }
-
-    return this;
+  public String getQueryInternal() {
+    JsonObjectConverter<Object> converter = getConverter();
+    return converter.toJson(query);
   }
 
   public <T extends Query<?, ?>> Filter setQuery(T query) {
     ensureNotNull(NotValidException.class, "query", query);
-    JsonObjectConverter<T> converter = getConverter();
-    setQuery(converter.toJson(query));
+    this.query = (AbstractQuery<?, ?>) query;
     return this;
   }
 
-  public <T extends Query<?, ?>> Filter extend(T extendingQuery) {
-    ensureNotNull(NotValidException.class, "extendingQuery", extendingQuery);
+  public void setQueryInternal(String query) {
+    ensureNotNull(NotValidException.class, "query", query);
+    JsonObjectConverter<Object> converter = getConverter();
+    this.query = (AbstractQuery<?, ?>) converter.toObject(new JSONObject(query));
+  }
 
-    // convert extendingQuery to JSON
-    JsonObjectConverter<T> converter = getConverter();
-    JSONObject extendingQueryJson = converter.toJsonObject(extendingQuery);
+  public Map<String, Object> getProperties() {
+    if (properties != null) {
+      return JsonUtil.jsonObjectAsMap(new JSONObject(properties));
+    }
+    else {
+      return null;
+    }
+  }
 
-    return extendQuery(extendingQueryJson);
+  public String getPropertiesInternal() {
+    return new JSONObject(properties).toString();
+  }
+
+  public Filter setProperties(Map<String, Object> properties) {
+    this.properties = properties;
+    return this;
+  }
+
+  public void setPropertiesInternal(String properties) {
+    if (properties != null) {
+      JSONObject jsonObject = new JSONObject(properties);
+      this.properties = JsonUtil.jsonObjectAsMap(jsonObject);
+    }
+    else {
+      this.properties = null;
+    }
+  }
+
+  public int getRevision() {
+    return revision;
+  }
+
+  public void setRevision(int revision) {
+    this.revision = revision;
+  }
+
+  public int getRevisionNext() {
+    return revision + 1;
   }
 
   public Filter extend(Map<String, Object> extendingQuery) {
@@ -144,6 +177,16 @@ public class FilterEntity implements Filter, Serializable, DbEntity, HasDbRevisi
     catch (JSONException e) {
       throw new NotValidException("Query string has to be a JSON object", e);
     }
+  }
+
+  public <T extends Query<?, ?>> Filter extend(T extendingQuery) {
+    ensureNotNull(NotValidException.class, "extendingQuery", extendingQuery);
+
+    // convert extendingQuery to JSON
+    JsonObjectConverter<T> converter = getConverter();
+    JSONObject extendingQueryJson = converter.toJsonObject(extendingQuery);
+
+    return extendQuery(extendingQueryJson);
   }
 
   @SuppressWarnings("unchecked")
@@ -167,56 +210,9 @@ public class FilterEntity implements Filter, Serializable, DbEntity, HasDbRevisi
 
     // create copy of the filter with the new query
     FilterEntity copy = copyFilter();
-    copy.setQuery(queryJson.toString());
+    copy.setQueryInternal(queryJson.toString());
 
     return copy;
-  }
-
-  public Map<String, Object> getProperties() {
-    if (properties != null) {
-      return jsonAsMap(new JSONObject(properties));
-    }
-    else {
-      return null;
-    }
-  }
-
-  protected Map<String, Object> jsonAsMap(JSONObject json) {
-    Map<String, Object> map = new HashMap<String, Object>();
-    Iterator<String> keys = json.keys();
-    while (keys.hasNext()) {
-      String key = keys.next();
-      if (json.optJSONObject(key) != null) {
-        map.put(key, json.getJSONObject(key).toString());
-      }
-      else if (json.optJSONArray(key) != null) {
-        map.put(key, json.getJSONArray(key).toString());
-      }
-      else {
-        map.put(key, json.get(key));
-      }
-    }
-    return map;
-  }
-
-  public Filter setProperties(Map<String, Object> properties) {
-    if (properties != null) {
-      JSONObject json = new JSONObject(properties);
-      this.properties = json.toString();
-    }
-    else {
-      this.properties = null;
-    }
-    return this;
-  }
-
-  public Object getPersistentState() {
-    Map<String, Object> persistentState = new HashMap<String, Object>();
-    persistentState.put("name", this.name);
-    persistentState.put("owner", this.owner);
-    persistentState.put("query", this.query);
-    persistentState.put("properties", this.properties);
-    return persistentState;
   }
 
   @SuppressWarnings("unchecked")
@@ -230,26 +226,22 @@ public class FilterEntity implements Filter, Serializable, DbEntity, HasDbRevisi
     }
   }
 
+  public Object getPersistentState() {
+    Map<String, Object> persistentState = new HashMap<String, Object>();
+    persistentState.put("name", this.name);
+    persistentState.put("owner", this.owner);
+    persistentState.put("query", this.query);
+    persistentState.put("properties", this.properties);
+    return persistentState;
+  }
+
   protected FilterEntity copyFilter() {
-    FilterEntity copy = new FilterEntity();
-    copy.resourceType = resourceType;
-    copy.name = name;
-    copy.owner = owner;
-    copy.query = query;
-    copy.properties = properties;
+    FilterEntity copy = new FilterEntity(getResourceType());
+    copy.setName(getName());
+    copy.setOwner(getOwner());
+    copy.setQueryInternal(getQueryInternal());
+    copy.setPropertiesInternal(getPropertiesInternal());
     return copy;
-  }
-
-  public void setRevision(int revision) {
-    this.revision = revision;
-  }
-
-  public int getRevision() {
-    return revision;
-  }
-
-  public int getRevisionNext() {
-    return revision + 1;
   }
 
 }

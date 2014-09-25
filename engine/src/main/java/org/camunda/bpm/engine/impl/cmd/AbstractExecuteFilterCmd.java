@@ -70,7 +70,7 @@ public abstract class AbstractExecuteFilterCmd implements Serializable {
 
   protected Query<?, ?> getFilterQuery(CommandContext commandContext) {
     Filter filter = getFilter(commandContext);
-    Query<?, ?> query = filter.getTypeQuery();
+    Query<?, ?> query = filter.getQuery();
     if (query instanceof TaskQuery) {
       ((TaskQuery) query).initializeFormKeys();
     }

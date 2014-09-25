@@ -35,16 +35,8 @@ import org.camunda.bpm.engine.query.Query;
  */
 public class FilterServiceImpl extends ServiceImpl implements FilterService {
 
-  public Filter newFilter() {
-    return commandExecutor.execute(new CreateFilterCmd());
-  }
-
-  public Filter newFilter(String filterName) {
-    return newFilter().setName(filterName);
-  }
-
   public Filter newTaskFilter() {
-    return newFilter().setResourceType(EntityTypes.TASK);
+    return commandExecutor.execute(new CreateFilterCmd(EntityTypes.TASK));
   }
 
   public Filter newTaskFilter(String filterName) {

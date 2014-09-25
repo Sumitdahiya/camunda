@@ -104,8 +104,8 @@ public class FilterTaskQueryTest extends PluggableProcessEngineTestCase {
 
     filter.setQuery(emptyQuery);
 
-    assertEquals(emptyQueryJson, ((FilterEntity) filter).getQuery());
-    assertNotNull(filter.getTypeQuery());
+    assertEquals(emptyQueryJson, ((FilterEntity) filter).getQueryInternal());
+    assertNotNull(filter.getQuery());
   }
 
   public void testTaskQuery() {
@@ -192,7 +192,7 @@ public class FilterTaskQueryTest extends PluggableProcessEngineTestCase {
     filter = filterService.createTaskFilterQuery().singleResult();
 
     // test query
-    query = filter.getTypeQuery();
+    query = filter.getQuery();
     assertEquals(testString, query.getTaskId());
     assertEquals(testString, query.getName());
     assertEquals(testString, query.getNameLike());
@@ -278,7 +278,7 @@ public class FilterTaskQueryTest extends PluggableProcessEngineTestCase {
     query.taskCandidateUserExpression(testUser.getId());
 
     filter.setQuery(query);
-    query = filter.getTypeQuery();
+    query = filter.getQuery();
 
     assertEquals(testUser.getId(), query.getCandidateUser());
     assertEquals(testUser.getId(), query.getExpressions().get("taskCandidateUser"));
@@ -290,7 +290,7 @@ public class FilterTaskQueryTest extends PluggableProcessEngineTestCase {
     query.taskCandidateGroupExpression(testGroup.getId());
 
     filter.setQuery(query);
-    query = filter.getTypeQuery();
+    query = filter.getQuery();
 
     assertEquals(testGroup.getId(), query.getCandidateGroup());
     assertEquals(testGroup.getId(), query.getExpressions().get("taskCandidateGroup"));
@@ -517,14 +517,14 @@ public class FilterTaskQueryTest extends PluggableProcessEngineTestCase {
     saveQuery(query);
 
     // assert default sorting
-    query = filter.getTypeQuery();
+    query = filter.getQuery();
     String orderBy = query.getOrderBy();
     assertEquals(AbstractQuery.DEFAULT_ORDER_BY, orderBy);
 
     // extend query by new task query with sorting
     TaskQuery sortQuery = taskService.createTaskQuery().orderByTaskName().asc();
     Filter extendedFilter = filter.extend(sortQuery);
-    query = extendedFilter.getTypeQuery();
+    query = extendedFilter.getQuery();
     orderBy = query.getOrderBy();
 
     assertEquals(sortByNameAsc, orderBy);
@@ -532,7 +532,7 @@ public class FilterTaskQueryTest extends PluggableProcessEngineTestCase {
     // extend query by new json query with sorting
     TaskQuery extendingQuery = taskService.createTaskQuery().orderByTaskAssignee().desc();
     extendedFilter = extendedFilter.extend(extendingQuery);
-    query = extendedFilter.getTypeQuery();
+    query = extendedFilter.getQuery();
     orderBy = query.getOrderBy();
 
     assertEquals(sortByNameAsc + ", " + sortByAssigneeDesc, orderBy);
@@ -540,7 +540,7 @@ public class FilterTaskQueryTest extends PluggableProcessEngineTestCase {
     // extend query by incomplete sorting query (sorting should not change)
     sortQuery = taskService.createTaskQuery().orderByCaseExecutionId();
     extendedFilter = extendedFilter.extend(sortQuery);
-    query = extendedFilter.getTypeQuery();
+    query = extendedFilter.getQuery();
     orderBy = query.getOrderBy();
 
     assertEquals(sortByNameAsc + ", " + sortByAssigneeDesc, orderBy);

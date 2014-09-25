@@ -27,22 +27,6 @@ import org.camunda.bpm.engine.query.Query;
 public interface FilterService {
 
   /**
-   * Creates a new filter.
-   *
-   * @return a new filter
-   * @throws AuthorizationException if the user has no {@link Permissions#CREATE} permissions on {@link Resources#FILTER}.
-   */
-  Filter newFilter();
-
-  /**
-   * Creates a new filter with a given name.
-   *
-   * @return a new filter with a name
-   * @throws AuthorizationException if the user has no {@link Permissions#CREATE} permissions on {@link Resources#FILTER}.
-   */
-  Filter newFilter(String filterName);
-
-  /**
    * Creates a new task filter.
    *
    * @return a new task filter
