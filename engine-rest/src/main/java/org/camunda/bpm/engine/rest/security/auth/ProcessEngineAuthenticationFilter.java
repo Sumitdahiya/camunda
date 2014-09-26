@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -35,7 +34,8 @@ import org.camunda.bpm.engine.rest.ProcessEngineRestService;
 import org.camunda.bpm.engine.rest.dto.ExceptionDto;
 import org.camunda.bpm.engine.rest.exception.InvalidRequestException;
 import org.camunda.bpm.engine.rest.util.EngineUtil;
-import org.codehaus.jackson.map.ObjectMapper;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * <p>
@@ -88,13 +88,13 @@ public class ProcessEngineAuthenticationFilter implements Filter {
       Class<?> authenticationProviderClass = Class.forName(authenticationProviderClassName);
       authenticationProvider = (AuthenticationProvider) authenticationProviderClass.newInstance();
     } catch (ClassNotFoundException e) {
-      new ServletException("Cannot instantiate authentication filter: authentication provider not found", e);
+      throw new ServletException("Cannot instantiate authentication filter: authentication provider not found", e);
     } catch (InstantiationException e) {
-      new ServletException("Cannot instantiate authentication filter: cannot instantiate authentication provider", e);
+      throw new ServletException("Cannot instantiate authentication filter: cannot instantiate authentication provider", e);
     } catch (IllegalAccessException e) {
-      new ServletException("Cannot instantiate authentication filter: constructor not accessible", e);
+      throw new ServletException("Cannot instantiate authentication filter: constructor not accessible", e);
     } catch (ClassCastException e) {
-      new ServletException("Cannot instantiate authentication filter: authentication provider does not implement interface " +
+      throw new ServletException("Cannot instantiate authentication filter: authentication provider does not implement interface " +
           AuthenticationProvider.class.getName(), e);
     }
 

@@ -13,17 +13,17 @@
 
 package org.camunda.bpm.engine.rest.sub.repository.impl;
 
-import org.camunda.bpm.engine.ProcessEngine;
-import org.camunda.bpm.engine.repository.Resource;
-import org.camunda.bpm.engine.rest.dto.repository.DeploymentResourceDto;
-import org.camunda.bpm.engine.rest.exception.InvalidRequestException;
-import org.camunda.bpm.engine.rest.sub.repository.DeploymentResourcesResource;
+import static javax.ws.rs.core.Response.Status;
 
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import static javax.ws.rs.core.Response.Status;
+import org.camunda.bpm.engine.ProcessEngine;
+import org.camunda.bpm.engine.repository.Resource;
+import org.camunda.bpm.engine.rest.dto.repository.DeploymentResourceDto;
+import org.camunda.bpm.engine.rest.exception.InvalidRequestException;
+import org.camunda.bpm.engine.rest.sub.repository.DeploymentResourcesResource;
 
 /**
  * @author Sebastian Menski

@@ -42,7 +42,8 @@ import org.camunda.bpm.engine.rest.dto.runtime.FilterQueryDto;
 import org.camunda.bpm.engine.rest.exception.InvalidRequestException;
 import org.camunda.bpm.engine.rest.sub.runtime.FilterResource;
 import org.camunda.bpm.engine.rest.sub.runtime.impl.FilterResourceImpl;
-import org.codehaus.jackson.map.ObjectMapper;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 /**

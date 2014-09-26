@@ -5,7 +5,6 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.UriBuilder;
 

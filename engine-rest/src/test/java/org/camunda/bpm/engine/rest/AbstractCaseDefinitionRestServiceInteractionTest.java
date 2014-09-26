@@ -27,7 +27,6 @@ import static org.mockito.Mockito.when;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.ws.rs.core.Response.Status;
 
 import org.camunda.bpm.engine.CaseService;

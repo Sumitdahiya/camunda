@@ -12,15 +12,15 @@
  */
 package org.camunda.bpm.engine.rest.standalone;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.util.HashMap;
 import java.util.Map;
 
 import org.camunda.bpm.engine.rest.helper.EqualsMap;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Thorben Lindhauer

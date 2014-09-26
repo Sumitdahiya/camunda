@@ -21,9 +21,9 @@ import org.camunda.bpm.engine.rest.hal.JacksonHalJsonProvider;
 import org.camunda.bpm.engine.rest.impl.history.HistoryRestServiceImpl;
 import org.camunda.bpm.engine.rest.mapper.JacksonConfigurator;
 import org.camunda.bpm.engine.rest.mapper.MultipartPayloadProvider;
-import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
-import org.codehaus.jackson.jaxrs.JsonMappingExceptionMapper;
-import org.codehaus.jackson.jaxrs.JsonParseExceptionMapper;
+
+import com.fasterxml.jackson.jaxrs.base.JsonParseExceptionMapper;
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 
 /**
  * <p>Class providing static methods returning all the resource classes provided by camunda BPM.</p>
@@ -62,7 +62,6 @@ public class CamundaRestResources {
 
     CONFIGURATION_CLASSES.add(JacksonConfigurator.class);
     CONFIGURATION_CLASSES.add(JacksonJsonProvider.class);
-    CONFIGURATION_CLASSES.add(JsonMappingExceptionMapper.class);
     CONFIGURATION_CLASSES.add(JsonParseExceptionMapper.class);
     CONFIGURATION_CLASSES.add(ProcessEngineExceptionHandler.class);
     CONFIGURATION_CLASSES.add(RestExceptionHandler.class);

@@ -15,7 +15,6 @@ package org.camunda.bpm.engine.rest.dto.runtime;
 
 import java.io.IOException;
 import java.util.Map;
-
 import javax.ws.rs.core.Response.Status;
 
 import org.camunda.bpm.engine.EntityTypes;
@@ -25,9 +24,10 @@ import org.camunda.bpm.engine.query.Query;
 import org.camunda.bpm.engine.rest.dto.AbstractQueryDto;
 import org.camunda.bpm.engine.rest.dto.task.TaskQueryDto;
 import org.camunda.bpm.engine.rest.exception.InvalidRequestException;
-import org.codehaus.jackson.annotate.JsonSubTypes;
-import org.codehaus.jackson.annotate.JsonTypeInfo;
-import org.codehaus.jackson.map.ObjectMapper;
+
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class FilterDto {
 

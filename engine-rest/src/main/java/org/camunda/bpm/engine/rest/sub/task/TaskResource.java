@@ -15,7 +15,6 @@ package org.camunda.bpm.engine.rest.sub.task;
 import static org.camunda.bpm.engine.rest.hal.Hal.MEDIA_TYPE_HAL;
 
 import java.util.List;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;

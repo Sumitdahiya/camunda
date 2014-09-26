@@ -15,7 +15,6 @@ package org.camunda.bpm.engine.rest.impl;
 import java.text.ParseException;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import javax.ws.rs.core.Response.Status;
 
 import org.camunda.bpm.engine.MismatchingMessageCorrelationException;

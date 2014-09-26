@@ -14,7 +14,6 @@ package org.camunda.bpm.engine.rest.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 

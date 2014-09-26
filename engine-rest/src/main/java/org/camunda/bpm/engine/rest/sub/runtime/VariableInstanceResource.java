@@ -13,7 +13,6 @@
 package org.camunda.bpm.engine.rest.sub.runtime;
 
 import java.io.InputStream;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;

@@ -13,7 +13,6 @@
 package org.camunda.bpm.engine.rest.dto.history;
 
 import java.util.Date;
-
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.camunda.bpm.engine.ProcessEngine;

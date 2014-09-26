@@ -28,7 +28,6 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
 import javax.ws.rs.core.Response.Status;
 import javax.xml.registry.InvalidRequestException;
 
@@ -55,7 +54,7 @@ import com.jayway.restassured.response.Response;
  * @author Roman Smirnov
  *
  */
-public class AbstractHistoricDetailRestServiceQueryTest extends AbstractRestServiceTest {
+public abstract class AbstractHistoricDetailRestServiceQueryTest extends AbstractRestServiceTest {
 
   protected static final String HISTORIC_DETAIL_RESOURCE_URL = TEST_RESOURCE_ROOT_PATH + "/history/detail";
 

@@ -18,7 +18,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
-
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 

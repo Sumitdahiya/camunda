@@ -14,7 +14,6 @@ package org.camunda.bpm.engine.rest.sub.runtime.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-
 import javax.ws.rs.core.Response.Status;
 
 import org.camunda.bpm.engine.ProcessEngine;

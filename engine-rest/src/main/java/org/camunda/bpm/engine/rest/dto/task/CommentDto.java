@@ -12,10 +12,10 @@
  */
 package org.camunda.bpm.engine.rest.dto.task;
 
+import java.util.Date;
+
 import org.camunda.bpm.engine.rest.dto.LinkableDto;
 import org.camunda.bpm.engine.task.Comment;
-
-import java.util.Date;
 
 public class CommentDto extends LinkableDto {
 

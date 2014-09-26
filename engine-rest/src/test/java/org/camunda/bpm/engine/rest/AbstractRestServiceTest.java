@@ -19,7 +19,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
-
 import javax.ws.rs.core.MediaType;
 
 import org.apache.http.entity.ContentType;

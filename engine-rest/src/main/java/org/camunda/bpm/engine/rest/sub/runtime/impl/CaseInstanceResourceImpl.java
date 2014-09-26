@@ -15,7 +15,6 @@ package org.camunda.bpm.engine.rest.sub.runtime.impl;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
-
 import javax.ws.rs.core.Response.Status;
 
 import org.camunda.bpm.engine.CaseService;

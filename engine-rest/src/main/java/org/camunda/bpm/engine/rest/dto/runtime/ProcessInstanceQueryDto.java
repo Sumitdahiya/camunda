@@ -15,7 +15,6 @@ package org.camunda.bpm.engine.rest.dto.runtime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response.Status;
 

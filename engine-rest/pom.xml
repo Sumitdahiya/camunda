@@ -13,12 +13,19 @@
 
   <properties>
     <rest.http.port>8080</rest.http.port>
+    <jackson.version>2.4.2</jackson.version>
   </properties>
 
   <dependencies>
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-jaxrs</artifactId>
+      <groupId>com.fasterxml.jackson.jaxrs</groupId>
+      <artifactId>jackson-jaxrs-xml-provider</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.jaxrs</groupId>
+      <artifactId>jackson-jaxrs-json-provider</artifactId>
       <version>${jackson.version}</version>
     </dependency>
 
@@ -324,9 +331,6 @@
   <profiles>
     <profile>
       <id>distro</id>
-      <properties>
-        <jackson.version>1.9.11</jackson.version>
-      </properties>
       <build>
         <plugins>
           <plugin>
@@ -347,7 +351,6 @@
       </activation>
       <properties>
         <rest.http.port>38080</rest.http.port>
-        <jackson.version>1.9.11</jackson.version>
       </properties>
       <build>
         <plugins>
@@ -461,7 +464,6 @@
       <id>was-compatibility</id>
       <properties>
         <rest.http.port>38080</rest.http.port>
-        <jackson.version>1.6.2</jackson.version>
       </properties>
       <build>
         <plugins>

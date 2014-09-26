@@ -12,14 +12,14 @@
  */
 package org.camunda.bpm.engine.rest.dto.repository;
 
+import java.util.Date;
+import javax.ws.rs.core.Response.Status;
+
 import org.camunda.bpm.engine.ProcessEngine;
 import org.camunda.bpm.engine.RepositoryService;
 import org.camunda.bpm.engine.impl.calendar.DateTimeUtil;
 import org.camunda.bpm.engine.rest.dto.SuspensionStateDto;
 import org.camunda.bpm.engine.rest.exception.InvalidRequestException;
-
-import javax.ws.rs.core.Response.Status;
-import java.util.Date;
 
 /**
  * @author roman.smirnov

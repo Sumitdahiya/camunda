@@ -19,7 +19,6 @@ import static org.camunda.bpm.engine.authorization.Resources.AUTHORIZATION;
 
 import java.net.URI;
 import java.util.List;
-
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;

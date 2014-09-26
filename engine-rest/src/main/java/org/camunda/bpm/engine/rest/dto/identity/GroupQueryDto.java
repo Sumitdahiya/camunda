@@ -14,7 +14,6 @@ package org.camunda.bpm.engine.rest.dto.identity;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.camunda.bpm.engine.ProcessEngine;

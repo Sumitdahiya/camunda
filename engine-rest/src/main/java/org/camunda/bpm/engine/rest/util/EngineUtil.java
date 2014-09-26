@@ -14,7 +14,6 @@ package org.camunda.bpm.engine.rest.util;
 
 import java.util.Iterator;
 import java.util.ServiceLoader;
-
 import javax.ws.rs.core.Response.Status;
 
 import org.camunda.bpm.engine.ProcessEngine;

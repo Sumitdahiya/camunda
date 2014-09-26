@@ -14,7 +14,6 @@ package org.camunda.bpm.engine.rest.dto.converter;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.ws.rs.core.Response.Status;
 
 import org.camunda.bpm.engine.rest.dto.ConditionQueryParameterDto;

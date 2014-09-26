@@ -18,8 +18,8 @@ import java.util.List;
 import org.camunda.bpm.engine.ProcessEngine;
 import org.camunda.bpm.engine.RepositoryService;
 import org.camunda.bpm.engine.repository.ProcessDefinition;
-import org.camunda.bpm.engine.rest.hal.HalResource;
 import org.camunda.bpm.engine.rest.hal.HalLinkResolver;
+import org.camunda.bpm.engine.rest.hal.HalResource;
 
 /**
  * @author Daniel Meyer

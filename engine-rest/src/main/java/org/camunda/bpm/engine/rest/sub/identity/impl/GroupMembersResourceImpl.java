@@ -16,7 +16,6 @@ import static org.camunda.bpm.engine.authorization.Permissions.CREATE;
 import static org.camunda.bpm.engine.authorization.Permissions.DELETE;
 
 import java.net.URI;
-
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.UriInfo;
 

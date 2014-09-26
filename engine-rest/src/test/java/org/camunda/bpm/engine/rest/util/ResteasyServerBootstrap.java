@@ -1,7 +1,6 @@
 package org.camunda.bpm.engine.rest.util;
 
 import java.util.Properties;
-
 import javax.ws.rs.core.Application;
 
 import org.camunda.bpm.engine.rest.impl.application.DefaultApplication;

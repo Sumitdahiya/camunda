@@ -14,7 +14,6 @@ package org.camunda.bpm.engine.rest.sub.task;
 
 import java.io.InputStream;
 import java.util.List;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;

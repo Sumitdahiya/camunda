@@ -14,7 +14,6 @@ package org.camunda.bpm.engine.rest.impl.application;
 
 import java.util.HashSet;
 import java.util.Set;
-
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
