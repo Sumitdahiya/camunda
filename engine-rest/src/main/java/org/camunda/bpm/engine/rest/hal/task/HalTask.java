@@ -24,6 +24,7 @@ import org.camunda.bpm.engine.rest.ProcessDefinitionRestService;
 import org.camunda.bpm.engine.rest.ProcessInstanceRestService;
 import org.camunda.bpm.engine.rest.TaskRestService;
 import org.camunda.bpm.engine.rest.UserRestService;
+import org.camunda.bpm.engine.rest.VariableInstanceRestService;
 import org.camunda.bpm.engine.rest.hal.HalResource;
 import org.camunda.bpm.engine.rest.hal.HalRelation;
 import org.camunda.bpm.engine.task.DelegationState;
@@ -45,6 +46,7 @@ public class HalTask extends HalResource<HalTask> {
   public static HalRelation REL_CASE_INSTANCE = HalRelation.build("caseInstance", CaseInstanceRestService.class);
   public static HalRelation REL_CASE_EXECUTION = HalRelation.build("caseExecution", CaseExecutionRestService.class);
   public static HalRelation REL_CASE_DEFINITION = HalRelation.build("caseDefinition", CaseDefinitionRestService.class);
+  public static HalRelation REL_VARIABLES = HalRelation.build("variables", VariableInstanceRestService.class);
 
   private String id;
   private String name;

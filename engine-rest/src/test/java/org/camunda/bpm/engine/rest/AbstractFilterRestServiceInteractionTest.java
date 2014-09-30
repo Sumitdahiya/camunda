@@ -19,6 +19,11 @@ import static org.camunda.bpm.engine.authorization.Permissions.DELETE;
 import static org.camunda.bpm.engine.authorization.Permissions.READ;
 import static org.camunda.bpm.engine.authorization.Permissions.UPDATE;
 import static org.camunda.bpm.engine.authorization.Resources.FILTER;
+import static org.camunda.bpm.engine.rest.helper.MockProvider.EXAMPLE_FILTER_ID;
+import static org.camunda.bpm.engine.rest.helper.MockProvider.EXAMPLE_TASK_ID;
+import static org.camunda.bpm.engine.rest.helper.MockProvider.mockFilter;
+import static org.camunda.bpm.engine.rest.helper.MockProvider.mockTask;
+import static org.camunda.bpm.engine.rest.helper.MockProvider.mockVariableInstance;
 import static org.camunda.bpm.engine.rest.helper.TaskQueryMatcher.hasName;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -26,6 +31,7 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.anyVararg;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isNull;
@@ -35,8 +41,12 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
@@ -45,6 +55,7 @@ import org.camunda.bpm.engine.AuthorizationService;
 import org.camunda.bpm.engine.FilterService;
 import org.camunda.bpm.engine.IdentityService;
 import org.camunda.bpm.engine.ProcessEngineException;
+import org.camunda.bpm.engine.RuntimeService;
 import org.camunda.bpm.engine.TaskService;
 import org.camunda.bpm.engine.exception.NullValueException;
 import org.camunda.bpm.engine.filter.Filter;
@@ -60,6 +71,9 @@ import org.camunda.bpm.engine.rest.dto.runtime.FilterDto;
 import org.camunda.bpm.engine.rest.dto.task.TaskQueryDto;
 import org.camunda.bpm.engine.rest.hal.Hal;
 import org.camunda.bpm.engine.rest.helper.MockProvider;
+import org.camunda.bpm.engine.runtime.VariableInstance;
+import org.camunda.bpm.engine.runtime.VariableInstanceQuery;
+import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.engine.task.TaskQuery;
 import org.junit.Before;
 import org.junit.Test;
@@ -101,26 +115,26 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
 
     when(filterServiceMock.newTaskFilter()).thenReturn(filterMock);
     when(filterServiceMock.saveFilter(eq(filterMock))).thenReturn(filterMock);
-    when(filterServiceMock.getFilter(eq(MockProvider.EXAMPLE_FILTER_ID))).thenReturn(filterMock);
+    when(filterServiceMock.getFilter(eq(EXAMPLE_FILTER_ID))).thenReturn(filterMock);
     when(filterServiceMock.getFilter(eq(MockProvider.NON_EXISTING_ID))).thenReturn(null);
 
     List mockTasks = Collections.singletonList(new TaskEntity());
 
-    when(filterServiceMock.singleResult(eq(MockProvider.EXAMPLE_FILTER_ID)))
+    when(filterServiceMock.singleResult(eq(EXAMPLE_FILTER_ID)))
       .thenReturn(mockTasks.get(0));
-    when(filterServiceMock.singleResult(eq(MockProvider.EXAMPLE_FILTER_ID), any(Query.class)))
+    when(filterServiceMock.singleResult(eq(EXAMPLE_FILTER_ID), any(Query.class)))
       .thenReturn(mockTasks.get(0));
-    when(filterServiceMock.list(eq(MockProvider.EXAMPLE_FILTER_ID)))
+    when(filterServiceMock.list(eq(EXAMPLE_FILTER_ID)))
       .thenReturn(mockTasks);
-    when(filterServiceMock.list(eq(MockProvider.EXAMPLE_FILTER_ID), any(Query.class)))
+    when(filterServiceMock.list(eq(EXAMPLE_FILTER_ID), any(Query.class)))
       .thenReturn(mockTasks);
-    when(filterServiceMock.listPage(eq(MockProvider.EXAMPLE_FILTER_ID), anyInt(), anyInt()))
+    when(filterServiceMock.listPage(eq(EXAMPLE_FILTER_ID), anyInt(), anyInt()))
       .thenReturn(mockTasks);
-    when(filterServiceMock.listPage(eq(MockProvider.EXAMPLE_FILTER_ID), any(Query.class), anyInt(), anyInt()))
+    when(filterServiceMock.listPage(eq(EXAMPLE_FILTER_ID), any(Query.class), anyInt(), anyInt()))
       .thenReturn(mockTasks);
-    when(filterServiceMock.count(eq(MockProvider.EXAMPLE_FILTER_ID)))
+    when(filterServiceMock.count(eq(EXAMPLE_FILTER_ID)))
       .thenReturn((long) 1);
-    when(filterServiceMock.count(eq(MockProvider.EXAMPLE_FILTER_ID), any(Query.class)))
+    when(filterServiceMock.count(eq(EXAMPLE_FILTER_ID), any(Query.class)))
       .thenReturn((long) 1);
 
     doThrow(new NullValueException("No filter found with given id"))
@@ -155,14 +169,14 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
   @Test
   public void testGetFilter() {
     given()
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
     .then().expect()
       .statusCode(Status.OK.getStatusCode())
-      .body("id", equalTo(MockProvider.EXAMPLE_FILTER_ID))
+      .body("id", equalTo(EXAMPLE_FILTER_ID))
     .when()
       .get(SINGLE_FILTER_URL);
 
-    verify(filterServiceMock).getFilter(eq(MockProvider.EXAMPLE_FILTER_ID));
+    verify(filterServiceMock).getFilter(eq(EXAMPLE_FILTER_ID));
   }
 
   @Test
@@ -210,7 +224,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     FilterDto dto = FilterDto.fromFilter(MockProvider.createMockFilter());
 
     given()
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
       .contentType(POST_JSON_CONTENT_TYPE)
       .body(dto)
     .then().expect()
@@ -218,7 +232,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .put(SINGLE_FILTER_URL);
 
-    verify(filterServiceMock).getFilter(eq(MockProvider.EXAMPLE_FILTER_ID));
+    verify(filterServiceMock).getFilter(eq(EXAMPLE_FILTER_ID));
     verify(filterServiceMock).saveFilter(eq(filterMock));
   }
 
@@ -228,7 +242,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     dto.setResourceType("invalid");
 
     given()
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
       .contentType(POST_JSON_CONTENT_TYPE)
       .body(dto)
     .then().expect()
@@ -252,7 +266,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
   @Test
   public void testUpdateInvalidFilter() {
     given()
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
       .contentType(POST_JSON_CONTENT_TYPE)
       .body(EMPTY_JSON_OBJECT)
     .then().expect()
@@ -264,13 +278,13 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
   @Test
   public void testDeleteFilter() {
     given()
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
     .then().expect()
       .statusCode(Status.NO_CONTENT.getStatusCode())
     .when()
       .delete(SINGLE_FILTER_URL);
 
-    verify(filterServiceMock).deleteFilter(eq(MockProvider.EXAMPLE_FILTER_ID));
+    verify(filterServiceMock).deleteFilter(eq(EXAMPLE_FILTER_ID));
   }
 
   @Test
@@ -287,13 +301,13 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
   public void testExecuteSingleResult() {
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
     .then().expect()
       .statusCode(Status.OK.getStatusCode())
     .when()
       .get(EXECUTE_SINGLE_RESULT_FILTER_URL);
 
-    verify(filterServiceMock).singleResult(eq(MockProvider.EXAMPLE_FILTER_ID), isNull(Query.class));
+    verify(filterServiceMock).singleResult(eq(EXAMPLE_FILTER_ID), isNull(Query.class));
   }
 
   @Test
@@ -302,13 +316,13 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
 
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
     .then().expect()
       .statusCode(Status.NO_CONTENT.getStatusCode())
     .when()
       .get(EXECUTE_SINGLE_RESULT_FILTER_URL);
 
-    verify(filterServiceMock).singleResult(eq(MockProvider.EXAMPLE_FILTER_ID), isNull(Query.class));
+    verify(filterServiceMock).singleResult(eq(EXAMPLE_FILTER_ID), isNull(Query.class));
   }
 
   @Test
@@ -318,26 +332,26 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
 
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
     .then().expect()
       .statusCode(Status.BAD_REQUEST.getStatusCode())
     .when()
       .get(EXECUTE_SINGLE_RESULT_FILTER_URL);
 
-    verify(filterServiceMock).singleResult(eq(MockProvider.EXAMPLE_FILTER_ID), isNull(Query.class));
+    verify(filterServiceMock).singleResult(eq(EXAMPLE_FILTER_ID), isNull(Query.class));
   }
 
   @Test
   public void testExecuteHalSingleResult() {
     given()
       .header("Accept", Hal.MEDIA_TYPE_HAL)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
       .then().expect()
       .statusCode(Status.OK.getStatusCode())
       .when()
       .get(EXECUTE_SINGLE_RESULT_FILTER_URL);
 
-    verify(filterServiceMock).singleResult(eq(MockProvider.EXAMPLE_FILTER_ID),isNull(Query.class));
+    verify(filterServiceMock).singleResult(eq(EXAMPLE_FILTER_ID),isNull(Query.class));
   }
 
   @Test
@@ -346,7 +360,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
 
     given()
       .header("Accept", Hal.MEDIA_TYPE_HAL)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
     .then().expect()
       .statusCode(Status.OK.getStatusCode())
       .body("_links.size()", equalTo(0))
@@ -354,7 +368,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .get(EXECUTE_SINGLE_RESULT_FILTER_URL);
 
-    verify(filterServiceMock).singleResult(eq(MockProvider.EXAMPLE_FILTER_ID), isNull(Query.class));
+    verify(filterServiceMock).singleResult(eq(EXAMPLE_FILTER_ID), isNull(Query.class));
   }
 
   @Test
@@ -364,13 +378,13 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
 
     given()
       .header("Accept", Hal.MEDIA_TYPE_HAL)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
     .then().expect()
       .statusCode(Status.BAD_REQUEST.getStatusCode())
     .when()
       .get(EXECUTE_SINGLE_RESULT_FILTER_URL);
 
-    verify(filterServiceMock).singleResult(eq(MockProvider.EXAMPLE_FILTER_ID), isNull(Query.class));
+    verify(filterServiceMock).singleResult(eq(EXAMPLE_FILTER_ID), isNull(Query.class));
   }
 
   @Test
@@ -390,7 +404,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
   public void testExecuteSingleResultAsPost() {
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
       .contentType(POST_JSON_CONTENT_TYPE)
       .body(EMPTY_JSON_OBJECT)
     .then().expect()
@@ -398,14 +412,14 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_SINGLE_RESULT_FILTER_URL);
 
-    verify(filterServiceMock).singleResult(eq(MockProvider.EXAMPLE_FILTER_ID), any(Query.class));
+    verify(filterServiceMock).singleResult(eq(EXAMPLE_FILTER_ID), any(Query.class));
   }
 
   @Test
   public void testExecuteHalSingleResultAsPost() {
     given()
       .header("Accept", Hal.MEDIA_TYPE_HAL)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
       .contentType(POST_JSON_CONTENT_TYPE)
       .body(EMPTY_JSON_OBJECT)
     .then().expect()
@@ -413,14 +427,14 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_SINGLE_RESULT_FILTER_URL);
 
-    verify(filterServiceMock).singleResult(eq(MockProvider.EXAMPLE_FILTER_ID), any(Query.class));
+    verify(filterServiceMock).singleResult(eq(EXAMPLE_FILTER_ID), any(Query.class));
   }
 
   @Test
   public void testExecuteSingleResultInvalidWithExtendingQuery() {
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
       .contentType(POST_JSON_CONTENT_TYPE)
       .body(invalidExtendingQuery)
     .then().expect()
@@ -433,7 +447,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
   public void testExecuteSingleResultWithExtendingQuery() {
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
       .contentType(POST_JSON_CONTENT_TYPE)
       .body(extendingQueryDto)
     .then().expect()
@@ -441,7 +455,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_SINGLE_RESULT_FILTER_URL);
 
-    verify(filterServiceMock).singleResult(eq(MockProvider.EXAMPLE_FILTER_ID),
+    verify(filterServiceMock).singleResult(eq(EXAMPLE_FILTER_ID),
         argThat(hasName(MockProvider.EXAMPLE_TASK_NAME)));
   }
 
@@ -449,14 +463,14 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
   public void testExecuteList() {
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
     .then().expect()
       .statusCode(Status.OK.getStatusCode())
       .body("$.size()", equalTo(1))
     .when()
       .get(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).list(eq(MockProvider.EXAMPLE_FILTER_ID), isNull(Query.class));
+    verify(filterServiceMock).list(eq(EXAMPLE_FILTER_ID), isNull(Query.class));
   }
 
   @Test
@@ -465,28 +479,28 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
 
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
     .then().expect()
       .statusCode(Status.OK.getStatusCode())
       .body("$.size()", equalTo(0))
     .when()
       .get(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).list(eq(MockProvider.EXAMPLE_FILTER_ID), isNull(Query.class));
+    verify(filterServiceMock).list(eq(EXAMPLE_FILTER_ID), isNull(Query.class));
   }
 
   @Test
   public void testExecuteHalList() {
     given()
       .header("Accept", Hal.MEDIA_TYPE_HAL)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
     .then().expect()
       .statusCode(Status.OK.getStatusCode())
       .body("count", equalTo(1))
     .when()
       .get(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).list(eq(MockProvider.EXAMPLE_FILTER_ID), isNull(Query.class));
+    verify(filterServiceMock).list(eq(EXAMPLE_FILTER_ID), isNull(Query.class));
   }
 
   @Test
@@ -495,7 +509,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
 
     given()
       .header("Accept", Hal.MEDIA_TYPE_HAL)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
     .then().expect()
       .statusCode(Status.OK.getStatusCode())
       .body("_links.size()", equalTo(0))
@@ -504,7 +518,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .get(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).list(eq(MockProvider.EXAMPLE_FILTER_ID), isNull(Query.class));
+    verify(filterServiceMock).list(eq(EXAMPLE_FILTER_ID), isNull(Query.class));
   }
 
   @Test
@@ -524,7 +538,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
   public void testExecuteListWithPagination() {
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
       .queryParams("firstResult", 1)
       .queryParams("maxResults", 2)
     .then().expect()
@@ -533,14 +547,14 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .get(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).listPage(eq(MockProvider.EXAMPLE_FILTER_ID), isNull(Query.class), eq(1), eq(2));
+    verify(filterServiceMock).listPage(eq(EXAMPLE_FILTER_ID), isNull(Query.class), eq(1), eq(2));
   }
 
   @Test
   public void testExecuteListAsPost() {
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
       .contentType(POST_JSON_CONTENT_TYPE)
       .body(EMPTY_JSON_OBJECT)
     .then().expect()
@@ -549,14 +563,14 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).list(eq(MockProvider.EXAMPLE_FILTER_ID), any(Query.class));
+    verify(filterServiceMock).list(eq(EXAMPLE_FILTER_ID), any(Query.class));
   }
 
   @Test
   public void testExecuteHalListAsPost() {
     given()
       .header("Accept", Hal.MEDIA_TYPE_HAL)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
       .contentType(POST_JSON_CONTENT_TYPE)
       .body(EMPTY_JSON_OBJECT)
     .then().expect()
@@ -565,14 +579,14 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).list(eq(MockProvider.EXAMPLE_FILTER_ID), any(Query.class));
+    verify(filterServiceMock).list(eq(EXAMPLE_FILTER_ID), any(Query.class));
   }
 
   @Test
   public void testExecuteListAsPostWithPagination() {
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
       .queryParams("firstResult", 1)
       .queryParams("maxResults", 2)
       .contentType(POST_JSON_CONTENT_TYPE)
@@ -583,14 +597,14 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).listPage(eq(MockProvider.EXAMPLE_FILTER_ID), isNull(Query.class), eq(1), eq(2));
+    verify(filterServiceMock).listPage(eq(EXAMPLE_FILTER_ID), isNull(Query.class), eq(1), eq(2));
   }
 
   @Test
   public void testExecuteListWithExtendingQuery() {
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
       .contentType(POST_JSON_CONTENT_TYPE)
       .body(extendingQueryDto)
     .then().expect()
@@ -599,14 +613,14 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).list(eq(MockProvider.EXAMPLE_FILTER_ID), argThat(hasName(MockProvider.EXAMPLE_TASK_NAME)));
+    verify(filterServiceMock).list(eq(EXAMPLE_FILTER_ID), argThat(hasName(MockProvider.EXAMPLE_TASK_NAME)));
   }
 
   @Test
   public void testExecuteListWithExtendingQueryWithPagination() {
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
       .queryParams("firstResult", 1)
       .queryParams("maxResults", 2)
       .contentType(POST_JSON_CONTENT_TYPE)
@@ -617,14 +631,14 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_LIST_FILTER_URL);
 
-    verify(filterServiceMock).listPage(eq(MockProvider.EXAMPLE_FILTER_ID), argThat(hasName(MockProvider.EXAMPLE_TASK_NAME)), eq(1), eq(2));
+    verify(filterServiceMock).listPage(eq(EXAMPLE_FILTER_ID), argThat(hasName(MockProvider.EXAMPLE_TASK_NAME)), eq(1), eq(2));
   }
 
   @Test
   public void testExecuteListWithInvalidExtendingQuery() {
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
       .contentType(POST_JSON_CONTENT_TYPE)
       .body(invalidExtendingQuery)
     .then().expect()
@@ -637,14 +651,14 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
   public void testExecuteCount() {
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
     .then().expect()
       .statusCode(Status.OK.getStatusCode())
       .body("count", equalTo(1))
     .when()
       .get(EXECUTE_COUNT_FILTER_URL);
 
-    verify(filterServiceMock).count(eq(MockProvider.EXAMPLE_FILTER_ID), isNull(Query.class));
+    verify(filterServiceMock).count(eq(EXAMPLE_FILTER_ID), isNull(Query.class));
   }
 
   @Test
@@ -664,7 +678,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
   public void testExecuteCountAsPost() {
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
       .contentType(POST_JSON_CONTENT_TYPE)
       .body(EMPTY_JSON_OBJECT)
     .then().expect()
@@ -673,14 +687,14 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_COUNT_FILTER_URL);
 
-    verify(filterServiceMock).count(eq(MockProvider.EXAMPLE_FILTER_ID), any(Query.class));
+    verify(filterServiceMock).count(eq(EXAMPLE_FILTER_ID), any(Query.class));
   }
 
   @Test
   public void testExecuteCountWithExtendingQuery() {
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
       .contentType(POST_JSON_CONTENT_TYPE)
       .body(extendingQueryDto)
     .then().expect()
@@ -689,14 +703,14 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     .when()
       .post(EXECUTE_COUNT_FILTER_URL);
 
-    verify(filterServiceMock).count(eq(MockProvider.EXAMPLE_FILTER_ID), argThat(hasName(MockProvider.EXAMPLE_TASK_NAME)));
+    verify(filterServiceMock).count(eq(EXAMPLE_FILTER_ID), argThat(hasName(MockProvider.EXAMPLE_TASK_NAME)));
   }
 
   @Test
   public void testExecuteCountWithInvalidExtendingQuery() {
     given()
       .header("Accept", MediaType.APPLICATION_JSON)
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
       .contentType(POST_JSON_CONTENT_TYPE)
       .body(invalidExtendingQuery)
     .then().expect()
@@ -769,12 +783,12 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
 
   @Test
   public void testAnonymousFilterResourceOptions() {
-    String fullFilterUrl = "http://localhost:" + PORT + FILTER_URL + "/" + MockProvider.EXAMPLE_FILTER_ID;
+    String fullFilterUrl = "http://localhost:" + PORT + FILTER_URL + "/" + EXAMPLE_FILTER_ID;
 
     // anonymity means the identityService returns a null authentication, so no need to mock here
 
     given()
-        .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+        .pathParam("id", EXAMPLE_FILTER_ID)
     .then()
         .statusCode(Status.OK.getStatusCode())
 
@@ -828,12 +842,12 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     Authentication authentication = new Authentication(MockProvider.EXAMPLE_USER_ID, null);
     when(identityServiceMock.getCurrentAuthentication()).thenReturn(authentication);
 
-    when(authorizationServiceMock.isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, READ, FILTER, MockProvider.EXAMPLE_FILTER_ID)).thenReturn(false);
-    when(authorizationServiceMock.isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, DELETE, FILTER, MockProvider.EXAMPLE_FILTER_ID)).thenReturn(false);
-    when(authorizationServiceMock.isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, UPDATE, FILTER, MockProvider.EXAMPLE_FILTER_ID)).thenReturn(false);
+    when(authorizationServiceMock.isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, READ, FILTER, EXAMPLE_FILTER_ID)).thenReturn(false);
+    when(authorizationServiceMock.isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, DELETE, FILTER, EXAMPLE_FILTER_ID)).thenReturn(false);
+    when(authorizationServiceMock.isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, UPDATE, FILTER, EXAMPLE_FILTER_ID)).thenReturn(false);
 
     given()
-        .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+        .pathParam("id", EXAMPLE_FILTER_ID)
     .then()
         .statusCode(Status.OK.getStatusCode())
 
@@ -843,24 +857,24 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
         .options(SINGLE_FILTER_URL);
 
     verify(identityServiceMock, times(3)).getCurrentAuthentication();
-    verify(authorizationServiceMock, times(1)).isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, READ, FILTER, MockProvider.EXAMPLE_FILTER_ID);
-    verify(authorizationServiceMock, times(1)).isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, DELETE, FILTER, MockProvider.EXAMPLE_FILTER_ID);
-    verify(authorizationServiceMock, times(1)).isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, UPDATE, FILTER, MockProvider.EXAMPLE_FILTER_ID);
+    verify(authorizationServiceMock, times(1)).isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, READ, FILTER, EXAMPLE_FILTER_ID);
+    verify(authorizationServiceMock, times(1)).isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, DELETE, FILTER, EXAMPLE_FILTER_ID);
+    verify(authorizationServiceMock, times(1)).isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, UPDATE, FILTER, EXAMPLE_FILTER_ID);
 
   }
 
   @Test
   public void testFilterResourceOptionsUpdateUnauthorized() {
-    String fullFilterUrl = "http://localhost:" + PORT + FILTER_URL + "/" + MockProvider.EXAMPLE_FILTER_ID;
+    String fullFilterUrl = "http://localhost:" + PORT + FILTER_URL + "/" + EXAMPLE_FILTER_ID;
 
     Authentication authentication = new Authentication(MockProvider.EXAMPLE_USER_ID, null);
     when(identityServiceMock.getCurrentAuthentication()).thenReturn(authentication);
-    when(authorizationServiceMock.isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, READ, FILTER, MockProvider.EXAMPLE_FILTER_ID)).thenReturn(true);
-    when(authorizationServiceMock.isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, DELETE, FILTER, MockProvider.EXAMPLE_FILTER_ID)).thenReturn(true);
-    when(authorizationServiceMock.isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, UPDATE, FILTER, MockProvider.EXAMPLE_FILTER_ID)).thenReturn(false);
+    when(authorizationServiceMock.isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, READ, FILTER, EXAMPLE_FILTER_ID)).thenReturn(true);
+    when(authorizationServiceMock.isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, DELETE, FILTER, EXAMPLE_FILTER_ID)).thenReturn(true);
+    when(authorizationServiceMock.isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, UPDATE, FILTER, EXAMPLE_FILTER_ID)).thenReturn(false);
 
     given()
-        .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+        .pathParam("id", EXAMPLE_FILTER_ID)
     .then()
         .statusCode(Status.OK.getStatusCode())
 
@@ -902,9 +916,9 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
         .options(SINGLE_FILTER_URL);
 
     verify(identityServiceMock, times(3)).getCurrentAuthentication();
-    verify(authorizationServiceMock, times(1)).isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, READ, FILTER, MockProvider.EXAMPLE_FILTER_ID);
-    verify(authorizationServiceMock, times(1)).isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, DELETE, FILTER, MockProvider.EXAMPLE_FILTER_ID);
-    verify(authorizationServiceMock, times(1)).isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, UPDATE, FILTER, MockProvider.EXAMPLE_FILTER_ID);
+    verify(authorizationServiceMock, times(1)).isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, READ, FILTER, EXAMPLE_FILTER_ID);
+    verify(authorizationServiceMock, times(1)).isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, DELETE, FILTER, EXAMPLE_FILTER_ID);
+    verify(authorizationServiceMock, times(1)).isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, UPDATE, FILTER, EXAMPLE_FILTER_ID);
 
   }
 
@@ -919,7 +933,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     when(filterMock.getQuery()).thenReturn((Query) query);
 
     given()
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
     .expect()
       .statusCode(Status.OK.getStatusCode())
       .body("query.processVariables.size", equalTo(1))
@@ -945,7 +959,7 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     when(filterMock.getQuery()).thenReturn((Query) query);
 
     given()
-      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+      .pathParam("id", EXAMPLE_FILTER_ID)
     .expect()
       .statusCode(Status.OK.getStatusCode())
       .body("query.containsKey('processVariables')", is(false))
@@ -953,6 +967,73 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
       .body("query.containsKey('caseInstanceVariables')", is(false))
     .when()
       .get(SINGLE_FILTER_URL);
+  }
+
+  @Test
+  public void testHalTaskQueryWithAdditionalVariables() {
+    // mock properties with variable name list
+    Map<String, Object> properties = new HashMap<String, Object>();
+    properties.put("variables", Arrays.asList("a", "b", "c"));
+    Filter filter = mockFilter().properties(properties).build();
+    when(filterServiceMock.getFilter(eq(EXAMPLE_FILTER_ID))).thenReturn(filter);
+
+    // mock resulting task
+    Task task = mockTask()
+      .id(EXAMPLE_TASK_ID)
+      .processInstanceId(EXAMPLE_PROCESS_INSTANCE_ID)
+      .executionId(EXAMPLE_EXECUTION_ID)
+      .caseInstanceId(null)
+      .caseExecutionId(null)
+      .build();
+    when(filterServiceMock.singleResult(eq(EXAMPLE_FILTER_ID), any(Query.class))).thenReturn(task);
+
+    // mock variable instances
+    List<VariableInstance> variableInstances = new ArrayList<VariableInstance>();
+    variableInstances.add(
+      mockVariableInstance()
+        .name("hello").value("world")
+        .processInstanceId(EXAMPLE_PROCESS_INSTANCE_ID)
+        .executionId(EXAMPLE_PROCESS_INSTANCE_ID)
+        .caseExecutionId(null)
+        .taskId(null)
+        .buildEntity()
+    );
+    variableInstances.add(
+      mockVariableInstance()
+        .name("hello").value("world")
+        .processInstanceId(EXAMPLE_PROCESS_INSTANCE_ID)
+        .executionId(EXAMPLE_EXECUTION_ID)
+        .caseExecutionId(null)
+        .taskId(null)
+        .buildEntity()
+    );
+    variableInstances.add(
+      mockVariableInstance()
+        .name("hello").value("world")
+        .processInstanceId(EXAMPLE_PROCESS_INSTANCE_ID)
+        .executionId("anotherExecutionId")
+        .caseExecutionId(null)
+        .taskId(EXAMPLE_TASK_ID)
+        .buildEntity()
+    );
+    RuntimeService runtimeService = mock(RuntimeService.class);
+    when(processEngine.getRuntimeService()).thenReturn(runtimeService);
+
+    VariableInstanceQuery query = mock(VariableInstanceQuery.class);
+    when(runtimeService.createVariableInstanceQuery()).thenReturn(query);
+    when(query.variableNameIn((String) anyVararg())).thenReturn(query);
+    when(query.variableScopeIdIn((String) anyVararg())).thenReturn(query);
+    when(query.list()).thenReturn(variableInstances);
+
+    given()
+      .pathParam("id", EXAMPLE_FILTER_ID)
+      .header(ACCEPT_HAL_HEADER)
+    .expect()
+      .statusCode(Status.OK.getStatusCode())
+      .body("_embedded.containsKey('variable')", is(true))
+      .body("_embedded.variable.size", equalTo(3))
+    .when()
+      .get(EXECUTE_SINGLE_RESULT_FILTER_URL);
   }
 
 }

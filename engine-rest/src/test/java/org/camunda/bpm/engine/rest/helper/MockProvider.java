@@ -103,6 +103,7 @@ public abstract class MockProvider {
 
   // task properties
   public static final String EXAMPLE_TASK_ID = "anId";
+  public static final String ANOTHER_EXAMPLE_TASK_ID = "anotherId";
   public static final String EXAMPLE_TASK_NAME = "aName";
   public static final String EXAMPLE_TASK_ASSIGNEE_NAME = "anAssignee";
   public static final String EXAMPLE_TASK_CREATE_TIME = "2013-01-23T13:42:42";
@@ -461,25 +462,27 @@ public abstract class MockProvider {
 
   // tasks
   public static Task createMockTask() {
-    Task mockTask = new MockTaskBuilder()
-        .id(EXAMPLE_TASK_ID).name(EXAMPLE_TASK_NAME)
-        .assignee(EXAMPLE_TASK_ASSIGNEE_NAME)
-        .createTime(DateTimeUtil.parseDate(EXAMPLE_TASK_CREATE_TIME))
-        .dueDate(DateTimeUtil.parseDate(EXAMPLE_TASK_DUE_DATE))
-        .followUpDate(DateTimeUtil.parseDate(EXAMPLE_FOLLOW_UP_DATE))
-        .delegationState(EXAMPLE_TASK_DELEGATION_STATE).description(EXAMPLE_TASK_DESCRIPTION)
-        .executionId(EXAMPLE_TASK_EXECUTION_ID).owner(EXAMPLE_TASK_OWNER)
-        .parentTaskId(EXAMPLE_TASK_PARENT_TASK_ID)
-        .priority(EXAMPLE_TASK_PRIORITY)
-        .processDefinitionId(EXAMPLE_PROCESS_DEFINITION_ID)
-        .processInstanceId(EXAMPLE_PROCESS_INSTANCE_ID)
-        .taskDefinitionKey(EXAMPLE_TASK_DEFINITION_KEY)
-        .caseDefinitionId(EXAMPLE_CASE_DEFINITION_ID)
-        .caseInstanceId(EXAMPLE_CASE_INSTANCE_ID)
-        .caseExecutionId(EXAMPLE_CASE_EXECUTION_ID)
-        .formKey(EXAMPLE_FORM_KEY)
-        .build();
-    return mockTask;
+    return mockTask().build();
+  }
+
+  public static MockTaskBuilder mockTask() {
+    return new MockTaskBuilder()
+      .id(EXAMPLE_TASK_ID).name(EXAMPLE_TASK_NAME)
+      .assignee(EXAMPLE_TASK_ASSIGNEE_NAME)
+      .createTime(DateTimeUtil.parseDate(EXAMPLE_TASK_CREATE_TIME))
+      .dueDate(DateTimeUtil.parseDate(EXAMPLE_TASK_DUE_DATE))
+      .followUpDate(DateTimeUtil.parseDate(EXAMPLE_FOLLOW_UP_DATE))
+      .delegationState(EXAMPLE_TASK_DELEGATION_STATE).description(EXAMPLE_TASK_DESCRIPTION)
+      .executionId(EXAMPLE_TASK_EXECUTION_ID).owner(EXAMPLE_TASK_OWNER)
+      .parentTaskId(EXAMPLE_TASK_PARENT_TASK_ID)
+      .priority(EXAMPLE_TASK_PRIORITY)
+      .processDefinitionId(EXAMPLE_PROCESS_DEFINITION_ID)
+      .processInstanceId(EXAMPLE_PROCESS_INSTANCE_ID)
+      .taskDefinitionKey(EXAMPLE_TASK_DEFINITION_KEY)
+      .caseDefinitionId(EXAMPLE_CASE_DEFINITION_ID)
+      .caseInstanceId(EXAMPLE_CASE_INSTANCE_ID)
+      .caseExecutionId(EXAMPLE_CASE_EXECUTION_ID)
+      .formKey(EXAMPLE_FORM_KEY);
   }
 
   public static List<Task> createMockTasks() {
@@ -1423,14 +1426,7 @@ public abstract class MockProvider {
   }
 
   public static Filter createMockFilter() {
-    Filter mock = mock(Filter.class);
-
-    when(mock.getId()).thenReturn(EXAMPLE_FILTER_ID);
-    when(mock.getResourceType()).thenReturn(EXAMPLE_FILTER_RESOURCE_TYPE);
-    when(mock.getName()).thenReturn(EXAMPLE_FILTER_NAME);
-    when(mock.getOwner()).thenReturn(EXAMPLE_FILTER_OWNER);
-    when(mock.getQuery()).thenReturn(EXAMPLE_FILTER_QUERY);
-    when(mock.getProperties()).thenReturn(EXAMPLE_FILTER_PROPERTIES);
+    Filter mock = mockFilter().build();
 
     doThrow(new NotValidException("Name must not be null"))
       .when(mock).setName(null);
@@ -1440,6 +1436,16 @@ public abstract class MockProvider {
       .when(mock).setQuery(null);
 
     return mock;
+  }
+
+  public static MockFilterBuilder mockFilter() {
+    return new MockFilterBuilder()
+      .id(EXAMPLE_FILTER_ID)
+      .resourceType(EXAMPLE_FILTER_RESOURCE_TYPE)
+      .name(EXAMPLE_FILTER_NAME)
+      .owner(EXAMPLE_FILTER_OWNER)
+      .query(EXAMPLE_FILTER_QUERY)
+      .properties(EXAMPLE_FILTER_PROPERTIES);
   }
 
   public static FilterQuery createMockFilterQuery() {

@@ -21,8 +21,14 @@ import static org.camunda.bpm.engine.authorization.Resources.FILTER;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.Response.Status;
@@ -35,7 +41,7 @@ import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.exception.NotValidException;
 import org.camunda.bpm.engine.exception.NullValueException;
 import org.camunda.bpm.engine.filter.Filter;
-import org.camunda.bpm.engine.impl.persistence.entity.TaskEntity;
+import org.camunda.bpm.engine.impl.persistence.entity.VariableInstanceEntity;
 import org.camunda.bpm.engine.query.Query;
 import org.camunda.bpm.engine.rest.FilterRestService;
 import org.camunda.bpm.engine.rest.dto.AbstractQueryDto;
@@ -48,10 +54,12 @@ import org.camunda.bpm.engine.rest.exception.InvalidRequestException;
 import org.camunda.bpm.engine.rest.hal.EmptyHalCollection;
 import org.camunda.bpm.engine.rest.hal.EmptyHalResource;
 import org.camunda.bpm.engine.rest.hal.HalResource;
+import org.camunda.bpm.engine.rest.hal.HalVariableValue;
 import org.camunda.bpm.engine.rest.hal.task.HalTask;
 import org.camunda.bpm.engine.rest.hal.task.HalTaskList;
 import org.camunda.bpm.engine.rest.impl.AbstractAuthorizedRestResource;
 import org.camunda.bpm.engine.rest.sub.runtime.FilterResource;
+import org.camunda.bpm.engine.runtime.VariableInstance;
 import org.camunda.bpm.engine.task.Task;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -59,6 +67,8 @@ import org.codehaus.jackson.map.ObjectMapper;
  * @author Sebastian Menski
  */
 public class FilterResourceImpl extends AbstractAuthorizedRestResource implements FilterResource {
+
+  public static final String PROPERTIES_VARIABLES_KEY = "variables";
 
   protected ObjectMapper objectMapper;
   protected String filterId;
@@ -303,7 +313,7 @@ public class FilterResourceImpl extends AbstractAuthorizedRestResource implement
   }
 
   protected Object convertToDto(Object entity) {
-    if (TaskEntity.class.equals(entity.getClass())) {
+    if (isEntityOfClass(entity, Task.class)) {
       return TaskDto.fromEntity((Task) entity);
     }
     else {
@@ -312,19 +322,99 @@ public class FilterResourceImpl extends AbstractAuthorizedRestResource implement
   }
 
   protected HalResource<?> convertToHalResource(Object entity) {
-    if (TaskEntity.class.equals(entity.getClass())) {
-      return HalTask.generate((Task) entity, processEngine);
+    if (isEntityOfClass(entity, Task.class)) {
+      return convertToHalTask((Task) entity);
     }
     else {
       throw new InvalidRequestException(Status.BAD_REQUEST, "Entities of class '" + entity.getClass().getCanonicalName() + "' are currently not supported by filters and HAL media type.");
     }
   }
 
+  protected boolean isEntityOfClass(Object entity, Class<?> entityClass) {
+    return entityClass.isAssignableFrom(entityClass.getClass());
+  }
+
+  @SuppressWarnings("unchecked")
+  protected HalTask convertToHalTask(Task task) {
+    HalTask halTask = HalTask.generate(task, processEngine);
+    List<String> variableNames = (List<String>) getDbFilter().getProperties().get(PROPERTIES_VARIABLES_KEY);
+    if (variableNames != null) {
+      LinkedHashSet<String> variableScopeIds = getVariableScopeIds(task);
+      Map<String, List<VariableInstance>> variableInstances = getSortedVariableInstances(variableNames, variableScopeIds);
+      List<HalResource<?>> variableValues = getVariableValuesForTask(task, variableInstances);
+      halTask.addEmbedded("variable", variableValues);
+    }
+    return halTask;
+  }
+
+  protected List<HalResource<?>> getVariableValuesForTask(Task task, Map<String, List<VariableInstance>> variableInstances) {
+    // converted variables values
+    List<HalResource<?>> variableValues = new ArrayList<HalResource<?>>();
+
+    // variable scope ids to check, ordered by visibility
+    LinkedHashSet<String> variableScopeIds = getVariableScopeIds(task);
+
+    // names of already converted variables
+    Set<String> knownVariableNames = new HashSet<String>();
+
+    for (String variableScopeId : variableScopeIds) {
+      if (variableInstances.containsKey(variableScopeId)) {
+        for (VariableInstance variableInstance : variableInstances.get(variableScopeId)) {
+          if (!knownVariableNames.contains(variableInstance.getName())) {
+            variableValues.add(HalVariableValue.generateVariableValue(variableInstance, variableScopeId));
+            knownVariableNames.add(variableInstance.getName());
+          }
+        }
+      }
+    }
+
+    return variableValues;
+  }
+
+  protected LinkedHashSet<String> getVariableScopeIds(Task... tasks) {
+    LinkedHashSet<String> variableScopeIds = new LinkedHashSet<String>();
+    if (tasks != null && tasks.length > 0) {
+      for (Task task : tasks) {
+        variableScopeIds.add(task.getId());
+        variableScopeIds.add(task.getExecutionId());
+        variableScopeIds.add(task.getCaseInstanceId());
+        variableScopeIds.add(task.getProcessInstanceId());
+        variableScopeIds.add(task.getExecutionId());
+      }
+    }
+
+    // remove null from set which was probably added due an unset id
+    variableScopeIds.remove(null);
+
+    return variableScopeIds;
+  }
+
+  protected Map<String, List<VariableInstance>> getSortedVariableInstances(Collection<String> variableNames, Collection<String> variableScopeIds) {
+    List<VariableInstance> variableInstances = queryVariablesInstancesByVariableScopeIds(variableNames, variableScopeIds);
+    Map<String, List<VariableInstance>> sortedVariableInstances = new HashMap<String, List<VariableInstance>>();
+    for (VariableInstance variableInstance : variableInstances) {
+      String variableScopeId = ((VariableInstanceEntity) variableInstance).getVariableScope();
+      if (!sortedVariableInstances.containsKey(variableScopeId)) {
+        sortedVariableInstances.put(variableScopeId, new ArrayList<VariableInstance>());
+      }
+      sortedVariableInstances.get(variableScopeId).add(variableInstance);
+    }
+    return sortedVariableInstances;
+  }
+
+  protected List<VariableInstance> queryVariablesInstancesByVariableScopeIds(Collection<String> variableNames, Collection<String> variableScopeIds) {
+    return getProcessEngine().getRuntimeService()
+      .createVariableInstanceQuery()
+      .variableNameIn(variableNames.toArray(new String[variableNames.size()]))
+      .variableScopeIdIn(variableScopeIds.toArray(new String[variableScopeIds.size()]))
+      .list();
+  }
+
   @SuppressWarnings("unchecked")
   protected HalResource convertToHalList(List<?> entities) {
     long count = executeFilterCount(null);
 
-    if (TaskEntity.class.equals(entities.get(0).getClass())) {
+    if (isEntityOfClass(entities.get(0), Task.class)) {
       return HalTaskList.generate((List<Task>) entities, count, processEngine);
     }
     else {
