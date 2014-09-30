@@ -55,6 +55,7 @@ import org.camunda.bpm.engine.impl.TaskQueryImpl;
 import org.camunda.bpm.engine.impl.identity.Authentication;
 import org.camunda.bpm.engine.impl.persistence.entity.TaskEntity;
 import org.camunda.bpm.engine.query.Query;
+import org.camunda.bpm.engine.rest.dto.ConditionQueryParameterDto;
 import org.camunda.bpm.engine.rest.dto.runtime.FilterDto;
 import org.camunda.bpm.engine.rest.dto.task.TaskQueryDto;
 import org.camunda.bpm.engine.rest.hal.Hal;
@@ -905,6 +906,53 @@ public abstract class AbstractFilterRestServiceInteractionTest extends AbstractR
     verify(authorizationServiceMock, times(1)).isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, DELETE, FILTER, MockProvider.EXAMPLE_FILTER_ID);
     verify(authorizationServiceMock, times(1)).isUserAuthorized(MockProvider.EXAMPLE_USER_ID, null, UPDATE, FILTER, MockProvider.EXAMPLE_FILTER_ID);
 
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void testTaskQueryWithVariables() {
+    TaskQuery query = new TaskQueryImpl();
+    query.processVariableValueEquals("hello", "world");
+    query.caseInstanceVariableValueEquals("hello", "world");
+    query.taskVariableValueEquals("hello", "world");
+
+    when(filterMock.getQuery()).thenReturn((Query) query);
+
+    given()
+      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+    .expect()
+      .statusCode(Status.OK.getStatusCode())
+      .body("query.processVariables.size", equalTo(1))
+      .body("query.processVariables[0].name", equalTo("hello"))
+      .body("query.processVariables[0].operator", equalTo(ConditionQueryParameterDto.EQUALS_OPERATOR_NAME))
+      .body("query.processVariables[0].value", equalTo("world"))
+      .body("query.taskVariables.size", equalTo(1))
+      .body("query.taskVariables[0].name", equalTo("hello"))
+      .body("query.taskVariables[0].operator", equalTo(ConditionQueryParameterDto.EQUALS_OPERATOR_NAME))
+      .body("query.taskVariables[0].value", equalTo("world"))
+      .body("query.caseInstanceVariables.size", equalTo(1))
+      .body("query.caseInstanceVariables[0].name", equalTo("hello"))
+      .body("query.caseInstanceVariables[0].operator", equalTo(ConditionQueryParameterDto.EQUALS_OPERATOR_NAME))
+      .body("query.caseInstanceVariables[0].value", equalTo("world"))
+    .when()
+      .get(SINGLE_FILTER_URL);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void testTaskQueryWithoutVariables() {
+    TaskQuery query = new TaskQueryImpl();
+    when(filterMock.getQuery()).thenReturn((Query) query);
+
+    given()
+      .pathParam("id", MockProvider.EXAMPLE_FILTER_ID)
+    .expect()
+      .statusCode(Status.OK.getStatusCode())
+      .body("query.containsKey('processVariables')", is(false))
+      .body("query.containsKey('taskVariables')", is(false))
+      .body("query.containsKey('caseInstanceVariables')", is(false))
+    .when()
+      .get(SINGLE_FILTER_URL);
   }
 
 }

@@ -139,8 +139,11 @@ public class TaskQueryDto extends AbstractQueryDto<TaskQuery> {
   private List<String> candidateGroups;
   private String candidateGroupsExpression;
 
+  @JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
   private List<VariableQueryParameterDto> taskVariables;
+  @JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
   private List<VariableQueryParameterDto> processVariables;
+  @JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
   private List<VariableQueryParameterDto> caseInstanceVariables;
 
   public TaskQueryDto() {
@@ -1119,7 +1122,9 @@ public class TaskQueryDto extends AbstractQueryDto<TaskQuery> {
       dto.delegationState = taskQuery.getDelegationState().toString();
     }
 
+    dto.processVariables = new ArrayList<VariableQueryParameterDto>();
     dto.taskVariables = new ArrayList<VariableQueryParameterDto>();
+    dto.caseInstanceVariables = new ArrayList<VariableQueryParameterDto>();
     for (TaskQueryVariableValue variableValue : taskQuery.getVariables()) {
       VariableQueryParameterDto variableValueDto = new VariableQueryParameterDto(variableValue);
 
