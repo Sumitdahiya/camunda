@@ -75,7 +75,7 @@ public class SentryHandler extends CmmnElementHandler<Sentry, CmmnSentryDeclarat
 
     CmmnSentryDeclaration sentryDeclaration = new CmmnSentryDeclaration(id);
 
-    // the ifPart will initialized immediately
+    // the ifPart will be initialized immediately
     initializeIfPart(ifPart, sentryDeclaration, context);
 
     // ...whereas the onParts will be initialized later because the

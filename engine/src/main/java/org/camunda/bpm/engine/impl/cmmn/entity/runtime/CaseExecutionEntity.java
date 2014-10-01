@@ -392,6 +392,8 @@ public class CaseExecutionEntity extends CmmnExecution implements CaseExecution,
         .getCaseSentryPartManager()
         .findCaseSentryPartsByCaseExecutionId(id);
 
+      // create a map sentries: sentryId -> caseSentryParts
+      // for simple select to get all parts for one sentry
       sentries = new HashMap<String, List<CaseSentryPartEntity>>();
 
       for (CaseSentryPartEntity sentryPart : caseSentryParts) {
@@ -405,9 +407,7 @@ public class CaseExecutionEntity extends CmmnExecution implements CaseExecution,
         }
 
         parts.add(sentryPart);
-
       }
-
     }
   }
 

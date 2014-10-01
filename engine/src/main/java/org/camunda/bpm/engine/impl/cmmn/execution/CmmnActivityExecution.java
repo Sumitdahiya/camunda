@@ -90,6 +90,29 @@ public interface CmmnActivityExecution extends DelegateCaseExecution {
   boolean isNew();
 
   /**
+   * <p>Returns <code>true</code> iff:<br>
+   *  <code>{@link #getCurrentState()} == {@link CaseExecutionState#TERMINATING_ON_TERMINATION}
+   *        || {@link #getCurrentState()} == {@link CaseExecutionState#TERMINATING_ON_PARENT_TERMINATION}
+   *        || {@link #getCurrentState()} == {@link CaseExecutionState#TERMINATING_ON_EXIT}</code>
+   * </p>
+   *
+   * @return whether <code>this</code> case execution has as current state {@link CaseExecutionState#TERMINATING_ON_TERMINATION},
+   *         {@link CaseExecutionState#TERMINATING_ON_PARENT_TERMINATION} or {@link CaseExecutionState#TERMINATING_ON_EXIT}
+   */
+  boolean isTerminating();
+
+  /**
+   * <p>Returns <code>true</code> iff:<br>
+   *  <code>{@link #getCurrentState()} == {@link CaseExecutionState#SUSPENDING_ON_SUSPENSION}
+   *        || {@link #getCurrentState()} == {@link CaseExecutionState#SUSPENDING_ON_PARENT_SUSPENSION}</code>
+   * </p>
+   *
+   * @return whether <code>this</code> case execution has as current state
+   *        {@link CaseExecutionState#SUSPENDING_ON_SUSPENSION} or {@link CaseExecutionState#SUSPENDING_ON_PARENT_SUSPENSION}
+   */
+  boolean isSuspending();
+
+  /**
    * <p>Returns the {@link CmmnActivity activity} which is associated with
    * <code>this</code> case execution.
    *
@@ -365,6 +388,8 @@ public interface CmmnActivityExecution extends DelegateCaseExecution {
    * @throws ProcessEngineException when an internal exception happens during the execution
    *     of the command.
    */
+  void performTerminate();
+
   void terminate();
 
   /**
@@ -382,6 +407,8 @@ public interface CmmnActivityExecution extends DelegateCaseExecution {
    * @throws ProcessEngineException when an internal exception happens during the execution
    *     of the command.
    */
+  void performParentTerminate();
+
   void parentTerminate();
 
   /**
@@ -415,6 +442,8 @@ public interface CmmnActivityExecution extends DelegateCaseExecution {
    * @throws ProcessEngineException when an internal exception happens during the execution
    *     of the command.
    */
+  void performExit();
+
   void exit();
 
   /**
@@ -436,6 +465,8 @@ public interface CmmnActivityExecution extends DelegateCaseExecution {
    * @throws ProcessEngineException when an internal exception happens during the execution
    *     of the command.
    */
+  void performSuspension();
+
   void suspend();
 
   /**
@@ -459,6 +490,8 @@ public interface CmmnActivityExecution extends DelegateCaseExecution {
    * @throws ProcessEngineException when an internal exception happens during the execution
    *     of the command.
    */
+  void performParentSuspension();
+
   void parentSuspend();
 
   /**
