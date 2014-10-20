@@ -27,6 +27,9 @@ import org.camunda.bpm.engine.filter.Filter;
 import org.camunda.bpm.engine.filter.FilterQuery;
 import org.camunda.bpm.engine.impl.persistence.entity.FilterEntity;
 import org.camunda.bpm.engine.impl.test.PluggableProcessEngineTestCase;
+import org.camunda.bpm.engine.impl.util.ClockUtil;
+import org.camunda.bpm.engine.task.Task;
+import org.camunda.bpm.engine.task.TaskQuery;
 import org.junit.Assert;
 
 /**
@@ -272,6 +275,61 @@ public class FilterQueryTest extends PluggableProcessEngineTestCase {
     assertEquals("ACT_RU_FILTER", managementService.getTableName(FilterEntity.class));
     assertEquals(3, taskService.createNativeTaskQuery().sql("SELECT * FROM " + managementService.getTableName(Filter.class)).listPage(0, 3).size());
     assertEquals(2, taskService.createNativeTaskQuery().sql("SELECT * FROM " + managementService.getTableName(Filter.class)).listPage(2, 2).size());
+  }
+
+  public void testTaskSorting() {
+    Task taskA = taskService.newTask("a");
+    Task taskB = taskService.newTask("b");
+    Task taskC = taskService.newTask("c");
+    Task taskD = taskService.newTask("d");
+
+    taskA.setPriority(50);
+    taskB.setPriority(50);
+    taskC.setPriority(50);
+    taskD.setPriority(50);
+
+    taskService.saveTask(taskA);
+    taskService.saveTask(taskB);
+    taskService.saveTask(taskC);
+    taskService.saveTask(taskD);
+
+    Filter filter = filterService.newTaskFilter("testFilter");
+    filterService.saveFilter(filter);
+
+    TaskQuery extendingQuery = taskService.createTaskQuery().orderByTaskPriority().desc();
+
+    List<String> firstTaskIds = getTaskIds(filterService.list(filter.getId(), extendingQuery));
+
+    taskB.setAssignee("demo");
+    taskService.saveTask(taskB);
+
+    List<String> secondsTaskIds = getTaskIds(filterService.list(filter.getId(), extendingQuery));
+    assertEquals(firstTaskIds, secondsTaskIds);
+
+    taskD.setFollowUpDate(ClockUtil.getCurrentTime());
+    taskService.saveTask(taskD);
+
+    secondsTaskIds = getTaskIds(filterService.list(filter.getId(), extendingQuery));
+    assertEquals(firstTaskIds, secondsTaskIds);
+
+    taskA.setDueDate(ClockUtil.getCurrentTime());
+    taskService.saveTask(taskA);
+
+    secondsTaskIds = getTaskIds(filterService.list(filter.getId(), extendingQuery));
+    assertEquals(firstTaskIds, secondsTaskIds);
+
+    taskService.deleteTask(taskA.getId(), true);
+    taskService.deleteTask(taskB.getId(), true);
+    taskService.deleteTask(taskC.getId(), true);
+    taskService.deleteTask(taskD.getId(), true);
+  }
+
+  protected List<String> getTaskIds(List<Task> tasks) {
+    ArrayList<String> taskIds = new ArrayList<String>();
+    for (Task task : tasks) {
+      taskIds.add(task.getId());
+    }
+    return taskIds;
   }
 
 }
