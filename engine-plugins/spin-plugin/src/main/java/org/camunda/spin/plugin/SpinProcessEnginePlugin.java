@@ -31,13 +31,14 @@ import org.camunda.spin.spi.DataFormat;
  */
 public class SpinProcessEnginePlugin extends AbstractProcessEnginePlugin {
 
+  public void preInit(ProcessEngineConfigurationImpl processEngineConfiguration) {
+    // use classloader which loaded the plugin
+    ClassLoader classloader = ClassLoaderUtil.getClassloader(SpinProcessEnginePlugin.class);
+    DataFormats.loadDataFormats(classloader);
+  }
+
   @Override
   public void postInit(ProcessEngineConfigurationImpl processEngineConfiguration) {
-    ClassLoader classloader = ClassLoaderUtil.getContextClassloader();
-    if(classloader == null) {
-      classloader = ClassLoaderUtil.getClassloader(SpinProcessEnginePlugin.class);
-    }
-    DataFormats.loadDataFormats(classloader);
     registerFunctionMapper(processEngineConfiguration);
     registerScriptResolver(processEngineConfiguration);
     registerSerializers(processEngineConfiguration);

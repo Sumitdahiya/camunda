@@ -26,10 +26,8 @@ public class ConnectProcessEnginePlugin extends AbstractProcessEnginePlugin {
 
   @Override
   public void preInit(ProcessEngineConfigurationImpl processEngineConfiguration) {
-    ClassLoader classloader = ClassLoaderUtil.getContextClassloader();
-    if(classloader == null) {
-      classloader = ClassLoaderUtil.getClassloader(ConnectProcessEnginePlugin.class);
-    }
+    // use classloader which loaded the plugin
+    ClassLoader classloader = ClassLoaderUtil.getClassloader(ConnectProcessEnginePlugin.class);
     Connectors.loadConnectors(classloader);
 
     addConnectorParseListener(processEngineConfiguration);
