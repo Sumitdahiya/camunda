@@ -83,7 +83,7 @@
 
     <dependency>
       <groupId>org.camunda.spin</groupId>
-      <artifactId>camunda-spin-all</artifactId>
+      <artifactId>camunda-spin-core</artifactId>
     </dependency>
 
     <dependency>

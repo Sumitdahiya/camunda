@@ -4,12 +4,11 @@
   <groupId>org.camunda.bpm.identity</groupId>
   <artifactId>camunda-identity-ldap</artifactId>
   <packaging>jar</packaging>
-  <name>camunda BPM - identity - ldap</name>
+  <name>camunda BPM - engine plugins - identity - ldap</name>
 
   <parent>
     <groupId>org.camunda.bpm</groupId>
-    <artifactId>camunda-parent</artifactId>
-    <relativePath>../../parent</relativePath>
+    <artifactId>camunda-engine-plugins</artifactId>
     <version>7.2.0-SNAPSHOT</version>
   </parent>
 

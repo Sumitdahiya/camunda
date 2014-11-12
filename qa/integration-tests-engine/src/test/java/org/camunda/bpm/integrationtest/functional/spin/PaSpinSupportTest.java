@@ -19,7 +19,6 @@ import java.util.List;
 
 import org.camunda.bpm.engine.impl.cfg.ProcessEnginePlugin;
 import org.camunda.bpm.integrationtest.util.AbstractFoxPlatformIntegrationTest;
-import org.camunda.spin.plugin.SpinProcessEnginePlugin;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -47,12 +46,13 @@ public class PaSpinSupportTest extends AbstractFoxPlatformIntegrationTest {
 
   @Test
   public void spinPluginShouldBeRegistered() {
+
     List<ProcessEnginePlugin> processEnginePlugins = processEngineConfiguration.getProcessEnginePlugins();
 
     boolean spinPluginFound = false;
 
     for (ProcessEnginePlugin plugin : processEnginePlugins) {
-      if (plugin instanceof SpinProcessEnginePlugin) {
+      if (plugin.getClass().getName().contains("Spin")) {
         spinPluginFound = true;
         break;
       }
