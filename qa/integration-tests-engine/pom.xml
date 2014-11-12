@@ -88,8 +88,7 @@
 
     <dependency>
       <groupId>org.camunda.connect</groupId>
-      <artifactId>camunda-connect-all</artifactId>
-      <scope>provided</scope>
+      <artifactId>camunda-connect-core</artifactId>
     </dependency>
 
     <dependency>
