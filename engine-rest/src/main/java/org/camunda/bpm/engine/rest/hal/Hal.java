@@ -20,6 +20,7 @@ import javax.ws.rs.core.MediaType;
 import org.camunda.bpm.engine.rest.CaseDefinitionRestService;
 import org.camunda.bpm.engine.rest.ProcessDefinitionRestService;
 import org.camunda.bpm.engine.rest.UserRestService;
+import org.camunda.bpm.engine.rest.hal.cache.HalResourceCache;
 import org.camunda.bpm.engine.rest.hal.processDefinition.HalCaseDefinitionResolver;
 import org.camunda.bpm.engine.rest.hal.processDefinition.HalProcessDefinitionResolver;
 import org.camunda.bpm.engine.rest.hal.user.HalUserResolver;
@@ -36,6 +37,16 @@ public class Hal {
   public static Hal instance = new Hal();
 
   protected Map<Class<?>, HalLinkResolver> halLinkResolvers = new HashMap<Class<?>, HalLinkResolver>();
+
+  protected Map<Class<?>, HalResourceCache> caches = new HashMap<Class<?>, HalResourceCache>();
+
+  public HalResourceCache getChacheByEntityType(Class<?> entityType) {
+    return caches.get(entityType);
+  }
+
+  public void registerCache(Class<?> resourceType, HalResourceCache halResourceCache) {
+    caches.put(resourceType, halResourceCache);
+  }
 
   public Hal() {
     // register the built-in resolvers
