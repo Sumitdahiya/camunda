@@ -14,8 +14,10 @@
 package org.camunda.bpm.engine.impl.persistence.entity;
 
 import java.util.*;
+
 import org.camunda.bpm.engine.impl.JobQueryImpl;
 import org.camunda.bpm.engine.impl.Page;
+import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl;
 import org.camunda.bpm.engine.impl.cfg.TransactionListener;
 import org.camunda.bpm.engine.impl.cfg.TransactionState;
 import org.camunda.bpm.engine.impl.context.Context;
@@ -35,7 +37,11 @@ public class JobManager extends AbstractManager {
 
   public void send(MessageEntity message) {
     message.insert();
-    if (Context.getProcessEngineConfiguration().isHintJobExecutor()) {
+    ProcessEngineConfigurationImpl processEngineConfiguration = Context.getProcessEngineConfiguration();
+    if(processEngineConfiguration.isMetricsEnabled()) {
+      processEngineConfiguration.getJobExecutorMonitor().messageJobCreated();
+    }
+    if (processEngineConfiguration.isHintJobExecutor()) {
       hintJobExecutor(message);
     }
   }
@@ -50,7 +56,13 @@ public class JobManager extends AbstractManager {
     // This is highly unlikely because normally waitTimeInMillis is 5000 (5 seconds)
     // and timers are usually set further in the future
 
-    JobExecutor jobExecutor = Context.getProcessEngineConfiguration().getJobExecutor();
+    ProcessEngineConfigurationImpl processEngineConfiguration = Context.getProcessEngineConfiguration();
+    JobExecutor jobExecutor = processEngineConfiguration.getJobExecutor();
+
+    if(processEngineConfiguration.isMetricsEnabled()) {
+      processEngineConfiguration.getJobExecutorMonitor().timerJobCreated();
+    }
+
     int waitTimeInMillis = jobExecutor.getWaitTimeInMillis();
     if (duedate.getTime() < (ClockUtil.getCurrentTime().getTime() + waitTimeInMillis)) {
       hintJobExecutor(timer);

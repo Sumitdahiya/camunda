@@ -17,6 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.camunda.bpm.engine.ProcessEngineException;
+import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl;
 import org.camunda.bpm.engine.impl.cfg.TransactionState;
 import org.camunda.bpm.engine.impl.context.Context;
 import org.camunda.bpm.engine.impl.interceptor.Command;
@@ -24,7 +25,11 @@ import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.interceptor.CommandExecutor;
 import org.camunda.bpm.engine.impl.jobexecutor.FailedJobListener;
 import org.camunda.bpm.engine.impl.jobexecutor.JobExecutorContext;
+import org.camunda.bpm.engine.impl.metrics.JobExecutorMonitor;
 import org.camunda.bpm.engine.impl.persistence.entity.JobEntity;
+import org.camunda.bpm.engine.impl.persistence.entity.MessageEntity;
+import org.camunda.bpm.engine.impl.persistence.entity.TimerEntity;
+import org.camunda.bpm.engine.impl.util.ClockUtil;
 
 import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
 
@@ -52,7 +57,20 @@ public class ExecuteJobsCmd implements Command<Object>, Serializable {
     }
     JobEntity job = commandContext.getDbEntityManager().selectById(JobEntity.class, jobId);
 
-    final CommandExecutor commandExecutor = Context.getProcessEngineConfiguration().getCommandExecutorTxRequiresNew();
+    ProcessEngineConfigurationImpl processEngineConfiguration = Context.getProcessEngineConfiguration();
+
+    if(processEngineConfiguration.isMetricsEnabled()) {
+      JobExecutorMonitor jobExecutorMonitor = processEngineConfiguration.getJobExecutorMonitor();
+      long jobAge = ClockUtil.getCurrentTime().getTime() - job.getDuedate().getTime();
+      if(job instanceof MessageEntity) {
+        jobExecutorMonitor.messageJobExecuted(jobAge, job.getRetries());
+      }
+      else if(job instanceof TimerEntity) {
+        jobExecutorMonitor.timerJobExecuted(jobAge, job.getRetries());
+      }
+    }
+
+    final CommandExecutor commandExecutor = processEngineConfiguration.getCommandExecutorTxRequiresNew();
     final JobExecutorContext jobExecutorContext = Context.getJobExecutorContext();
 
     if (job == null) {

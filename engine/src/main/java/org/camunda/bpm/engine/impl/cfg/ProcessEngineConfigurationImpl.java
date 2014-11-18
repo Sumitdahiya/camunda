@@ -33,6 +33,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.naming.InitialContext;
 import javax.sql.DataSource;
 
@@ -162,6 +163,8 @@ import org.camunda.bpm.engine.impl.jobexecutor.TimerStartEventJobHandler;
 import org.camunda.bpm.engine.impl.jobexecutor.TimerStartEventSubprocessJobHandler;
 import org.camunda.bpm.engine.impl.jobexecutor.TimerSuspendJobDefinitionHandler;
 import org.camunda.bpm.engine.impl.jobexecutor.TimerSuspendProcessDefinitionHandler;
+import org.camunda.bpm.engine.impl.metrics.DefaultJobExecutorMonitor;
+import org.camunda.bpm.engine.impl.metrics.JobExecutorMonitor;
 import org.camunda.bpm.engine.impl.persistence.GenericManagerFactory;
 import org.camunda.bpm.engine.impl.persistence.deploy.Deployer;
 import org.camunda.bpm.engine.impl.persistence.deploy.DeploymentCache;
@@ -446,6 +449,12 @@ public abstract class ProcessEngineConfigurationImpl extends ProcessEngineConfig
 
   protected DbEntityCacheKeyMapping dbEntityCacheKeyMapping = DbEntityCacheKeyMapping.defaultEntityCacheKeyMapping();
 
+  // metrics //////////////////////////////////////////////////////////////////
+
+  protected JobExecutorMonitor jobExecutorMonitor;
+
+  protected boolean metricsEnabled = false;
+
   // buildProcessEngine ///////////////////////////////////////////////////////
 
   public ProcessEngine buildProcessEngine() {
@@ -459,6 +468,7 @@ public abstract class ProcessEngineConfigurationImpl extends ProcessEngineConfig
 
   protected void init() {
     invokePreInit();
+    initMetrics();
     initDefaultCharset();
     initHistoryLevel();
     initHistoryEventProducer();
@@ -1410,6 +1420,16 @@ public abstract class ProcessEngineConfigurationImpl extends ProcessEngineConfig
   protected void initResourceAuthorizationProvider() {
     if(resourceAuthorizationProvider == null) {
       resourceAuthorizationProvider = new DefaultAuthorizationProvider();
+    }
+  }
+
+  // metrics //////////////////////////////////////////////////////////////////
+
+  protected void initMetrics() {
+    if(isMetricsEnabled()) {
+      if(jobExecutorMonitor == null) {
+        jobExecutorMonitor = new DefaultJobExecutorMonitor();
+      }
     }
   }
 
@@ -2494,6 +2514,24 @@ public abstract class ProcessEngineConfigurationImpl extends ProcessEngineConfig
   public ProcessEngineConfigurationImpl setInvokeCustomVariableListeners(boolean isInvokeCustomVariableListeners) {
     this.isInvokeCustomVariableListeners = isInvokeCustomVariableListeners;
     return this;
+  }
+
+  public JobExecutorMonitor getJobExecutorMonitor() {
+    return jobExecutorMonitor;
+  }
+
+  public ProcessEngineConfigurationImpl setJobExecutorMonitor(JobExecutorMonitor jobExecutorMonitor) {
+    this.jobExecutorMonitor = jobExecutorMonitor;
+    return this;
+  }
+
+  public ProcessEngineConfigurationImpl setMetricsEnabled(boolean metricsEnabled) {
+    this.metricsEnabled = metricsEnabled;
+    return this;
+  }
+
+  public boolean isMetricsEnabled() {
+    return metricsEnabled;
   }
 
 }
