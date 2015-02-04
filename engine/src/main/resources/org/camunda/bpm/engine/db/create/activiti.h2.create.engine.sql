@@ -212,6 +212,20 @@ create table ACT_RU_FILTER (
   primary key (ID_)
 );
 
+create table ACT_RU_EXTERNAL_EX (
+  ID_ varchar(64) not null,
+  REV_ integer not null,
+  LOCK_OWNER_ varchar(64),
+  LOCK_TIME_ timestamp,
+  CREATED_ timestamp,
+  PROC_DEF_KEY_ varchar(255),
+  PROC_DEF_ID_ varchar(64),
+  PROC_INST_ID_ varchar(64),
+  EXECUTION_ID_ varchar(64),
+  ACT_ID_ varchar(255) not null,
+  primary key (ID_)
+);
+
 
 create index ACT_IDX_EXEC_BUSKEY on ACT_RU_EXECUTION(BUSINESS_KEY_);
 create index ACT_IDX_TASK_CREATE on ACT_RU_TASK(CREATE_TIME_);

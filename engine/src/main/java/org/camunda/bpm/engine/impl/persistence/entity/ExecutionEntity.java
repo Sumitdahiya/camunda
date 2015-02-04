@@ -556,6 +556,12 @@ public class ExecutionEntity extends PvmExecutionImpl implements
     this.isActive = false;
   }
 
+  public void executeExternal(String type) {
+    Context.getCommandContext()
+      .getExternalExecutionManager()
+      .create(this);
+  }
+
   // executions ///////////////////////////////////////////////////////////////
 
   /** ensures initialization and returns the non-null executions list */

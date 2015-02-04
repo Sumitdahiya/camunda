@@ -52,6 +52,7 @@ import org.camunda.bpm.engine.impl.persistence.entity.DeploymentManager;
 import org.camunda.bpm.engine.impl.persistence.entity.EventSubscriptionManager;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionManager;
+import org.camunda.bpm.engine.impl.persistence.entity.ExternalExecutionManager;
 import org.camunda.bpm.engine.impl.persistence.entity.FilterManager;
 import org.camunda.bpm.engine.impl.persistence.entity.HistoricActivityInstanceManager;
 import org.camunda.bpm.engine.impl.persistence.entity.HistoricCaseActivityInstanceManager;
@@ -417,6 +418,10 @@ public class CommandContext {
 
   public WritableIdentityProvider getWritableIdentityProvider() {
     return getSession(WritableIdentityProvider.class);
+  }
+
+  public ExternalExecutionManager getExternalExecutionManager() {
+    return getSession(ExternalExecutionManager.class);
   }
 
   // CMMN /////////////////////////////////////////////////////////////////////

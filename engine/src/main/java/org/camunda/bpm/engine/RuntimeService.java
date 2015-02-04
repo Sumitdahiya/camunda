@@ -1078,4 +1078,7 @@ public interface RuntimeService {
    * @throws ProcessEngineException if messageName is null and businessKey is null and correlationKeys is null
    */
   void correlateMessage(String messageName, String businessKey, Map<String, Object> correlationKeys, Map<String, Object> processVariables);
+
+  // external executions ///////////////////////////////////////////////
+
 }

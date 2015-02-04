@@ -46,6 +46,7 @@ import org.camunda.bpm.engine.impl.bpmn.behavior.ErrorEndEventActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.EventBasedGatewayActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.EventSubProcessStartEventActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.ExclusiveGatewayActivityBehavior;
+import org.camunda.bpm.engine.impl.bpmn.behavior.ExternalTaskActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.InclusiveGatewayActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.IntermediateCatchEventActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.IntermediateCatchLinkEventActivityBehavior;
@@ -1620,6 +1621,8 @@ public class BpmnParse extends Parse {
         parseEmailServiceTask(activity, serviceTaskElement, parseFieldDeclarations(serviceTaskElement));
       } else if (type.equalsIgnoreCase("shell")) {
         parseShellServiceTask(activity, serviceTaskElement, parseFieldDeclarations(serviceTaskElement));
+      } else if (type.equalsIgnoreCase("external")) {
+        parseExternalServiceTask(activity, serviceTaskElement, parseFieldDeclarations(serviceTaskElement));
       } else {
         addError("Invalid usage of type attribute on " + elementName + ": '" + type + "'", serviceTaskElement);
       }
@@ -1652,6 +1655,11 @@ public class BpmnParse extends Parse {
     }
 
     return activity;
+  }
+
+  protected void parseExternalServiceTask(ActivityImpl activity, Element serviceTaskElement, List<FieldDeclaration> parseFieldDeclarations) {
+    ExternalTaskActivityBehavior behavior = new ExternalTaskActivityBehavior();
+    activity.setActivityBehavior(behavior);
   }
 
   /**

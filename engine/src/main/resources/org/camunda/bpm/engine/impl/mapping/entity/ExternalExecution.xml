@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd"> 
+  
+<mapper namespace="org.camunda.bpm.engine.impl.persistence.entity.ExternalExecutionEntity">
+
+  <!-- ExternalExecution DELETE -->
+
+  <delete id="deleteExternalExecution" parameterType="org.camunda.bpm.engine.impl.persistence.entity.ExternalExecutionEntity">
+    delete from ${prefix}ACT_RU_EXTERNAL_EX where ID_ = #{id} and REV_ = #{revision}
+  </delete>
+
+  <!-- ExternalExecution INSERT -->
+
+  <insert id="insertExternalExecution" parameterType="org.camunda.bpm.engine.impl.persistence.entity.ExternalExecutionEntity">
+    insert into ${prefix}ACT_RU_EXTERNAL_EX (
+      ID_,
+      LOCK_OWNER_,
+      LOCK_TIME_,
+      CREATED_,
+      PROC_DEF_KEY_,
+      PROC_DEF_ID_,
+      PROC_INST_ID_,
+      EXECUTION_ID_,
+      ACT_ID_,
+      REV_)
+    values (
+      #{id ,jdbcType=VARCHAR},
+      #{lockOwner, jdbcType=VARCHAR},
+      #{lockTime, jdbcType=TIMESTAMP},
+      #{created, jdbcType=TIMESTAMP},
+      #{processDefinitionKey, jdbcType=VARCHAR},
+      #{processDefinitionId ,jdbcType=VARCHAR},
+      #{processInstanceId ,jdbcType=VARCHAR},
+      #{executionId ,jdbcType=VARCHAR},
+      #{activityId ,jdbcType=VARCHAR},
+      1
+    )
+  </insert>
+
+  <!-- ExternalExecution RESULTMAP -->
+
+  <resultMap id="ExternalExecutionResultMap" type="org.camunda.bpm.engine.impl.persistence.entity.ExternalExecutionEntity">
+    <id property="id" column="ID_" jdbcType="VARCHAR" />
+    <result property="lockOwner" column="LOCK_OWNER_" jdbcType="VARCHAR" />
+    <result property="lockTime" column="LOCK_TIME_" jdbcType="TIMESTAMP" />
+    <result property="created" column="CREATED_" jdbcType="TIMESTAMP" />
+    <result property="processDefinitionKey" column="PROC_DEF_KEY_" jdbcType="VARCHAR" />
+    <result property="processDefinitionId" column="PROC_DEF_ID_" jdbcType="VARCHAR" />
+    <result property="processInstanceId" column="PROC_INST_ID_" jdbcType="VARCHAR" />
+    <result property="executionId" column="EXECUTION_ID_" jdbcType="VARCHAR" />
+    <result property="activityId" column="ACT_ID_" jdbcType="VARCHAR" />
+    <result property="revision" column="REV_" jdbcType="INTEGER" />
+  </resultMap>
+  
+  <!-- ExternalExecution SELECT -->  
+
+  <select id="selectExternalExecutionsByExecutionId" parameterType="string" resultMap="ExternalExecutionResultMap">
+    select *
+    from ${prefix}ACT_RU_EXTERNAL_EX E
+    where E.EXECUTION_ID_ = #{parameter}
+  </select>
+  
+  <select id="selectExternalExecutionsByProcessInstanceId" parameterType="string" resultMap="ExternalExecutionResultMap">
+    select *
+    from ${prefix}ACT_RU_EXTERNAL_EX E
+    where E.PROC_INST_ID_ = #{parameter}
+  </select>
+
+  <select id="selectExternalExecutionByQueryCriteria" parameterType="org.camunda.bpm.engine.impl.ExternalExecutionQueryImpl" resultMap="ExternalExecutionResultMap">
+    ${limitBefore}
+    select RES.* ${limitBetween}
+    <include refid="selectExternalExecutionByQueryCriteriaSql"/>
+    ${orderBy}
+    ${limitAfter}
+  </select>
+
+  <select id="selectExternalExecutionCountByQueryCriteria" parameterType="org.camunda.bpm.engine.impl.ExternalExecutionQueryImpl" resultType="long">
+    select count(distinct RES.ID_)
+    <include refid="selectExternalExecutionByQueryCriteriaSql"/>
+  </select>
+  
+  <sql id="selectExternalExecutionByQueryCriteriaSql">
+    from ${prefix}ACT_RU_EXTERNAL_EX RES
+    <where>
+      <if test="executionId != null">
+        and RES.EXECUTION_ID_ = #{executionId}
+      </if>
+      <if test="activityId != null">
+        and RES.ACT_ID_ = #{activityId}
+      </if>
+      <if test="processInstanceId != null">
+        and RES.PROC_INST_ID_ = #{processInstanceId}
+      </if>
+      <if test="processDefinitionId != null">
+        and RES.PROC_DEF_ID_ = #{processDefinitionId}
+      </if>
+      <if test="processDefinitionKey != null">
+        and RES.PROC_DEF_KEY_ = #{processDefinitionKey}
+      </if>
+    </where>
+  </sql>
+
+  <update id="updateExternalExecution" parameterType="org.camunda.bpm.engine.impl.persistence.entity.ExternalExecutionEntity">
+    update ${prefix}ACT_RU_EXTERNAL_EX
+    <set>
+      REV_ = #{revisionNext, jdbcType=INTEGER},
+      EXECUTION_ID_ = #{executionId, jdbcType=VARCHAR},
+      LOCK_OWNER_ = #{lockOwner, jdbcType=VARCHAR}
+      LOCK_TIME_ = #{lockTime, jdbcType=TIMESTAMP}
+    </set>
+    <where>
+      ID_ = #{id, jdbcType=VARCHAR}
+      and REV_ = #{revision, jdbcType=INTEGER}
+    </where>
+  </update>
+
+</mapper>
