@@ -27,7 +27,6 @@ public abstract class PvmAtomicOperationCreateScope implements PvmAtomicOperatio
 
   public void execute(PvmExecutionImpl execution) {
 
-    // we are continuing execution along this sequence flow:
     // reset activity instance id before creating the scope
     execution.setActivityInstanceId(execution.getParentActivityInstanceId());
 

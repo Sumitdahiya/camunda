@@ -21,6 +21,9 @@ import org.camunda.bpm.engine.impl.pvm.PvmActivity;
 import org.camunda.bpm.engine.impl.pvm.PvmProcessDefinition;
 import org.camunda.bpm.engine.impl.pvm.PvmProcessInstance;
 import org.camunda.bpm.engine.impl.pvm.PvmTransition;
+import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
+import org.camunda.bpm.engine.impl.pvm.process.TransitionImpl;
+import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
 
 /**
  * @author Tom Baeyens
@@ -222,12 +225,30 @@ public interface ActivityExecution extends DelegateExecution {
   /** An activity which is to be started next. */
   PvmActivity getNextActivity();
 
+
   void remove();
+  void destroy();
 
   void signal(String string, Object signalData);
 
   void cancelScope(String string);
 
-  void setActivity(PvmActivity cancelBoundaryEvent);
+  void setActivity(PvmActivity activity);
+
+  boolean tryPruneLastConcurrentChild();
+
+  void forceUpdate();
+
+  TransitionImpl getTransition();
+
+  /**
+   * Assumption: the current execution is active and executing an activity ({@link #getActivity()} is not null).
+   *
+   * For a given target scope, this method returns the scope execution.
+   *
+   * @param targetScope scope activity or process definition for which the scope execution should be found
+   * @return
+   */
+  public PvmExecutionImpl findExecutionForScope(ScopeImpl targetScope);
 
 }

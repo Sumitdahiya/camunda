@@ -482,7 +482,18 @@ public class ExecutionEntity extends PvmExecutionImpl implements
     removeActivityJobs(reason);
 
     super.cancelScope(reason, skipCustomListeners, skipIoMappings);
+  }
 
+  public void interruptScope(String reason, boolean skipCustomListeners, boolean skipIoMappings) {
+
+    // remove Jobs
+    removeJobs();
+
+    removeTasks(reason);
+
+    removeEventSubscriptionsExceptCompensation();
+
+    super.interruptScope(reason, skipCustomListeners, skipIoMappings);
   }
 
   protected void removeActivityJobs(String reason) {
@@ -933,13 +944,6 @@ public class ExecutionEntity extends PvmExecutionImpl implements
     Context.getCommandContext()
       .getExecutionManager()
       .deleteExecution(this);
-  }
-
-  public void interruptScope(String reason) {
-    // remove Jobs
-    removeJobs();
-
-    removeEventSubscriptionsExceptCompensation();
   }
 
   protected void removeEventSubscriptionsExceptCompensation() {
@@ -1573,5 +1577,6 @@ public class ExecutionEntity extends PvmExecutionImpl implements
     return Context.getProcessEngineConfiguration()
           .getProcessEngine();
   }
+
 
 }

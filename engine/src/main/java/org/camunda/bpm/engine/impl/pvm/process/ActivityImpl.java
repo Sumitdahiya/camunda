@@ -48,6 +48,8 @@ public class ActivityImpl extends ScopeImpl implements PvmActivity, HasDIBounds 
 
   protected boolean isCancelScope = false;
 
+  protected boolean isInterruptScope = false;
+
   protected boolean isConcurrent = false;
 
   protected ScopeImpl scope;
@@ -59,6 +61,8 @@ public class ActivityImpl extends ScopeImpl implements PvmActivity, HasDIBounds 
   protected int y = -1;
   protected int width = -1;
   protected int height = -1;
+
+  protected ScopeImpl levelOfSubprocessScope;
 
   public ActivityImpl(String id, ProcessDefinitionImpl processDefinition) {
     super(id, processDefinition);
@@ -137,11 +141,7 @@ public class ActivityImpl extends ScopeImpl implements PvmActivity, HasDIBounds 
   }
 
   public ScopeImpl getScope() {
-    if(scope == null) {
-      return parent;
-    } else {
-      return scope;
-    }
+    return scope;
   }
 
   @SuppressWarnings("unchecked")
@@ -252,8 +252,8 @@ public class ActivityImpl extends ScopeImpl implements PvmActivity, HasDIBounds 
     return isCancelScope;
   }
 
-  public void setCancelScope(boolean isInterrupting) {
-    this.isCancelScope = isInterrupting;
+  public void setCancelScope(boolean isCancelScope) {
+    this.isCancelScope = isCancelScope;
   }
 
   public boolean isConcurrent() {
@@ -271,17 +271,27 @@ public class ActivityImpl extends ScopeImpl implements PvmActivity, HasDIBounds 
    * this would be the scope execution of the flow scope).
    */
   public ScopeImpl getFlowScope() {
-    if(flowScope == null) {
-      return getScope();
-
-    } else {
-
-      return flowScope;
-    }
+    return flowScope;
   }
 
   public void setFlowScope(ScopeImpl flowScope) {
     this.flowScope = flowScope;
+  }
+
+  public boolean isInterruptScope() {
+    return isInterruptScope;
+  }
+
+  public void setInterruptScope(boolean isInterruptScope) {
+    this.isInterruptScope = isInterruptScope;
+  }
+
+  public ScopeImpl getLevelOfScubprocessScope() {
+    return this.levelOfSubprocessScope;
+  }
+
+  public void setLevelOfSubprocessScope(ScopeImpl levelOfSubprocessScope) {
+    this.levelOfSubprocessScope = levelOfSubprocessScope;
   }
 
 }

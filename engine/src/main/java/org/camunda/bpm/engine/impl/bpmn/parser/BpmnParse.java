@@ -34,7 +34,6 @@ import org.camunda.bpm.engine.delegate.ExecutionListener;
 import org.camunda.bpm.engine.delegate.Expression;
 import org.camunda.bpm.engine.delegate.TaskListener;
 import org.camunda.bpm.engine.impl.Condition;
-import org.camunda.bpm.engine.impl.bpmn.behavior.AbstractBpmnActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.BoundaryEventActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.CallActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.CallableElementActivityBehavior;
@@ -44,6 +43,7 @@ import org.camunda.bpm.engine.impl.bpmn.behavior.CaseCallActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.ClassDelegateActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.ErrorEndEventActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.EventBasedGatewayActivityBehavior;
+import org.camunda.bpm.engine.impl.bpmn.behavior.EventSubProcessActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.EventSubProcessStartEventActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.ExclusiveGatewayActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.InclusiveGatewayActivityBehavior;
@@ -57,11 +57,12 @@ import org.camunda.bpm.engine.impl.bpmn.behavior.ManualTaskActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.MultiInstanceActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.NoneEndEventActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.NoneStartEventActivityBehavior;
+import org.camunda.bpm.engine.impl.bpmn.behavior.OLD_MultiInstanceActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.ParallelGatewayActivityBehavior;
-import org.camunda.bpm.engine.impl.bpmn.behavior.ParallelMultiInstanceBehavior;
+import org.camunda.bpm.engine.impl.bpmn.behavior.ParallelMultiInstanceActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.ReceiveTaskActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.ScriptTaskActivityBehavior;
-import org.camunda.bpm.engine.impl.bpmn.behavior.SequentialMultiInstanceBehavior;
+import org.camunda.bpm.engine.impl.bpmn.behavior.SequentialMultiInstanceActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.ServiceTaskDelegateExpressionActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.ServiceTaskExpressionActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.ShellActivityBehavior;
@@ -147,6 +148,8 @@ import org.camunda.bpm.engine.repository.ProcessDefinition;
  */
 public class BpmnParse extends Parse {
 
+  public static final String MULTI_INSTANCE_BODY_ID_SUFFIX = "$multiInstanceBody";
+
   protected static final Logger LOGGER = Logger.getLogger(BpmnParse.class.getName());
 
   public static final String PROPERTYNAME_DOCUMENTATION = "documentation";
@@ -172,6 +175,8 @@ public class BpmnParse extends Parse {
   protected static final String CANDIDATE_STARTER_GROUPS_EXTENSION = "candidateStarterGroups";
 
   protected static final String ATTRIBUTEVALUE_T_FORMAL_EXPRESSION = BpmnParser.BPMN20_NS + ":tFormalExpression";
+
+  public static final String PROPERTYNAME_IS_MULTI_INSTANCE = "isMultiInstance";
 
   /** The deployment to which the parsed process definitions will be added. */
   protected DeploymentEntity deployment;
@@ -813,15 +818,10 @@ public class BpmnParse extends Parse {
       String isInterrupting = startEventElement.attribute("isInterrupting");
       boolean interrupting = isInterrupting.equalsIgnoreCase("true");
 
-      ((ActivityImpl)scope).setCancelScope(interrupting);
+      ((ActivityImpl)scope).setInterruptScope(interrupting);
       ((ActivityImpl)scope).setConcurrent(!interrupting);
 
-      // the scope of the event subscription is the parent of the event
-      // subprocess (subscription must be created when parent is initialized).
-      ScopeImpl catchingScope = ((ActivityImpl) scope).getParent();
-      startEventActivity.setScope(catchingScope);
-      // the flow scope is the event subprocess activity.
-      startEventActivity.setFlowScope(scope);
+//      startEventActivity.setFlowScope(scope);
 
       if (scope.getProperty(PROPERTYNAME_INITIAL) == null) {
         scope.setProperty(PROPERTYNAME_INITIAL, startEventActivity);
@@ -833,22 +833,22 @@ public class BpmnParse extends Parse {
         if(!interrupting) {
           addError("error start event of event subprocess must be interrupting", startEventElement);
         }
-        parseErrorStartEventDefinition(errorEventDefinition, startEventActivity, catchingScope);
+        parseErrorStartEventDefinition(errorEventDefinition, startEventActivity, startEventActivity.getScope());
 
       } else if (messageEventDefinition != null) {
         startEventActivity.setProperty("type", "messageStartEvent");
 
         EventSubscriptionDeclaration eventSubscriptionDeclaration = parseMessageEventDefinition(messageEventDefinition);
-        parseEventDefinitionForSubprocess(eventSubscriptionDeclaration, startEventActivity, catchingScope, messageEventDefinition);
+        parseEventDefinitionForSubprocess(eventSubscriptionDeclaration, startEventActivity, startEventActivity.getScope(), messageEventDefinition);
 
       } else if (signalEventDefinition != null) {
         startEventActivity.setProperty("type", "signalStartEvent");
 
         EventSubscriptionDeclaration eventSubscriptionDeclaration = parseSignalEventDefinition(signalEventDefinition);
-        parseEventDefinitionForSubprocess(eventSubscriptionDeclaration, startEventActivity, catchingScope, signalEventDefinition);
+        parseEventDefinitionForSubprocess(eventSubscriptionDeclaration, startEventActivity, startEventActivity.getScope(), signalEventDefinition);
 
       } else if (timerEventDefinition != null) {
-        parseTimerStartEventDefinitionForEventSubprocess(timerEventDefinition, startEventActivity, catchingScope, interrupting);
+        parseTimerStartEventDefinitionForEventSubprocess(timerEventDefinition, startEventActivity, startEventActivity.getScope(), interrupting);
 
       } else {
         addError("start event of event subprocess must be of type 'error', 'message', 'timer' or 'signal'", startEventElement);
@@ -894,7 +894,9 @@ public class BpmnParse extends Parse {
     startEventActivity.setProperty("type", "errorStartEvent");
     String errorRef = errorEventDefinition.attribute("errorRef");
     Error error = null;
-    ErrorEventDefinition definition = new ErrorEventDefinition(startEventActivity.getId());
+    // the error event defininition executes the event subprocess activity which hosts the start event
+    String eventSubProcessActivity = startEventActivity.getParent().getId();
+    ErrorEventDefinition definition = new ErrorEventDefinition(eventSubProcessActivity);
     if (errorRef != null) {
       error = errors.get(errorRef);
       String errorCode = error == null ? errorRef : error.getErrorCode();
@@ -963,6 +965,14 @@ public class BpmnParse extends Parse {
 
   protected void parseActivity(Element activityElement, Element parentElement, ScopeImpl scopeElement, HashMap<String, Element> postponedElements) {
     ActivityImpl activity = null;
+
+    boolean isMultiInstance = false;
+    ScopeImpl miBody = parseMultiInstanceLoopCharacteristics(activityElement, scopeElement);
+    if(miBody != null) {
+      scopeElement = miBody;
+      isMultiInstance = true;
+    }
+
     if (activityElement.getTagName().equals("exclusiveGateway")) {
       activity = parseExclusiveGateway(activityElement, scopeElement);
     } else if (activityElement.getTagName().equals("inclusiveGateway")) {
@@ -1002,9 +1012,9 @@ public class BpmnParse extends Parse {
       addWarning("Ignoring unsupported activity type", activityElement);
     }
 
-    // Parse stuff common to activities above
-    if (activity != null) {
-      parseMultiInstanceLoopCharacteristics(activityElement, activity);
+    if(isMultiInstance) {
+      activity.setProperty(PROPERTYNAME_IS_MULTI_INSTANCE, true);
+      activity.setLevelOfSubprocessScope(scopeElement.getParent());
     }
 
     if(activity != null) {
@@ -1241,13 +1251,13 @@ public class BpmnParse extends Parse {
     boolean waitForCompletion = "true".equals(compensateEventDefinitionElement.attribute("waitForCompletion", "true"));
 
     if(activityRef != null) {
-      if(scopeElement.getChildActivity(activityRef) == null) {
+      if(findActivityAtLevelOfSubprocess(scopeElement, activityRef) == null) {
         Boolean isTriggeredByEvent = (Boolean) scopeElement.getProperty(PROPERTYNAME_TRIGGERED_BY_EVENT);
         String type = (String) scopeElement.getProperty(PROPERTYNAME_TYPE);
         if (Boolean.TRUE == isTriggeredByEvent && "subProcess".equals(type)) {
           scopeElement = scopeElement.getParentScope();
         }
-        if (scopeElement.getChildActivity(activityRef) == null) {
+        if (findActivityAtLevelOfSubprocess(scopeElement, activityRef) == null) {
           addError("Invalid attribute value for 'activityRef': no activity with id '"+activityRef+"' in scope '"+scopeElement.getId()+"'", compensateEventDefinitionElement);
         }
       }
@@ -1258,6 +1268,18 @@ public class BpmnParse extends Parse {
     compensateEventDefinition.setWaitForCompletion(waitForCompletion);
 
     return compensateEventDefinition;
+  }
+
+  protected ActivityImpl findActivityAtLevelOfSubprocess(ScopeImpl scopeElement, String activityRef) {
+    for (ActivityImpl act : scopeElement.getActivities()) {
+      if(act.getActivityBehavior() != null && act.getActivityBehavior() instanceof MultiInstanceActivityBehavior) {
+        act = act.getActivities().get(0);
+      }
+      if(activityRef.equals(act.getId())) {
+        return act;
+      }
+    }
+    return null;
   }
 
   protected void parseCatchCompensateEventDefinition(Element compensateEventDefinition, ActivityImpl activity) {
@@ -1275,15 +1297,34 @@ public class BpmnParse extends Parse {
   protected ActivityBehavior parseBoundaryCancelEventDefinition(Element cancelEventDefinition, ActivityImpl activity) {
     activity.setProperty("type", "cancelBoundaryCatch");
 
+    activity.setCancelScope(true);
+
     ActivityImpl parent = (ActivityImpl) activity.getParent();
-    if(!parent.getProperty("type").equals("transaction")) {
+    if (parent.getActivityBehavior() != null && parent.getActivityBehavior() instanceof MultiInstanceActivityBehavior) {
+      parent = parent.getActivities().get(0);
+    }
+
+    if(!"transaction".equals(parent.getProperty("type"))) {
       addError("boundary event with cancelEventDefinition only supported on transaction subprocesses", cancelEventDefinition);
     }
 
+    // ensure there is only one cancel boundary event
     for (ActivityImpl child : parent.getActivities()) {
-      if(child.getProperty("type").equals("cancelBoundaryCatch")
+      if("cancelBoundaryCatch".equals(child.getProperty("type"))
         && child != activity ) {
         addError("multiple boundary events with cancelEventDefinition not supported on same transaction subprocess", cancelEventDefinition);
+      }
+    }
+
+    // find all cancel end events
+    ScopeImpl scope = activity.getParent();
+    if (scope.getActivityBehavior() != null && scope.getActivityBehavior() instanceof MultiInstanceActivityBehavior) {
+      scope = scope.getActivities().get(0);
+    }
+    for (ActivityImpl childActivity : scope.getActivities()) {
+      ActivityBehavior activityBehavior = childActivity.getActivityBehavior();
+      if(activityBehavior != null && activityBehavior instanceof CancelEndEventActivityBehavior) {
+        ((CancelEndEventActivityBehavior)activityBehavior).setCancelBoundaryEvent(activity);
       }
     }
 
@@ -1294,27 +1335,31 @@ public class BpmnParse extends Parse {
    * Parses loopCharacteristics (standardLoop/Multi-instance) of an activity, if
    * any is defined.
    */
-  public void parseMultiInstanceLoopCharacteristics(Element activityElement, ActivityImpl activity) {
-
-    // Only 'activities' (in the BPMN 2.0 spec meaning) can have mi
-    // characteristics
-    if (!(activity.getActivityBehavior() instanceof AbstractBpmnActivityBehavior)) {
-      return;
-    }
+  public ScopeImpl parseMultiInstanceLoopCharacteristics(Element activityElement, ScopeImpl scope) {
 
     Element miLoopCharacteristics = activityElement.element("multiInstanceLoopCharacteristics");
-    if (miLoopCharacteristics != null) {
-
-      MultiInstanceActivityBehavior miActivityBehavior = null;
-      boolean isSequential = parseBooleanAttribute(miLoopCharacteristics.attribute("isSequential"), false);
-      if (isSequential) {
-        miActivityBehavior = new SequentialMultiInstanceBehavior(activity, (AbstractBpmnActivityBehavior) activity.getActivityBehavior());
-      } else {
-        miActivityBehavior = new ParallelMultiInstanceBehavior(activity, (AbstractBpmnActivityBehavior) activity.getActivityBehavior());
+    if (miLoopCharacteristics == null) {
+      return null;
+    }
+    else {
+      String id = activityElement.attribute("id");
+      if (LOGGER.isLoggable(Level.FINE)) {
+        LOGGER.fine("Parsing mi body for activity " + id);
       }
-      activity.setScope(true);
-      activity.setProperty("multiInstance", isSequential ? "sequential" : "parallel");
-      activity.setActivityBehavior(miActivityBehavior);
+      id = getIdForMiBody(id);
+      ActivityImpl miBodyScope = scope.createActivity(id);
+      miBodyScope.setProperty(PROPERTYNAME_TYPE, "multiInstanceBody");
+      miBodyScope.setScope(true);
+
+      boolean isSequential = parseBooleanAttribute(miLoopCharacteristics.attribute("isSequential"), false);
+
+      MultiInstanceActivityBehavior behavior = null;
+      if (isSequential) {
+        behavior = new SequentialMultiInstanceActivityBehavior();
+      } else {
+        behavior = new ParallelMultiInstanceActivityBehavior();
+      }
+      miBodyScope.setActivityBehavior(behavior);
 
       // loopCardinality
       Element loopCardinality = miLoopCharacteristics.element("loopCardinality");
@@ -1323,23 +1368,23 @@ public class BpmnParse extends Parse {
         if (loopCardinalityText == null || "".equals(loopCardinalityText)) {
           addError("loopCardinality must be defined for a multiInstanceLoopCharacteristics definition ", miLoopCharacteristics);
         }
-        miActivityBehavior.setLoopCardinalityExpression(expressionManager.createExpression(loopCardinalityText));
+        behavior.setLoopCardinalityExpression(expressionManager.createExpression(loopCardinalityText));
       }
 
       // completionCondition
       Element completionCondition = miLoopCharacteristics.element("completionCondition");
       if (completionCondition != null) {
         String completionConditionText = completionCondition.getText();
-        miActivityBehavior.setCompletionConditionExpression(expressionManager.createExpression(completionConditionText));
+        behavior.setCompletionConditionExpression(expressionManager.createExpression(completionConditionText));
       }
 
       // activiti:collection
       String collection = miLoopCharacteristics.attributeNS(BpmnParser.ACTIVITI_BPMN_EXTENSIONS_NS, "collection");
       if (collection != null) {
         if (collection.contains("{")) {
-          miActivityBehavior.setCollectionExpression(expressionManager.createExpression(collection));
+          behavior.setCollectionExpression(expressionManager.createExpression(collection));
         } else {
-          miActivityBehavior.setCollectionVariable(collection);
+          behavior.setCollectionVariable(collection);
         }
       }
 
@@ -1349,9 +1394,9 @@ public class BpmnParse extends Parse {
         String loopDataInputRefText = loopDataInputRef.getText();
         if (loopDataInputRefText != null) {
           if (loopDataInputRefText.contains("{")) {
-            miActivityBehavior.setCollectionExpression(expressionManager.createExpression(loopDataInputRefText));
+            behavior.setCollectionExpression(expressionManager.createExpression(loopDataInputRefText));
           } else {
-            miActivityBehavior.setCollectionVariable(loopDataInputRefText);
+            behavior.setCollectionVariable(loopDataInputRefText);
           }
         }
       }
@@ -1359,33 +1404,39 @@ public class BpmnParse extends Parse {
       // activiti:elementVariable
       String elementVariable = miLoopCharacteristics.attributeNS(BpmnParser.ACTIVITI_BPMN_EXTENSIONS_NS, "elementVariable");
       if (elementVariable != null) {
-        miActivityBehavior.setCollectionElementVariable(elementVariable);
+        behavior.setCollectionElementVariable(elementVariable);
       }
 
       // dataInputItem
       Element inputDataItem = miLoopCharacteristics.element("inputDataItem");
       if (inputDataItem != null) {
         String inputDataItemName = inputDataItem.attribute("name");
-        miActivityBehavior.setCollectionElementVariable(inputDataItemName);
+        behavior.setCollectionElementVariable(inputDataItemName);
       }
 
       // Validation
-      if (miActivityBehavior.getLoopCardinalityExpression() == null && miActivityBehavior.getCollectionExpression() == null
-              && miActivityBehavior.getCollectionVariable() == null) {
+      if (behavior.getLoopCardinalityExpression() == null && behavior.getCollectionExpression() == null
+              && behavior.getCollectionVariable() == null) {
         addError("Either loopCardinality or loopDataInputRef/activiti:collection must been set", miLoopCharacteristics);
       }
 
       // Validation
-      if (miActivityBehavior.getCollectionExpression() == null && miActivityBehavior.getCollectionVariable() == null
-              && miActivityBehavior.getCollectionElementVariable() != null) {
+      if (behavior.getCollectionExpression() == null && behavior.getCollectionVariable() == null
+              && behavior.getCollectionElementVariable() != null) {
         addError("LoopDataInputRef/activiti:collection must be set when using inputDataItem or activiti:elementVariable", miLoopCharacteristics);
       }
 
+      // TODO: for backwards compatibility we should consider invoking this on the other activity
       for (BpmnParseListener parseListener : parseListeners) {
-        parseListener.parseMultiInstanceLoopCharacteristics(activityElement, miLoopCharacteristics, activity);
+        parseListener.parseMultiInstanceLoopCharacteristics(activityElement, miLoopCharacteristics, miBodyScope);
       }
 
+      return miBodyScope;
     }
+  }
+
+  public static String getIdForMiBody(String id) {
+    return id + MULTI_INSTANCE_BODY_ID_SUFFIX;
   }
 
   /**
@@ -2284,11 +2335,12 @@ public class BpmnParse extends Parse {
         } else {
           activity.setProperty("type", "cancelEndEvent");
           activity.setActivityBehavior(new CancelEndEventActivityBehavior());
+          activity.setInterruptScope(true);
         }
       } else if (terminateEventDefinition != null) {
         activity.setProperty("type", "terminateEndEvent");
         activity.setActivityBehavior(new TerminateEndEventActivityBehavior());
-        activity.setCancelScope(true);
+        activity.setInterruptScope(true);
       } else if (messageEventDefinitionElement != null) {
         if (isServiceTaskLike(messageEventDefinitionElement)) {
 
@@ -2354,19 +2406,11 @@ public class BpmnParse extends Parse {
         LOGGER.fine("Parsing boundary event " + id);
       }
 
-      ActivityImpl parentActivity = scopeElement.findActivity(attachedToRef);
-      if (parentActivity == null) {
+      ActivityImpl boundaryEventScopeActivity = scopeElement.findActivity(attachedToRef);
+      if (boundaryEventScopeActivity == null) {
         addError("Invalid reference in boundary event. Make sure that the referenced activity is " + "defined in the same scope as the boundary event",
                 boundaryEventElement);
       }
-
-      ActivityImpl nestedActivity = createActivityOnScope(boundaryEventElement, parentActivity);
-
-      String cancelActivity = boundaryEventElement.attribute("cancelActivity", "true");
-      boolean interrupting = cancelActivity.equals("true");
-
-      // Catch event behavior is the same for most types
-      ActivityBehavior behavior = null;
 
       // Depending on the sub-element definition, the correct activityBehavior
       // parsing is selected
@@ -2377,25 +2421,41 @@ public class BpmnParse extends Parse {
       Element compensateEventDefinition = boundaryEventElement.element("compensateEventDefinition");
       Element messageEventDefinition = boundaryEventElement.element("messageEventDefinition");
 
-      behavior = new BoundaryEventActivityBehavior();
+      if(compensateEventDefinition == null) {
+        ActivityImpl multiInstanceScope = getMultiInstanceScope(boundaryEventScopeActivity);
+        if(multiInstanceScope != null) {
+          // if the boundary event is attached to a multi instance activity, then the scope
+          // of the boundary event is the multi instance body.
+          boundaryEventScopeActivity = multiInstanceScope;
+        }
+      }
+
+      ActivityImpl boundaryEventActivity = createActivityOnScope(boundaryEventElement, boundaryEventScopeActivity);
+      // the flow scope of the boundary != scope of the boundary event.
+      boundaryEventActivity.setFlowScope(scopeElement);
+
+      String cancelActivity = boundaryEventElement.attribute("cancelActivity", "true");
+      boolean isCancelActivity = cancelActivity.equals("true");
+
+      // Catch event behavior is the same for most types
+      ActivityBehavior behavior = new BoundaryEventActivityBehavior();
       if (timerEventDefinition != null) {
-        parseBoundaryTimerEventDefinition(timerEventDefinition, interrupting, nestedActivity);
+        parseBoundaryTimerEventDefinition(timerEventDefinition, isCancelActivity, boundaryEventActivity);
 
       } else if (errorEventDefinition != null) {
-        interrupting = true; // always interrupting
-        parseBoundaryErrorEventDefinition(errorEventDefinition, interrupting, parentActivity, nestedActivity);
+        parseBoundaryErrorEventDefinition(errorEventDefinition, boundaryEventScopeActivity, boundaryEventActivity);
 
       } else if (signalEventDefinition != null) {
-        parseBoundarySignalEventDefinition(signalEventDefinition, interrupting, nestedActivity);
+        parseBoundarySignalEventDefinition(signalEventDefinition, isCancelActivity, boundaryEventActivity);
 
       } else if (cancelEventDefinition != null) {
-        behavior = parseBoundaryCancelEventDefinition(cancelEventDefinition, nestedActivity);
+        behavior = parseBoundaryCancelEventDefinition(cancelEventDefinition, boundaryEventActivity);
 
       } else if(compensateEventDefinition != null) {
-        parseCatchCompensateEventDefinition(compensateEventDefinition, nestedActivity);
+        parseCatchCompensateEventDefinition(compensateEventDefinition, boundaryEventActivity);
 
       } else if(messageEventDefinition != null) {
-        parseBoundaryMessageEventDefinition(messageEventDefinition, interrupting, nestedActivity);
+        parseBoundaryMessageEventDefinition(messageEventDefinition, isCancelActivity, boundaryEventActivity);
 
       } else {
         addError("Unsupported boundary event type", boundaryEventElement);
@@ -2405,19 +2465,29 @@ public class BpmnParse extends Parse {
       ensureNoIoMappingDefined(boundaryEventElement);
 
       for (BpmnParseListener parseListener : parseListeners) {
-        parseListener.parseBoundaryEvent(boundaryEventElement, scopeElement, nestedActivity);
+        parseListener.parseBoundaryEvent(boundaryEventElement, scopeElement, boundaryEventActivity);
       }
 
       if(cancelEventDefinition == null) {
-        nestedActivity.setCancelScope(interrupting);
-        nestedActivity.setConcurrent(!interrupting);
+        boundaryEventActivity.setCancelScope(isCancelActivity);
+        boundaryEventActivity.setConcurrent(!isCancelActivity);
       }
 
       // scope of the boundary event is the parent of the activity to which it is attached.
-      nestedActivity.setScope(parentActivity.getParentScope());
-      nestedActivity.setActivityBehavior(behavior);
+      boundaryEventActivity.setActivityBehavior(behavior);
 
-      parseExecutionListenersOnScope(boundaryEventElement, nestedActivity);
+      parseExecutionListenersOnScope(boundaryEventElement, boundaryEventActivity);
+    }
+
+  }
+
+  protected ActivityImpl getMultiInstanceScope(ActivityImpl activity) {
+    Boolean isMultiInstance = (Boolean) activity.getProperty(PROPERTYNAME_IS_MULTI_INSTANCE);
+    if(isMultiInstance != null  && isMultiInstance) {
+      return activity.getParentActivity();
+    }
+    else {
+      return null;
     }
   }
 
@@ -2667,11 +2737,10 @@ public class BpmnParse extends Parse {
     return null;
   }
 
-  public void parseBoundaryErrorEventDefinition(Element errorEventDefinition, boolean interrupting, ActivityImpl activity, ActivityImpl nestedErrorEventActivity) {
+  public void parseBoundaryErrorEventDefinition(Element errorEventDefinition, ActivityImpl scopeActivity, ActivityImpl nestedErrorEventActivity) {
 
     nestedErrorEventActivity.setProperty("type", "boundaryError");
-    ScopeImpl catchingScope = nestedErrorEventActivity.getParent();
-    ((ActivityImpl) catchingScope).setScope(true);
+    scopeActivity.setScope(true);
 
     String errorRef = errorEventDefinition.attribute("errorRef");
     Error error = null;
@@ -2681,10 +2750,10 @@ public class BpmnParse extends Parse {
       definition.setErrorCode(error == null ? errorRef : error.getErrorCode());
     }
 
-    addErrorEventDefinition(definition, catchingScope);
+    addErrorEventDefinition(definition, scopeActivity);
 
     for (BpmnParseListener parseListener : parseListeners) {
-      parseListener.parseBoundaryErrorEventDefinition(errorEventDefinition, interrupting, activity, nestedErrorEventActivity);
+      parseListener.parseBoundaryErrorEventDefinition(errorEventDefinition, true, scopeActivity, nestedErrorEventActivity);
     }
   }
 
@@ -2759,9 +2828,15 @@ public class BpmnParse extends Parse {
     Boolean isTriggeredByEvent = parseBooleanAttribute(subProcessElement.attribute(PROPERTYNAME_TRIGGERED_BY_EVENT), false);
     activity.setProperty(PROPERTYNAME_TRIGGERED_BY_EVENT, isTriggeredByEvent);
 
-    // event subprocesses are not scopes
-    activity.setScope(!isTriggeredByEvent);
-    activity.setActivityBehavior(new SubProcessActivityBehavior());
+    if(isTriggeredByEvent) {
+      // event subprocesses are not scopes
+      activity.setScope(false);
+      activity.setActivityBehavior(new EventSubProcessActivityBehavior());
+    }
+    else {
+      activity.setScope(true);
+      activity.setActivityBehavior(new SubProcessActivityBehavior());
+    }
     parseScope(subProcessElement, activity);
 
     for (BpmnParseListener parseListener : parseListeners) {
@@ -3130,6 +3205,7 @@ public class BpmnParse extends Parse {
       ActivityImpl sourceActivity = scope.findActivity(sourceRef);
       ActivityImpl destinationActivity = scope.findActivity(destinationRef);
 
+
       if (sourceActivity == null) {
         addError("Invalid source '" + sourceRef + "' of sequence flow '" + id + "'", sequenceFlowElement);
       } else if (destinationActivity == null) {
@@ -3145,6 +3221,14 @@ public class BpmnParse extends Parse {
       } else if (destinationActivity.getActivityBehavior() instanceof SubProcessActivityBehavior && (Boolean) destinationActivity.getProperty(PROPERTYNAME_TRIGGERED_BY_EVENT)) {
         addError("Invalid incoming sequence flow of event subprocess", sequenceFlowElement);
       } else {
+
+        if(getMultiInstanceScope(sourceActivity) != null) {
+          sourceActivity = (ActivityImpl) getMultiInstanceScope(sourceActivity);
+        }
+        if(getMultiInstanceScope(destinationActivity) != null) {
+          destinationActivity = (ActivityImpl) getMultiInstanceScope(destinationActivity);
+        }
+
         TransitionImpl transition = sourceActivity.createOutgoingTransition(id);
         sequenceFlows.put(id, transition);
         transition.setProperty("name", sequenceFlowElement.attribute("name"));
@@ -3551,8 +3635,8 @@ public class BpmnParse extends Parse {
       if(inputOutput != null) {
         if(checkActivityInputOutputSupported(activityElement, activity, inputOutput)) {
 
-          if (activity.getActivityBehavior() instanceof MultiInstanceActivityBehavior) {
-            MultiInstanceActivityBehavior behavior = (MultiInstanceActivityBehavior) activity.getActivityBehavior();
+          if (activity.getActivityBehavior() instanceof OLD_MultiInstanceActivityBehavior) {
+            OLD_MultiInstanceActivityBehavior behavior = (OLD_MultiInstanceActivityBehavior) activity.getActivityBehavior();
             behavior.setIoMapping(inputOutput);
 
           } else {
@@ -3560,8 +3644,14 @@ public class BpmnParse extends Parse {
 
           }
 
-          // turn activity into a scope (->local scope for variables)
-          activity.setScope(true);
+          if(getMultiInstanceScope(activity) == null) {
+            // turn activity into a scope (->local, isolated scope for variables) unless it is a multi instance activity, in that case this
+            // is not necessary because:
+            // A scope is already created for the multi instance body which isolates the local variables from other executions in the same scope, and
+            // * parallel: the individual concurrent executions are isolated even if they are not scope themselves
+            // * sequential: after each iteration local variables are purged
+            activity.setScope(true);
+          }
         }
       }
     }
@@ -3598,7 +3688,7 @@ public class BpmnParse extends Parse {
       addError("camunda:outputParameter not allowed for element type '" + tagName + "'.", activityElement);
       return true;
     }
-    else if (activity.getActivityBehavior() instanceof MultiInstanceActivityBehavior) {
+    else if (activity.getActivityBehavior() instanceof OLD_MultiInstanceActivityBehavior) {
       addError("camunda:outputParameter not allowed for multi-instance constructs", activityElement);
       return false;
     }

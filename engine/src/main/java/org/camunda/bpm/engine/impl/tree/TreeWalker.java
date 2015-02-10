@@ -23,36 +23,56 @@ public abstract class TreeWalker<T> {
 
   protected T currentElement;
 
-  protected List<Collector<T>> collectors = new ArrayList<Collector<T>>();
+  protected List<Collector<T>> preCollectors = new ArrayList<Collector<T>>();
+
+  protected List<Collector<T>> postCollectors = new ArrayList<Collector<T>>();
 
   protected abstract T nextElement();
 
-  public void addCollector(Collector<T> collector) {
-    this.collectors.add(collector);
+  public TreeWalker(T initialElement) {
+    currentElement = initialElement;
+  }
+
+  public void addPreCollector(Collector<T> collector) {
+    this.preCollectors.add(collector);
+  }
+
+  public void addPostCollector(Collector<T> collector) {
+    this.postCollectors.add(collector);
   }
 
   public void walk() {
     walkWhile(new NullCondition<T>());
   }
 
-  public void walkWhile(WalkCondition<T> condition) {
+  public T walkWhile(WalkCondition<T> condition) {
     while (!condition.isFulfilled(currentElement)) {
-      for (Collector<T> collector : collectors) {
+      for (Collector<T> collector : preCollectors) {
         collector.collect(currentElement);
       }
 
       currentElement = nextElement();
+
+      for (Collector<T> collector : postCollectors) {
+        collector.collect(currentElement);
+      }
     }
+    return getCurrentElement();
   }
 
-  public void walkUntil(WalkCondition<T> condition) {
+  public T walkUntil(WalkCondition<T> condition) {
     do {
-      for (Collector<T> collector : collectors) {
+      for (Collector<T> collector : preCollectors) {
         collector.collect(currentElement);
       }
 
       currentElement = nextElement();
+
+      for (Collector<T> collector : postCollectors) {
+        collector.collect(currentElement);
+      }
     } while (!condition.isFulfilled(currentElement));
+    return getCurrentElement();
   }
 
   public T getCurrentElement() {

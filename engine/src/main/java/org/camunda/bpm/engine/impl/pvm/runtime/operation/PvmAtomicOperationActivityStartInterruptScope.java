@@ -12,32 +12,27 @@
  */
 package org.camunda.bpm.engine.impl.pvm.runtime.operation;
 
-import org.camunda.bpm.engine.delegate.ExecutionListener;
-import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
+import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
 import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
 
-
 /**
- * @author Tom Baeyens
+ * @author Daniel Meyer
+ *
  */
-public class PvmAtomicOperationTransitionNotifyListenerEnd extends PvmAtomicOperationActivityInstanceEnd {
-
-  protected ScopeImpl getScope(PvmExecutionImpl execution) {
-    return execution.getActivity();
-  }
-
-  protected String getEventName() {
-    return ExecutionListener.EVENTNAME_END;
-  }
-
-  @Override
-  protected void eventNotificationsCompleted(PvmExecutionImpl execution) {
-    super.eventNotificationsCompleted(execution);
-
-    execution.performOperation(TRANSITION_DESTROY_SCOPE);
-  }
+public class PvmAtomicOperationActivityStartInterruptScope extends PvmAtomicOperationInterruptScope {
 
   public String getCanonicalName() {
-    return "transition-notify-listener-end";
+    return "activity-start-interrupt-scope";
   }
+
+  protected void scopeInterrupted(PvmExecutionImpl execution) {
+    execution.performOperation(ACTIVITY_START_CREATE_SCOPE);
+  }
+
+  protected ActivityImpl getInterruptingActivity(PvmExecutionImpl execution) {
+    ActivityImpl nextActivity = execution.getNextActivity();
+    execution.setNextActivity(null);
+    return nextActivity;
+  }
+
 }

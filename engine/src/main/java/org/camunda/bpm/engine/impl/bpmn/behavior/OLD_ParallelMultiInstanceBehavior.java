@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.logging.Level;
 
 import org.camunda.bpm.engine.impl.bpmn.parser.BpmnParse;
-import org.camunda.bpm.engine.impl.bpmn.parser.EventSubscriptionDeclaration;
 import org.camunda.bpm.engine.impl.context.Context;
 import org.camunda.bpm.engine.impl.core.variable.scope.AbstractVariableScope;
 import org.camunda.bpm.engine.impl.jobexecutor.TimerDeclarationImpl;
@@ -30,9 +29,9 @@ import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
  * @author Joram Barrez
  * @author Ronny Bräunlich
  */
-public class ParallelMultiInstanceBehavior extends MultiInstanceActivityBehavior {
+public class OLD_ParallelMultiInstanceBehavior extends OLD_MultiInstanceActivityBehavior {
 
-  public ParallelMultiInstanceBehavior(ActivityImpl activity, AbstractBpmnActivityBehavior originalActivityBehavior) {
+  public OLD_ParallelMultiInstanceBehavior(ActivityImpl activity, AbstractBpmnActivityBehavior originalActivityBehavior) {
     super(activity, originalActivityBehavior);
   }
 
@@ -104,11 +103,11 @@ public class ParallelMultiInstanceBehavior extends MultiInstanceActivityBehavior
         extraScopedExecution.setScope(true);
         concurrentExecution = extraScopedExecution;
       }
-
-      // create event subscriptions for the concurrent execution
-      for (EventSubscriptionDeclaration declaration : EventSubscriptionDeclaration.getDeclarationsForScope(execution.getActivity())) {
-        declaration.createSubscriptionForParallelMultiInstance((ExecutionEntity) concurrentExecution);
-      }
+//
+//      // create event subscriptions for the concurrent execution
+//      for (EventSubscriptionDeclaration declaration : EventSubscriptionDeclaration.getDeclarationsForScope(execution.getActivity())) {
+//        declaration.createSubscriptionForParallelMultiInstance((ExecutionEntity) concurrentExecution);
+//      }
 
       executeIoMapping((AbstractVariableScope) concurrentExecution);
 
@@ -205,6 +204,24 @@ public class ParallelMultiInstanceBehavior extends MultiInstanceActivityBehavior
     ActivityExecution miEnteringExecution = execution.getParent();
     ActivityExecution miRoot = miEnteringExecution.getParent();
     miRoot.setActivityInstanceId(miEnteringExecution.getActivityInstanceId());
+  }
+
+  /* (non-Javadoc)
+   * @see org.camunda.bpm.engine.impl.pvm.delegate.CompositeActivityBehavior#concurrentChildExecutionEnded(org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution, org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution)
+   */
+  @Override
+  public void concurrentChildExecutionEnded(ActivityExecution scopeExecution, ActivityExecution endedExecution) {
+    // TODO Auto-generated method stub
+
+  }
+
+  /* (non-Javadoc)
+   * @see org.camunda.bpm.engine.impl.pvm.delegate.CompositeActivityBehavior#complete(org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution)
+   */
+  @Override
+  public void complete(ActivityExecution scopeExecution) {
+    // TODO Auto-generated method stub
+
   }
 
 }

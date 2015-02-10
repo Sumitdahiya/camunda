@@ -23,7 +23,7 @@ import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
 public class FlowScopeWalker extends TreeWalker<ScopeImpl> {
 
   public FlowScopeWalker(ScopeImpl startActivity) {
-    this.currentElement = startActivity;
+    super(startActivity);
   }
 
   protected ScopeImpl nextElement() {

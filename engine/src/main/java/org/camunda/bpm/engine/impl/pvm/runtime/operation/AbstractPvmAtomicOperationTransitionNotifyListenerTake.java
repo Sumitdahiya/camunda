@@ -15,8 +15,6 @@ package org.camunda.bpm.engine.impl.pvm.runtime.operation;
 import org.camunda.bpm.engine.delegate.ExecutionListener;
 import org.camunda.bpm.engine.impl.core.model.CoreModelElement;
 import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
-import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
-import org.camunda.bpm.engine.impl.pvm.process.TransitionImpl;
 import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
 
 
@@ -26,14 +24,13 @@ import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
 public abstract class AbstractPvmAtomicOperationTransitionNotifyListenerTake extends AbstractPvmEventAtomicOperation {
 
   protected void eventNotificationsCompleted(PvmExecutionImpl execution) {
-    TransitionImpl transition = execution.getTransition();
-    ActivityImpl activity = execution.getActivity();
-    ActivityImpl nextScope = findNextScope(activity.getFlowScope(), transition.getDestination());
-    execution.setActivity(nextScope);
+    ActivityImpl destination = execution.getTransition().getDestination();
 
-    if (nextScope.isCancelScope()) {
-      execution.performOperation(TRANSITION_CANCEL_SCOPE);
+    if (destination.isInterruptScope()) {
+      execution.setActivity(null);
+      execution.performOperation(TRANSITION_INTERRUPT_SCOPE);
     } else {
+      execution.setActivity(destination);
       execution.performOperation(TRANSITION_CREATE_SCOPE);
     }
   }
@@ -46,14 +43,4 @@ public abstract class AbstractPvmAtomicOperationTransitionNotifyListenerTake ext
     return ExecutionListener.EVENTNAME_TAKE;
   }
 
-  /** finds the next scope to enter.  the most outer scope is found first */
-  public static ActivityImpl findNextScope(ScopeImpl outerScopeElement, ActivityImpl destination) {
-    ActivityImpl nextScope = destination;
-    while( (nextScope.getParent() instanceof ActivityImpl)
-           && (nextScope.getParent() != outerScopeElement)
-         ) {
-      nextScope = (ActivityImpl) nextScope.getParent();
-    }
-    return nextScope;
-  }
 }

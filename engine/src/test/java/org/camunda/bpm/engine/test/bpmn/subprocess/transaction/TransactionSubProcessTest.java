@@ -377,14 +377,6 @@ public class TransactionSubProcessTest extends PluggableProcessEngineTestCase {
     // there are 10 compensation event subscriptions
     assertEquals(10, eventSubscriptions.size());
 
-    // the event subscriptions are all under the same execution (the execution of the multi-instance wrapper)
-    String executionId = eventSubscriptions.get(0).getExecutionId();
-    for (EventSubscription eventSubscription : eventSubscriptions) {
-      if(!executionId.equals(eventSubscription.getExecutionId())) {
-        fail("subscriptions not under same execution");
-      }
-    }
-
     Task task = taskService.createTaskQuery().listPage(0, 1).get(0);
 
     // canceling one instance triggers compensation for all other instances:
@@ -393,6 +385,8 @@ public class TransactionSubProcessTest extends PluggableProcessEngineTestCase {
 
     assertEquals(0, runtimeService.createEventSubscriptionQuery().count());
 
+    // TODO: should all instances of the transaction subprocess be compensated or only the
+    // instance which threw the cancel event.
     assertEquals(5, runtimeService.getVariable(processInstance.getId(), "undoBookHotel"));
     assertEquals(5, runtimeService.getVariable(processInstance.getId(), "undoBookFlight"));
 
@@ -414,14 +408,6 @@ public class TransactionSubProcessTest extends PluggableProcessEngineTestCase {
 
     // there are 10 compensation event subscriptions
     assertEquals(10, eventSubscriptions.size());
-
-    // the event subscriptions are all under the same execution (the execution of the multi-instance wrapper)
-    String executionId = eventSubscriptions.get(0).getExecutionId();
-    for (EventSubscription eventSubscription : eventSubscriptions) {
-      if(!executionId.equals(eventSubscription.getExecutionId())) {
-        fail("subscriptions not under same execution");
-      }
-    }
 
     // first complete the inner user-tasks
     List<Task> tasks = taskService.createTaskQuery().list();

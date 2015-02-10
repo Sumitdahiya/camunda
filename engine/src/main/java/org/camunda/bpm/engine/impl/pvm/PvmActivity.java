@@ -25,9 +25,8 @@ public interface PvmActivity extends PvmScope {
   boolean isAsync();
 
   /**
-   * Indicates whether this activity is interrupting. If true, the activity
-   * will interrupt and cancel all other activities inside the same scope
-   * before it is executed.
+   * Indicates whether this activity is cancelling. If true, the activity
+   * will cancel it's scope (as returned by {@link #getScope()}
    *
    * @return true if this activity is interrupting. False otherwise.
    */
@@ -41,6 +40,12 @@ public interface PvmActivity extends PvmScope {
    * @return true if this activity is concurrent. False otherwise.
    */
   boolean isConcurrent();
+
+  /**
+   * TODO
+   * @return
+   */
+  boolean isInterruptScope();
 
   /** returns the scope of this activity. Must contain this activity but may or
    * may not be the direct parent. */

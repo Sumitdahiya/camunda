@@ -10,30 +10,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.camunda.bpm.engine.impl.bpmn.behavior;
 
-package org.camunda.bpm.engine.impl.pvm;
-
-import java.util.List;
-import java.util.Map;
-
+import org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution;
 
 /**
- * @author Tom Baeyens
  * @author Daniel Meyer
+ *
  */
-public interface PvmProcessInstance extends PvmExecution {
+public class EventSubProcessActivityBehavior extends SubProcessActivityBehavior {
 
-  void start();
+  public void complete(ActivityExecution scopeExecution) {
+    scopeExecution.end(false);
+  }
 
-  void start(Map<String, Object> variables);
+  public void concurrentChildExecutionEnded(ActivityExecution scopeExecution, ActivityExecution endedExecution) {
+    endedExecution.end(false);
+  }
 
-  PvmExecution findExecution(String activityId);
-
-  List<PvmExecution> findExecutions(String activityId);
-
-  List<String> findActiveActivityIds();
-
-  boolean isEnded();
-
-  void deleteCascade(String deleteReason);
 }

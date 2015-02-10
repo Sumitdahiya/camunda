@@ -359,4 +359,8 @@ public class ExecutionImpl extends PvmExecutionImpl implements
     throw new UnsupportedOperationException(ProcessEngineServicesAware.class.getName() +" is unsupported in transient ExecutionImpl");
   }
 
+  public void forceUpdate() {
+    // nothing to do
+  }
+
 }

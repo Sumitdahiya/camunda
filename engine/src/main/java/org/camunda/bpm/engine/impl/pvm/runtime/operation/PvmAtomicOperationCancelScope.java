@@ -13,34 +13,11 @@
 package org.camunda.bpm.engine.impl.pvm.runtime.operation;
 
 import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
-import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
 import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
 
 /**
- * <p>Base class for implementing an atomic operation which performs <em>cancel scope</em> behavior.</p>
  *
- * <p>Cancel scope behavior is different from "destroy scope" behavior. Destroy scope will delete the
- * scope execution for the current scope. <em>cancel scope</em> will not delete the scope execution itself
- * but will rather</p>
- * <ul>
- *   <li>find the scope execution for the current scope,</li>
- *   <li>perform an interrupt: this will delete any executions / subprocess instances etc
- *     which are child executions of the scope</li>
- *   <li>set the scope execution to the cancelling activity and move forward.</li>
- * </ul>
- * <p>So as opposed to <em>destroy scope</em> we will not delete the current scope execution but cancel
- * anything that is happening in the current scope and then, still in the current scope, execute the
- * canceling activity.</p>
- *
- * <h2>Usage in BPMN:</h2>
- * <p>In the context of BPMN this behavior is required for interrupting constructs like</p>
- * <ul>
- *   <li>boundary events with cancelActivity="true"</li>
- *   <li>interrupting event subprocesses,</li>
- *   <li>terminate end events etc..</li>
- * </ul>
- *
- *
+ * @author Throben Lindhauer
  * @author Daniel Meyer
  * @author Roman Smirnov
  *
@@ -48,36 +25,37 @@ import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
 public abstract class PvmAtomicOperationCancelScope implements PvmAtomicOperation {
 
   public void execute(PvmExecutionImpl execution) {
-    ActivityImpl activity = getCancellingActivity(execution);
 
-    // find scope execution:
-    PvmExecutionImpl scopeExecution = execution.isScope() ? execution : execution.getParent();
+    // Assumption: execution is scope
+    ActivityImpl cancellingActivity = execution.getNextActivity();
+    execution.setNextActivity(null);
 
-    ScopeImpl scope = activity.getScope();
-    if (scope != activity.getParent()) {
+    // first, cancel and destroy the current scope
+    execution.setActive(true);
 
-      if (activity.getParent() instanceof ActivityImpl) {
-        ActivityImpl parent = (ActivityImpl) activity.getParent();
+    PvmExecutionImpl propagatingExecution = null;
 
-        if (parent.isScope()) {
-          scopeExecution = scopeExecution.getParent();
-        }
-      }
+    if(execution.isConcurrent()) {
+      execution.cancelScope("Cancel scope activity "+cancellingActivity+" executed.");
+      execution.destroy();
+      execution.setActivity(cancellingActivity.getParentActivity());
+      execution.leaveActivityInstance();
+      execution.cancelScope("Cancel scope activity "+cancellingActivity+" executed.");
+      // execution is concurrent: continue with execution which remains concurrent
+      // NOTE: this can happen only if executions can be both scope AND concurrent
+      propagatingExecution = execution;
+    }
+    else {
+      execution.deleteCascade("Cancel scope activity "+cancellingActivity+" executed.");
+      propagatingExecution = execution.getParent();
     }
 
-    // cancel the current scope (removes all child executions)
-    scopeExecution.cancelScope("Cancel scope activity " + activity + " executed.");
-
-    // set new activity
-    scopeExecution.setActivity(activity);
-    scopeExecution.setActive(true);
-
-    scopeCancelled(scopeExecution);
+    propagatingExecution.setActivity(cancellingActivity);
+    propagatingExecution.setActive(true);
+    scopeCancelled(propagatingExecution);
   }
 
   protected abstract void scopeCancelled(PvmExecutionImpl execution);
-
-  protected abstract ActivityImpl getCancellingActivity(PvmExecutionImpl execution);
 
   public boolean isAsync(PvmExecutionImpl execution) {
     return false;

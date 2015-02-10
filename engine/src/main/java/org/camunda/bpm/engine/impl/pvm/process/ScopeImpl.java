@@ -81,6 +81,18 @@ public abstract class ScopeImpl extends CoreActivity implements PvmScope {
     }
     activity.setParent(this);
     activities.add(activity);
+
+    activity.setFlowScope(this);
+
+    ScopeImpl scope = this;
+    // if the scope element is not a scope (which is the case for event subprocesses),
+    // the 'scope' of the activity is the next scope which can be found
+    while(!scope.isScope()) {
+      scope = scope.getParent();
+    }
+    activity.setScope(scope);
+    activity.setLevelOfSubprocessScope(scope);
+
     return  activity;
   }
 

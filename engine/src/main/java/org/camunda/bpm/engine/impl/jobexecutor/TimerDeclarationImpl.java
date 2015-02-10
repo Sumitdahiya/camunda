@@ -18,7 +18,7 @@ import java.util.Date;
 import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.delegate.Expression;
 import org.camunda.bpm.engine.delegate.VariableScope;
-import org.camunda.bpm.engine.impl.bpmn.behavior.ParallelMultiInstanceBehavior;
+import org.camunda.bpm.engine.impl.bpmn.behavior.OLD_ParallelMultiInstanceBehavior;
 import org.camunda.bpm.engine.impl.calendar.BusinessCalendar;
 import org.camunda.bpm.engine.impl.context.Context;
 import org.camunda.bpm.engine.impl.el.StartProcessVariableScope;
@@ -138,7 +138,7 @@ public class TimerDeclarationImpl extends JobDeclaration<TimerEntity> {
         isParallelMultiInstance = false;
       } else {
         ActivityImpl activity = execution.getProcessDefinition().findActivity(eventScopeActivityId);
-        isParallelMultiInstance = activity.getActivityBehavior() instanceof ParallelMultiInstanceBehavior;
+        isParallelMultiInstance = activity.getActivityBehavior() instanceof OLD_ParallelMultiInstanceBehavior;
       }
     }
     return isParallelMultiInstance;

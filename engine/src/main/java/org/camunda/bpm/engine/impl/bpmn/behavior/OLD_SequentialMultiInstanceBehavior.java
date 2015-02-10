@@ -17,7 +17,6 @@ import java.util.List;
 import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.delegate.BpmnError;
 import org.camunda.bpm.engine.impl.bpmn.parser.BpmnParse;
-import org.camunda.bpm.engine.impl.bpmn.parser.EventSubscriptionDeclaration;
 import org.camunda.bpm.engine.impl.core.variable.scope.AbstractVariableScope;
 import org.camunda.bpm.engine.impl.jobexecutor.TimerDeclarationImpl;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
@@ -33,9 +32,9 @@ import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
  * @author Falko Menge
  * @author Ronny Bräunlich
  */
-public class SequentialMultiInstanceBehavior extends MultiInstanceActivityBehavior {
+public class OLD_SequentialMultiInstanceBehavior extends OLD_MultiInstanceActivityBehavior {
 
-  public SequentialMultiInstanceBehavior(ActivityImpl activity, AbstractBpmnActivityBehavior innerActivityBehavior) {
+  public OLD_SequentialMultiInstanceBehavior(ActivityImpl activity, AbstractBpmnActivityBehavior innerActivityBehavior) {
     super(activity, innerActivityBehavior);
   }
 
@@ -74,9 +73,9 @@ public class SequentialMultiInstanceBehavior extends MultiInstanceActivityBehavi
     if (loopCounter == nrOfInstances || completionConditionSatisfied(execution)) {
       super.leave(execution); // last instance
     } else {
-      for (EventSubscriptionDeclaration declaration : EventSubscriptionDeclaration.getDeclarationsForScope(execution.getActivity())) {
-        declaration.handleSequentialMultiInstanceLeave((ExecutionEntity) execution);
-      }
+//      for (EventSubscriptionDeclaration declaration : EventSubscriptionDeclaration.getDeclarationsForScope(execution.getActivity())) {
+//        declaration.handleSequentialMultiInstanceLeave((ExecutionEntity) execution);
+//      }
 
       // the given execution will not be leaved in that case
       // that's why we have to increment the sequence counter
@@ -136,6 +135,24 @@ public class SequentialMultiInstanceBehavior extends MultiInstanceActivityBehavi
         execution.setActive(true);
       }
     }
+  }
+
+  /* (non-Javadoc)
+   * @see org.camunda.bpm.engine.impl.pvm.delegate.CompositeActivityBehavior#concurrentChildExecutionEnded(org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution, org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution)
+   */
+  @Override
+  public void concurrentChildExecutionEnded(ActivityExecution scopeExecution, ActivityExecution endedExecution) {
+    // TODO Auto-generated method stub
+
+  }
+
+  /* (non-Javadoc)
+   * @see org.camunda.bpm.engine.impl.pvm.delegate.CompositeActivityBehavior#complete(org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution)
+   */
+  @Override
+  public void complete(ActivityExecution scopeExecution) {
+    // TODO Auto-generated method stub
+
   }
 
 }

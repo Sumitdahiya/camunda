@@ -862,8 +862,6 @@ public class MessageEventSubprocessTest extends PluggableProcessEngineTestCase {
         .activityId("userTask")
         .singleResult();
 
-    assertEquals(processInstanceId, ((ExecutionEntity) task2Execution).getParentId());
-
     assertEquals(1, runtimeService.createEventSubscriptionQuery().count());
 
     taskService.complete(task1.getId());

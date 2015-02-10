@@ -15,7 +15,7 @@ package org.camunda.bpm.engine.impl.bpmn.behavior;
 
 import java.util.List;
 
-import org.camunda.bpm.engine.impl.bpmn.helper.ScopeUtil;
+import org.camunda.bpm.engine.impl.bpmn.helper.CompensationUtil;
 import org.camunda.bpm.engine.impl.bpmn.parser.BpmnParse;
 import org.camunda.bpm.engine.impl.bpmn.parser.CompensateEventDefinition;
 import org.camunda.bpm.engine.impl.persistence.entity.CompensateEventSubscriptionEntity;
@@ -39,7 +39,7 @@ public class IntermediateThrowCompensationEventActivityBehavior extends FlowNode
   public void execute(ActivityExecution execution) throws Exception {
     final String activityRef = compensateEventDefinition.getActivityRef();
 
-    ExecutionEntity scopeExecution = (ExecutionEntity) (execution.isConcurrent() && !execution.isScope() ? execution.getParent() : execution);
+    ExecutionEntity scopeExecution = (ExecutionEntity) (execution.isScope() ? execution : execution.getParent());
 
     List<CompensateEventSubscriptionEntity> eventSubscriptions;
 
@@ -49,6 +49,7 @@ public class IntermediateThrowCompensationEventActivityBehavior extends FlowNode
       if(compensationHandlerId != null) {
         eventSubscriptions = scopeExecution.getCompensateEventSubscriptions(compensationHandlerId);
       } else {
+        // HACK <!> backwards compatibility (?)
         eventSubscriptions = scopeExecution.getCompensateEventSubscriptions(activityRef);
       }
     } else {
@@ -59,7 +60,7 @@ public class IntermediateThrowCompensationEventActivityBehavior extends FlowNode
       leave(execution);
     } else {
       // TODO: implement async (waitForCompletion=false in bpmn)
-      ScopeUtil.throwCompensationEvent(eventSubscriptions, execution, false );
+      CompensationUtil.throwCompensationEvent(eventSubscriptions, execution, false);
     }
 
   }

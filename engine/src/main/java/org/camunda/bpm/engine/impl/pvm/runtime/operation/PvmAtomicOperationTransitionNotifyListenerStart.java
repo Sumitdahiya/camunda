@@ -33,7 +33,6 @@ public class PvmAtomicOperationTransitionNotifyListenerStart extends PvmAtomicOp
     return ExecutionListener.EVENTNAME_START;
   }
 
-  @Override
   protected void eventNotificationsCompleted(PvmExecutionImpl execution) {
 
     super.eventNotificationsCompleted(execution);
@@ -45,23 +44,16 @@ public class PvmAtomicOperationTransitionNotifyListenerStart extends PvmAtomicOp
     } else {
       destination = transition.getDestination();
     }
-    ActivityImpl activity = execution.getActivity();
-    if (activity!=destination) {
-      ActivityImpl nextScope = PvmAtomicOperationTransitionNotifyListenerTake.findNextScope(activity, destination);
-      execution.setActivity(nextScope);
-      execution.performOperation(TRANSITION_CREATE_SCOPE);
-    } else {
-      execution.setTransition(null);
-      execution.setActivity(destination);
+    execution.setTransition(null);
+    execution.setActivity(destination);
 
-      ExecutionStartContext executionStartContext = execution.getExecutionStartContext();
-      if (executionStartContext != null) {
-        executionStartContext.executionStarted(execution);
-        execution.disposeExecutionStartContext();
-      }
-
-      execution.performOperation(ACTIVITY_EXECUTE);
+    ExecutionStartContext executionStartContext = execution.getExecutionStartContext();
+    if (executionStartContext != null) {
+      executionStartContext.executionStarted(execution);
+      execution.disposeExecutionStartContext();
     }
+
+    execution.performOperation(ACTIVITY_EXECUTE);
   }
 
   public String getCanonicalName() {
