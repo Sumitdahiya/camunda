@@ -285,12 +285,12 @@ public class PvmEventTest extends PvmTestCase {
     expectedEvents.add("start on Activity(c1)");
     expectedEvents.add("end on Activity(c1)");
     expectedEvents.add("start on Activity(join)");
-    expectedEvents.add("end on Activity(fork)");
+//    expectedEvents.add("end on Activity(fork)");
     expectedEvents.add("start on Activity(c2)");
     expectedEvents.add("end on Activity(c2)");
     expectedEvents.add("start on Activity(join)");
     expectedEvents.add("end on Activity(join)");
-    expectedEvents.add("end on Activity(join)");
+//    expectedEvents.add("end on Activity(join)");
     expectedEvents.add("start on Activity(end)");
     expectedEvents.add("end on Activity(end)");
     expectedEvents.add("end on ProcessDefinition(events)");

@@ -29,7 +29,4 @@ public interface SubProcessActivityBehavior extends ActivityBehavior {
    * No control flow should be done on the execution yet. */
   void completing(VariableScope execution, VariableScope subProcessInstance) throws Exception;
 
-  /** called after the process instance is destroyed for
-   * this activity to perform its outgoing control flow logic. */
-  void completed(ActivityExecution execution) throws Exception;
 }

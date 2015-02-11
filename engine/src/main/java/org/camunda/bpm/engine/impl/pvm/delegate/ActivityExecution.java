@@ -230,4 +230,9 @@ public interface ActivityExecution extends DelegateExecution {
 
   void setActivity(PvmActivity cancelBoundaryEvent);
 
+  /**
+   *
+   */
+  void completeActivity();
+
 }

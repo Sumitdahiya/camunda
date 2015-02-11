@@ -87,7 +87,7 @@ public class PvmAtomicOperationProcessEnd extends PvmAtomicOperationActivityInst
     if (superExecution!=null) {
       superExecution.setSubProcessInstance(null);
       try {
-          subProcessActivityBehavior.completed(superExecution);
+        superExecution.performOperation(TRANSITION_NOTIFY_LISTENER_END);
       } catch (RuntimeException e) {
           log.log(Level.SEVERE, "Error while completing sub process of execution " + execution, e);
           throw e;

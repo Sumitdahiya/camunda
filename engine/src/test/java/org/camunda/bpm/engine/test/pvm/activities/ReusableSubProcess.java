@@ -46,7 +46,7 @@ public class ReusableSubProcess implements SubProcessActivityBehavior {
     // TODO extract information from the subprocess and inject it into the superprocess
   }
 
-  public void completed(ActivityExecution execution) throws Exception {
+  public void executeOutgoing(ActivityExecution execution) throws Exception {
     List<PvmTransition> outgoingTransitions = execution.getActivity().getOutgoingTransitions();
     execution.takeAll(outgoingTransitions, null);
   }

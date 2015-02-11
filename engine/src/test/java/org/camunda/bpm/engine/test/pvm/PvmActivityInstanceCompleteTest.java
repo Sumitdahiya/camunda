@@ -93,7 +93,7 @@ public class PvmActivityInstanceCompleteTest extends PvmTestCase {
     processInstance.start();
 
     verifier.assertNonCompletingActivityInstance("start", 1);
-    verifier.assertNonCompletingActivityInstance("fork", 2);
+    verifier.assertNonCompletingActivityInstance("fork", 1);
     verifier.assertIsCompletingActivityInstance("end1", 1);
     verifier.assertIsCompletingActivityInstance("end2", 1);
   }
@@ -152,7 +152,7 @@ public class PvmActivityInstanceCompleteTest extends PvmTestCase {
     processInstance.start();
 
     verifier.assertNonCompletingActivityInstance("start", 1);
-    verifier.assertNonCompletingActivityInstance("fork", 2);
+    verifier.assertNonCompletingActivityInstance("fork", 1);
     verifier.assertNonCompletingActivityInstance("a1", 1);
     verifier.assertNonCompletingActivityInstance("a2", 1);
     verifier.assertNonCompletingActivityInstance("join", 2);

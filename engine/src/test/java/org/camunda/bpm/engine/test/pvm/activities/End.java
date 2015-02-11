@@ -23,6 +23,10 @@ import org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution;
 public class End implements ActivityBehavior {
 
   public void execute(ActivityExecution execution) throws Exception {
+    execution.completeActivity();
+  }
+
+  public void executeOutgoing(ActivityExecution execution) throws Exception {
     execution.end(true);
   }
 

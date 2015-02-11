@@ -43,31 +43,16 @@ public class EmbeddedSubProcess implements CompositeActivityBehavior {
 
   @SuppressWarnings("unchecked")
   public void lastExecutionEnded(ActivityExecution execution) {
+    execution.completeActivity();
+  }
+
+  public void executeOutgoing(ActivityExecution execution) throws Exception {
     List<PvmTransition> outgoingTransitions = execution.getActivity().getOutgoingTransitions();
     if(outgoingTransitions.isEmpty()) {
       execution.end(true);
     }else {
       execution.takeAll(outgoingTransitions, Collections.EMPTY_LIST);
     }
-  }
-
-
-  // used by timers
-  @SuppressWarnings("unchecked")
-  public void timerFires(ActivityExecution execution, String signalName, Object signalData) throws Exception {
-    PvmActivity timerActivity = execution.getActivity();
-    boolean isInterrupting = (Boolean) timerActivity.getProperty("isInterrupting");
-    List<ActivityExecution> recyclableExecutions = null;
-    if (isInterrupting) {
-      recyclableExecutions = removeAllExecutions(execution);
-    } else {
-      recyclableExecutions = Collections.EMPTY_LIST;
-    }
-    execution.takeAll(timerActivity.getOutgoingTransitions(), recyclableExecutions);
-  }
-
-  private List<ActivityExecution> removeAllExecutions(ActivityExecution execution) {
-    return null;
   }
 
 }

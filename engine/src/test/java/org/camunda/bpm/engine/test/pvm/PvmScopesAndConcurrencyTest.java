@@ -205,7 +205,7 @@ public class PvmScopesAndConcurrencyTest extends PvmTestCase {
     expectedEvents.add("end on Activity(fork)");
     expectedEvents.add("start on Activity(noscope)");
     expectedEvents.add("start on Activity(c1)");
-    expectedEvents.add("end on Activity(fork)");
+//    expectedEvents.add("end on Activity(fork)");
     expectedEvents.add("start on Activity(noscope)");
     expectedEvents.add("start on Activity(c2)");
 
@@ -316,7 +316,7 @@ public class PvmScopesAndConcurrencyTest extends PvmTestCase {
     expectedEvents.add("end on Activity(fork)");
     expectedEvents.add("start on Activity(scope)");
     expectedEvents.add("start on Activity(c1)");
-    expectedEvents.add("end on Activity(fork)");
+//    expectedEvents.add("end on Activity(fork)");
     expectedEvents.add("start on Activity(scope)");
     expectedEvents.add("start on Activity(c2)");
 
@@ -427,7 +427,7 @@ public class PvmScopesAndConcurrencyTest extends PvmTestCase {
     expectedEvents.add("start on Activity(fork)");
     expectedEvents.add("end on Activity(fork)");
     expectedEvents.add("start on Activity(c1)");
-    expectedEvents.add("end on Activity(fork)");
+//    expectedEvents.add("end on Activity(fork)");
     expectedEvents.add("start on Activity(c2)");
 
     assertEquals("expected "+expectedEvents+", but was \n"+eventCollector+"\n", expectedEvents, eventCollector.events);
@@ -537,7 +537,7 @@ public class PvmScopesAndConcurrencyTest extends PvmTestCase {
     expectedEvents.add("end on Activity(fork)");
     expectedEvents.add("start on Activity(scope)");
     expectedEvents.add("start on Activity(c1)");
-    expectedEvents.add("end on Activity(fork)");
+//    expectedEvents.add("end on Activity(fork)");
     expectedEvents.add("start on Activity(scope)");
     expectedEvents.add("start on Activity(c2)");
 

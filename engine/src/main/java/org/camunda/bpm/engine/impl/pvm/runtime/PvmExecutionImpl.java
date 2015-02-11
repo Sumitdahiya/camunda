@@ -206,13 +206,21 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
 
     isActive = false;
     isEnded = true;
-    performOperation(PvmAtomicOperation.ACTIVITY_NOTIFY_LISTENER_END);
+    if(completeScope) {
+      performOperation(PvmAtomicOperation.ACTIVITY_END);
+    } else {
+      performOperation(PvmAtomicOperation.ACTIVITY_NOTIFY_LISTENER_END);
+    }
   }
 
   public void endCompensation() {
     remove();
     performOperation(PvmAtomicOperation.FIRE_ACTIVITY_END);
     getParent().signal("compensationDone", null);
+  }
+
+  public void completeActivity() {
+    performOperation(PvmAtomicOperation.TRANSITION_NOTIFY_LISTENER_END);
   }
 
   public void remove() {
@@ -286,7 +294,7 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
     TransitionImpl transitionImpl = (TransitionImpl) transition;
     setActivity(transitionImpl.getSource());
     setTransition(transitionImpl);
-    performOperation(PvmAtomicOperation.TRANSITION_NOTIFY_LISTENER_END);
+    performOperation(PvmAtomicOperation.TRANSITION_DESTROY_SCOPE);
   }
 
   public void executeActivity(PvmActivity activity) {
