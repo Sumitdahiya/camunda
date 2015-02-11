@@ -9,4 +9,7 @@ public class IdGeneratorDataSourceDoNothing implements ActivityBehavior {
   public void execute(ActivityExecution execution) throws Exception {
   }
 
+  public void executeOutgoing(ActivityExecution execution) throws Exception {
+  }
+
 }

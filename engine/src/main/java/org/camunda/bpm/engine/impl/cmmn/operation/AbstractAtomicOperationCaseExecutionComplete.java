@@ -27,6 +27,7 @@ import org.camunda.bpm.engine.impl.cmmn.behavior.TransferVariablesActivityBehavi
 import org.camunda.bpm.engine.impl.cmmn.execution.CmmnExecution;
 import org.camunda.bpm.engine.impl.pvm.delegate.SubProcessActivityBehavior;
 import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
+import org.camunda.bpm.engine.impl.pvm.runtime.operation.PvmAtomicOperation;
 
 /**
  * @author Roman Smirnov
@@ -86,7 +87,7 @@ public abstract class AbstractAtomicOperationCaseExecutionComplete extends Abstr
         superExecution.setSubCaseInstance(null);
 
         try {
-          behavior.completed(superExecution);
+          superExecution.performOperation(PvmAtomicOperation.TRANSITION_NOTIFY_LISTENER_END);
         } catch (RuntimeException e) {
             log.log(Level.SEVERE, "Error while completing sub case of case execution " + execution, e);
             throw e;
