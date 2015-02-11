@@ -76,6 +76,9 @@ public class ParallelGatewayActivityBehavior extends GatewayActivityBehavior {
     }
   }
 
-
+  public void executeOutgoing(ActivityExecution execution) throws Exception {
+    List<ActivityExecution> joinedExecutions = execution.findInactiveConcurrentExecutions(execution.getActivity());
+    bpmnActivityBehavior.performOutgoingBehavior(execution, false, false, joinedExecutions);
+  }
 
 }
