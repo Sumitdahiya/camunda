@@ -77,8 +77,11 @@ public class ParallelGatewayActivityBehavior extends GatewayActivityBehavior {
   }
 
   public void executeOutgoing(ActivityExecution execution) throws Exception {
+    PvmActivity activity = execution.getActivity();
+
+    List<PvmTransition> outgoingTransitions = activity.getOutgoingTransitions();
     List<ActivityExecution> joinedExecutions = execution.findInactiveConcurrentExecutions(execution.getActivity());
-    bpmnActivityBehavior.performOutgoingBehavior(execution, false, false, joinedExecutions);
+    execution.takeAll(outgoingTransitions, joinedExecutions);
   }
 
 }
