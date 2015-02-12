@@ -68,6 +68,12 @@ public class ClassDelegateActivityBehavior extends AbstractBpmnActivityBehavior 
     }
   }
 
+  public void executeOutgoing(ActivityExecution execution) throws Exception {
+
+    ActivityBehavior activityBehaviorInstance = getActivityBehaviorInstance(execution);
+    activityBehaviorInstance.executeOutgoing(execution);
+  }
+
   // Signallable activity behavior
   public void signal(final ActivityExecution execution, final String signalName, final Object signalData) throws Exception {
 

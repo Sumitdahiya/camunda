@@ -130,7 +130,7 @@ public interface ActivityExecution extends DelegateExecution {
   /**
    * ends this execution.
    */
-  void end(boolean isScopeComplete);
+  void end();
 
   /**
    * Execution finished compensation. Removes this

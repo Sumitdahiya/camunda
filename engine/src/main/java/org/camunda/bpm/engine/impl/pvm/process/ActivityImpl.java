@@ -245,6 +245,10 @@ public class ActivityImpl extends ScopeImpl implements PvmActivity, HasDIBounds 
     return isCancelScope;
   }
 
+  public boolean isCompleteScope() {
+    return outgoingTransitions.isEmpty();
+  }
+
   public void setCancelScope(boolean isInterrupting) {
     this.isCancelScope = isInterrupting;
   }

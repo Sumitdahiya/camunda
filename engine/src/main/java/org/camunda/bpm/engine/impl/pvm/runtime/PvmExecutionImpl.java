@@ -200,17 +200,19 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
    *
    * @param completeScope true if ending the execution contributes to completing the BPMN 2.0 scope
    */
-  public void end(boolean completeScope) {
-
-    setCompleteScope(completeScope);
+  public void end() {
 
     isActive = false;
     isEnded = true;
-    if(completeScope) {
+
+    if (activity.isCompleteScope()) {
+
       performOperation(PvmAtomicOperation.ACTIVITY_END);
     } else {
       performOperation(PvmAtomicOperation.ACTIVITY_NOTIFY_LISTENER_END);
     }
+
+
   }
 
   public void endCompensation() {
@@ -393,7 +395,7 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
         // Others are already ended (end activities)
         if (!prunedExecution.isEnded()) {
           log.fine("pruning execution " + prunedExecution);
-          prunedExecution.end(false);
+          prunedExecution.end();
         }
       }
 
@@ -434,12 +436,10 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
 
       concurrentRoot.setActivityInstanceId(concurrentRoot.getParentActivityInstanceId());
 
-      boolean isConcurrentEnd = outgoingExecutions.isEmpty();
-
       // prune the executions that are not recycled
       for (PvmExecutionImpl prunedExecution: recyclableExecutions) {
         log.fine("pruning execution "+prunedExecution);
-        prunedExecution.end(isConcurrentEnd);
+        prunedExecution.end();
       }
 
       // then launch all the concurrent executions
@@ -448,8 +448,8 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
       }
 
       // if no outgoing executions, the concurrent root execution ends
-      if (isConcurrentEnd) {
-        concurrentRoot.end(true);
+      if (outgoingExecutions.isEmpty()) {
+        concurrentRoot.end();
       }
     }
   }
@@ -610,6 +610,13 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
     if(log.isLoggable(Level.FINE)) {
       log.fine("[ENTER] "+this + ": "+activityInstanceId+", parent: "+getParentActivityInstanceId());
     }
+
+    if (activity.isCompleteScope()) {
+      activityInstanceState = ActivityInstanceState.SCOPE_COMPLETE.getStateCode();
+    } else {
+      activityInstanceState = ActivityInstanceState.DEFAULT.getStateCode();
+    }
+
 
   }
 

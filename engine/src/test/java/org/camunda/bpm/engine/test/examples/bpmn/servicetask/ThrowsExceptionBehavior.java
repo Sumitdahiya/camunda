@@ -42,7 +42,7 @@ public class ThrowsExceptionBehavior implements ActivityBehavior {
   }
 
   public void executeOutgoing(ActivityExecution execution) throws Exception {
-    String transitionName = (String) execution.getVariable("executionToTake");
+    String transitionName = (String) execution.getVariable("transitionToTake");
     PvmTransition transition = execution.getActivity().findOutgoingTransition(transitionName);
     execution.take(transition);
   }

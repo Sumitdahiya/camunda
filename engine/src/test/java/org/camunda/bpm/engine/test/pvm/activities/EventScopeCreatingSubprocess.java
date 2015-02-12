@@ -65,7 +65,7 @@ public class EventScopeCreatingSubprocess implements CompositeActivityBehavior {
 
     List<PvmTransition> outgoingTransitions = execution.getActivity().getOutgoingTransitions();
     if(outgoingTransitions.isEmpty()) {
-      outgoingExecution.end(true);
+      outgoingExecution.end();
     }else {
       outgoingExecution.takeAll(outgoingTransitions, Collections.EMPTY_LIST);
     }

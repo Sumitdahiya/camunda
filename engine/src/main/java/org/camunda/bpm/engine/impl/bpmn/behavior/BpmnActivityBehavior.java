@@ -134,7 +134,7 @@ public class BpmnActivityBehavior {
           if (log.isLoggable(Level.FINE)) {
             log.fine("No outgoing sequence flow found for " + execution.getActivity().getId() + ". Ending execution.");
           }
-          execution.end(true);
+          execution.end();
 
           if (throwExceptionIfExecutionStuck) {
             throw new ProcessEngineException("No outgoing sequence flow of the inclusive gateway '" + execution.getActivity().getId()

@@ -49,7 +49,7 @@ public class EmbeddedSubProcess implements CompositeActivityBehavior {
   public void executeOutgoing(ActivityExecution execution) throws Exception {
     List<PvmTransition> outgoingTransitions = execution.getActivity().getOutgoingTransitions();
     if(outgoingTransitions.isEmpty()) {
-      execution.end(true);
+      execution.end();
     }else {
       execution.takeAll(outgoingTransitions, Collections.EMPTY_LIST);
     }

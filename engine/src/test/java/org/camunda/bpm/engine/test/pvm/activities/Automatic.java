@@ -32,7 +32,7 @@ public class Automatic implements ActivityBehavior {
   public void executeOutgoing(ActivityExecution execution) throws Exception {
     List<PvmTransition> outgoingTransitions = execution.getActivity().getOutgoingTransitions();
     if(outgoingTransitions.isEmpty()) {
-      execution.end(true);
+      execution.end();
     } else {
       execution.take(outgoingTransitions.get(0));
     }

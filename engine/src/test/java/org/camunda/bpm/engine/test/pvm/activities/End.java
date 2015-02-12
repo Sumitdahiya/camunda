@@ -27,7 +27,7 @@ public class End implements ActivityBehavior {
   }
 
   public void executeOutgoing(ActivityExecution execution) throws Exception {
-    execution.end(true);
+    execution.end();
   }
 
 }
