@@ -64,7 +64,7 @@ public class ProcessInstanceModificationBuilderImpl implements ProcessInstanceMo
   }
 
   public ProcessInstanceModificationBuilder startBeforeActivity(String activityId) {
-    currentActivity = new ActivityInstantiationInstruction(activityId);
+    currentActivity = new ActivityInstantiationInstruction(processInstanceId, activityId);
     activitiesToStartBefore.add(currentActivity);
     return this;
   }

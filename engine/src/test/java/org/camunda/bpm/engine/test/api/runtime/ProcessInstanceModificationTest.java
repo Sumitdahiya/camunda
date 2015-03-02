@@ -48,11 +48,8 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
   protected static final String SUBPROCESS_LISTENER_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.subprocessListeners.bpmn20.xml";
   protected static final String SUBPROCESS_BOUNDARY_EVENTS_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.subprocessBoundaryEvents.bpmn20.xml";
 
-
-  // TODO: improve assertions on activity instance trees
-
   @Deployment(resources = PARALLEL_GATEWAY_PROCESS)
-  public void FAILING_testCancellation() {
+  public void testCancellation() {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("parallelGateway");
     String processInstanceId = processInstance.getId();
 
@@ -81,7 +78,7 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
   }
 
   @Deployment(resources = PARALLEL_GATEWAY_PROCESS)
-  public void FAILING_testCancellationThatEndsProcessInstance() {
+  public void testCancellationThatEndsProcessInstance() {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("parallelGateway");
 
     ActivityInstance tree = runtimeService.getActivityInstance(processInstance.getId());
@@ -367,7 +364,7 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
   }
 
   @Deployment(resources = EXCLUSIVE_GATEWAY_PROCESS)
-  public void FAILING_testCancellationAndCreation() {
+  public void testCancellationAndCreation() {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("exclusiveGateway");
     String processInstanceId = processInstance.getId();
 
@@ -446,7 +443,7 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
   }
 
   @Deployment
-  public void FAILING_testNoCompensationCreatedOnCancellation() {
+  public void testNoCompensationCreatedOnCancellation() {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("compensationProcess");
     ActivityInstance tree = runtimeService.getActivityInstance(processInstance.getId());
 

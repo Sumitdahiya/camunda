@@ -253,7 +253,7 @@ public class ProcessInstanceModificationEventTest extends PluggableProcessEngine
   }
 
   @Deployment(resources = CANCEL_END_EVENT_PROCESS)
-  public void FAILING_testStartBeforeCancelEndEvent() {
+  public void testStartBeforeCancelEndEvent() {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("process");
     String processInstanceId = processInstance.getId();
 
