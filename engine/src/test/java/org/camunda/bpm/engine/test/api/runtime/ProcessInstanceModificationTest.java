@@ -47,6 +47,7 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
   protected static final String SUBPROCESS_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.subprocess.bpmn20.xml";
   protected static final String SUBPROCESS_LISTENER_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.subprocessListeners.bpmn20.xml";
   protected static final String SUBPROCESS_BOUNDARY_EVENTS_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.subprocessBoundaryEvents.bpmn20.xml";
+  protected static final String ONE_SCOPE_TASK_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.oneScopeTaskProcess.bpmn20.xml";
 
   @Deployment(resources = PARALLEL_GATEWAY_PROCESS)
   public void testCancellation() {
@@ -119,6 +120,40 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
       describeExecutionTree(null).scope()
         .child("task1").concurrent().noScope().up()
         .child("task2").concurrent().noScope()
+      .done());
+
+    assertEquals(2, taskService.createTaskQuery().count());
+  }
+
+  @Deployment(resources = ONE_SCOPE_TASK_PROCESS)
+  public void testScopeTaskCreation() {
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("oneTaskProcess");
+    String processInstanceId = processInstance.getId();
+
+    runtimeService
+      .createProcessInstanceModification(processInstance.getId())
+      .startBeforeActivity("theTask")
+      .execute();
+
+    ActivityInstance updatedTree = runtimeService.getActivityInstance(processInstanceId);
+    assertNotNull(updatedTree);
+    assertEquals(processInstanceId, updatedTree.getProcessInstanceId());
+
+    assertThat(updatedTree).hasStructure(
+      describeActivityInstanceTree(processInstance.getProcessDefinitionId())
+        .activity("theTask")
+        .activity("theTask")
+      .done());
+
+    ExecutionTree executionTree = ExecutionTree.forExecution(processInstanceId, processEngine);
+
+    assertThat(executionTree)
+    .matches(
+      describeExecutionTree(null).scope()
+        .child(null).concurrent().noScope()
+          .child("theTask").scope().up().up()
+        .child(null).concurrent().noScope()
+          .child("theTask").scope()
       .done());
 
     assertEquals(2, taskService.createTaskQuery().count());

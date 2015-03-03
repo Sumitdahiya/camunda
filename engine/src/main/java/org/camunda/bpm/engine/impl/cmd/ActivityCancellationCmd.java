@@ -76,16 +76,19 @@ public class ActivityCancellationCmd extends AbstractProcessInstanceModification
 
 
     // Outline:
-    // 1. cancel topmost scope execution
-    // 2. fix tree in parent of topmost
+    // 1. find topmost scope execution beginning at scopeExecution that has exactly
+    //    one child (this is the topmost scope we can cancel)
+    // 2. cancel all children of the topmost execution
+    // 3. cancel the activity of the topmost execution itself (if applicable)
+    // 4. remove topmost execution (and concurrent parent) if topmostExecution is not the process instance
 
     ExecutionEntity topmostCancellableExecution = scopeExecution;
-    ExecutionEntity parentExecution = topmostCancellableExecution.getParent();
+    ExecutionEntity parentScopeExecution = getParentScopeExecution(topmostCancellableExecution);
 
-    while (parentExecution != null && !topmostCancellableExecution.isConcurrent()) {
-      // if the parent is not concurrent, it must be the parent scope execution
-      topmostCancellableExecution = parentExecution;
-      parentExecution = topmostCancellableExecution.getParent();
+    // if topmostCancellabelExecution's parent is concurrent, we have reached the target execution
+    while (parentScopeExecution != null && !topmostCancellableExecution.isConcurrent() && !topmostCancellableExecution.getParent().isConcurrent()) {
+      topmostCancellableExecution = parentScopeExecution;
+      parentScopeExecution = getParentScopeExecution(topmostCancellableExecution);
     }
 
     // TODO: cancel reason
@@ -100,6 +103,18 @@ public class ActivityCancellationCmd extends AbstractProcessInstanceModification
     }
 
     return null;
+  }
+
+  protected ExecutionEntity getParentScopeExecution(ExecutionEntity execution) {
+    ExecutionEntity parent = execution.getParent();
+    if (parent == null) {
+      return null;
+    }
+
+    if (!parent.isScope()) {
+      parent = parent.getParent();
+    }
+    return parent;
   }
 
   protected ActivityInstance findActivityInstance(ActivityInstance tree, String activityInstanceId) {
