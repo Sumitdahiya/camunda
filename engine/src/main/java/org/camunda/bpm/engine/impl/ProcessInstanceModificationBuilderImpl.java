@@ -20,7 +20,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.camunda.bpm.engine.exception.NotValidException;
-import org.camunda.bpm.engine.impl.cmd.ModifyProcessInstanceCmd;
+import org.camunda.bpm.engine.impl.cmd.AbstractProcessInstanceModificationCommand;
+import org.camunda.bpm.engine.impl.cmd.ActivityCancellationCmd;
+import org.camunda.bpm.engine.impl.cmd.ActivityInstantiationCmd;
 import org.camunda.bpm.engine.impl.cmd.ModifyProcessInstanceCmd;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.interceptor.CommandExecutor;
@@ -36,13 +38,10 @@ public class ProcessInstanceModificationBuilderImpl implements ProcessInstanceMo
   protected CommandContext commandContext;
 
   protected String processInstanceId;
-  protected Set<String> activityInstancesToCancel = new HashSet<String>();
 
-  // TODO: this needs to be a more sophisticated data strucutre:
-  // first, it is possible to instantiate the same activity twice (i.e. no set)
-  // second, it should be possible to add variables to an activity
-  protected List<ActivityInstantiationInstruction> activitiesToStartBefore = new ArrayList<ActivityInstantiationInstruction>();
-  protected ActivityInstantiationInstruction currentActivity;
+  protected List<AbstractProcessInstanceModificationCommand> operations = new ArrayList<AbstractProcessInstanceModificationCommand>();
+
+  protected ActivityInstantiationCmd currentActivity;
 
   public ProcessInstanceModificationBuilderImpl(CommandExecutor commandExecutor, String processInstanceId) {
     this(processInstanceId);
@@ -55,17 +54,20 @@ public class ProcessInstanceModificationBuilderImpl implements ProcessInstanceMo
   }
 
   public ProcessInstanceModificationBuilderImpl(String processInstanceId) {
+    ensureNotNull("processInstanceId", processInstanceId);
     this.processInstanceId = processInstanceId;
   }
 
   public ProcessInstanceModificationBuilder cancelActivityInstance(String activityInstanceId) {
-    activityInstancesToCancel.add(activityInstanceId);
+    ensureNotNull("activityInstanceId", activityInstanceId);
+    operations.add(new ActivityCancellationCmd(processInstanceId, activityInstanceId));
     return this;
   }
 
   public ProcessInstanceModificationBuilder startBeforeActivity(String activityId) {
-    currentActivity = new ActivityInstantiationInstruction(processInstanceId, activityId);
-    activitiesToStartBefore.add(currentActivity);
+    ensureNotNull("activityId", activityId);
+    currentActivity = new ActivityInstantiationCmd(processInstanceId, activityId);
+    operations.add(currentActivity);
     return this;
   }
 
@@ -107,12 +109,8 @@ public class ProcessInstanceModificationBuilderImpl implements ProcessInstanceMo
     return processInstanceId;
   }
 
-  public Set<String> getActivityInstancesToCancel() {
-    return activityInstancesToCancel;
-  }
-
-  public List<ActivityInstantiationInstruction> getActivitiesToStartBefore() {
-    return activitiesToStartBefore;
+  public List<AbstractProcessInstanceModificationCommand> getModificationOperations() {
+    return operations;
   }
 
 }

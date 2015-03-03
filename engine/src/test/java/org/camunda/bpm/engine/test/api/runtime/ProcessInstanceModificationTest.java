@@ -73,7 +73,7 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
 
     assertThat(executionTree)
     .matches(
-      describeExecutionTree("task").scope()
+      describeExecutionTree("task2").scope()
         .done());
   }
 
@@ -403,8 +403,8 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
   public void testCompensationRemovalOnCancellation() {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("compensationProcess");
 
-    Execution task2Execution = runtimeService.createExecutionQuery().activityId("innerTask").singleResult();
-    Task task = taskService.createTaskQuery().executionId(task2Execution.getId()).singleResult();
+    Execution taskExecution = runtimeService.createExecutionQuery().activityId("innerTask").singleResult();
+    Task task = taskService.createTaskQuery().executionId(taskExecution.getId()).singleResult();
     assertNotNull(task);
 
     taskService.complete(task.getId());

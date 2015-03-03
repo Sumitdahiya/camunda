@@ -13,24 +13,12 @@
 package org.camunda.bpm.engine.impl.cmd;
 
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
-import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.impl.ActivityExecutionMapping;
-import org.camunda.bpm.engine.impl.ActivityInstantiationInstruction;
 import org.camunda.bpm.engine.impl.ProcessInstanceModificationBuilderImpl;
-import org.camunda.bpm.engine.impl.bpmn.parser.BpmnParse;
 import org.camunda.bpm.engine.impl.interceptor.Command;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
-import org.camunda.bpm.engine.impl.pvm.PvmActivity;
-import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
-import org.camunda.bpm.engine.impl.pvm.process.ProcessDefinitionImpl;
-import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
-import org.camunda.bpm.engine.impl.util.EnsureUtil;
+import org.camunda.bpm.engine.impl.pvm.runtime.operation.PvmAtomicOperation;
 
 /**
  * @author Thorben Lindhauer
@@ -47,11 +35,19 @@ public class ModifyProcessInstanceCmd implements Command<Void> {
   public Void execute(CommandContext commandContext) {
     String processInstanceId = builder.getProcessInstanceId();
 
+    ActivityExecutionMapping priorMapping = new ActivityExecutionMapping(commandContext, processInstanceId);
 
-    for (ActivityInstantiationInstruction startInstruction : builder.getActivitiesToStartBefore()) {
-      startInstruction.execute(commandContext);
-
+    for (AbstractProcessInstanceModificationCommand instruction : builder.getModificationOperations()) {
+      instruction.setPriorMapping(priorMapping);
+      instruction.execute(commandContext);
     }
+
+    ExecutionEntity processInstance = commandContext.getExecutionManager().findExecutionById(processInstanceId);
+    if (processInstance.getExecutions().isEmpty() && processInstance.getActivity() == null) {
+      // TODO: deletion reason?
+      processInstance.deleteCascade("Cancellation via API");
+    }
+
 
     return null;
   }

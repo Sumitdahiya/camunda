@@ -12,6 +12,7 @@
  */
 package org.camunda.bpm.engine.impl.cmd;
 
+import org.camunda.bpm.engine.impl.ActivityExecutionMapping;
 import org.camunda.bpm.engine.impl.interceptor.Command;
 
 /**
@@ -21,8 +22,16 @@ import org.camunda.bpm.engine.impl.interceptor.Command;
 public abstract class AbstractProcessInstanceModificationCommand implements Command<Void> {
 
   protected String processInstanceId;
+  /**
+   * Mapping of activities to executions before any change in the execution tree
+   */
+  protected ActivityExecutionMapping priorMapping;
 
   public AbstractProcessInstanceModificationCommand(String processInstanceId) {
     this.processInstanceId = processInstanceId;
+  }
+
+  public void setPriorMapping(ActivityExecutionMapping priorMapping) {
+    this.priorMapping = priorMapping;
   }
 }

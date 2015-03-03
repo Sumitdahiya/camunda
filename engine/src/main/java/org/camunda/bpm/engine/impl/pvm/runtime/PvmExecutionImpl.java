@@ -425,6 +425,36 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
     }
   }
 
+  public void removeFromParentScope() {
+    PvmExecutionImpl parent = getParent();
+
+    if (isScope()) {
+      destroy();
+    }
+    remove();
+
+    if (parent.isConcurrent()) {
+      parent.remove();
+      parent = parent.getParent();
+    }
+
+    // consolidate the parent scope's execution tree
+    if (parent.getExecutions().size() == 1) {
+      PvmExecutionImpl concurrentChild = parent.getExecutions().get(0);
+      parent.replace(concurrentChild);
+      parent.setActivity(concurrentChild.getActivity());
+      parent.setActive(concurrentChild.isActive());
+
+      if (!concurrentChild.getExecutions().isEmpty()) {
+        // a concurrent execution has exactly one child
+        PvmExecutionImpl childScopeExecution = concurrentChild.getExecutions().get(0);
+        childScopeExecution.setParent(parent);
+      }
+
+      concurrentChild.remove();
+    }
+  }
+
   @SuppressWarnings({ "rawtypes", "unchecked" })
   public List<ActivityExecution> findInactiveConcurrentExecutions(PvmActivity activity) {
     List<PvmExecutionImpl> inactiveConcurrentExecutionsInActivity = new ArrayList<PvmExecutionImpl>();
@@ -520,6 +550,7 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
       List<OutgoingExecution> outgoingExecutions = new ArrayList<OutgoingExecution>();
 
       recyclableExecutions.remove(concurrentRoot);
+      concurrentRoot.setActivity(null);
 
       log.fine("recyclable executions for reuse: " + recyclableExecutions);
 

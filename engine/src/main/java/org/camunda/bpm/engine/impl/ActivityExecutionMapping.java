@@ -21,7 +21,6 @@ import java.util.Set;
 
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
-import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
 import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
 import org.camunda.bpm.engine.impl.util.EnsureUtil;
 
@@ -35,12 +34,18 @@ public class ActivityExecutionMapping {
   protected CommandContext commandContext;
   protected String processInstanceId;
 
+  protected ActivityExecutionMapping priorMapping;
+
   public ActivityExecutionMapping(CommandContext commandContext, String processInstanceId) {
     this.commandContext = commandContext;
     this.processInstanceId = processInstanceId;
     this.activityExecutionMapping = new HashMap<ScopeImpl, Set<ExecutionEntity>>();
 
     initialize();
+  }
+
+  protected void submitExecution(ExecutionEntity execution, ScopeImpl scope) {
+    getExecutions(scope).add(execution);
   }
 
   public Set<ExecutionEntity> getExecutions(ScopeImpl activity) {
@@ -66,20 +71,25 @@ public class ActivityExecutionMapping {
 
   protected void assignExecutionsToActivities(List<ExecutionEntity> leaves) {
     for (ExecutionEntity leaf : leaves) {
-      ActivityImpl activity = leaf.getActivity();
-      assignToActivity(leaf, activity);
+      ScopeImpl activity = leaf.getActivity();
+
+      if (activity != null) {
+        assignToActivity(leaf, activity);
+
+      } else if (leaf.isProcessInstanceExecution()) {
+        assignToActivity(leaf, leaf.getProcessDefinition());
+
+      }
+
     }
   }
 
   protected void assignToActivity(ExecutionEntity execution, ScopeImpl activity) {
     EnsureUtil.ensureNotNull("activityId", activity);
-    Set<ExecutionEntity> executionsForActivity = getExecutions(activity);
-
-    executionsForActivity.add(execution);
+    submitExecution(execution, activity);
 
     if (execution.isProcessInstanceExecution()) {
-      Set<ExecutionEntity> executionsForProcessDefinition = getExecutions(activity.getProcessDefinition());
-      executionsForProcessDefinition.add(execution);
+      submitExecution(execution, activity.getProcessDefinition());
 
     } else {
 

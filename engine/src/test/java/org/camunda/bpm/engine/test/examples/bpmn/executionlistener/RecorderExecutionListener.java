@@ -79,9 +79,14 @@ public class RecorderExecutionListener implements ExecutionListener, Serializabl
       parameterValue = (String)parameter.getValue(execution);
     }
 
+    String activityName = null;
+    if (executionCasted.getActivity() != null) {
+      activityName = (String)executionCasted.getActivity().getProperties().get("name");
+    }
+
     recordedEvents.add( new RecordedEvent( //
                     executionCasted.getActivityId(),
-                    (String)executionCasted.getActivity().getProperties().get("name"),
+                    activityName,
                     execution.getEventName(),
                     parameterValue,
                     execution.getActivityInstanceId()));

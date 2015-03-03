@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.camunda.bpm.engine.impl;
+package org.camunda.bpm.engine.impl.cmd;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.camunda.bpm.engine.ProcessEngineException;
+import org.camunda.bpm.engine.impl.ActivityExecutionMapping;
 import org.camunda.bpm.engine.impl.bpmn.parser.BpmnParse;
-import org.camunda.bpm.engine.impl.cmd.AbstractProcessInstanceModificationCommand;
 import org.camunda.bpm.engine.impl.core.variable.VariableMapImpl;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
@@ -34,7 +34,7 @@ import org.camunda.bpm.engine.variable.VariableMap;
  * @author Thorben Lindhauer
  *
  */
-public class ActivityInstantiationInstruction extends AbstractProcessInstanceModificationCommand {
+public class ActivityInstantiationCmd extends AbstractProcessInstanceModificationCommand {
 
   protected String activityId;
 
@@ -42,7 +42,7 @@ public class ActivityInstantiationInstruction extends AbstractProcessInstanceMod
   protected VariableMap variablesLocal;
 
 
-  public ActivityInstantiationInstruction(String processInstanceId, String activityId) {
+  public ActivityInstantiationCmd(String processInstanceId, String activityId) {
     super(processInstanceId);
     this.activityId = activityId;
     this.variables = new VariableMapImpl();
@@ -170,9 +170,15 @@ public class ActivityInstantiationInstruction extends AbstractProcessInstanceMod
       }
     }
     else {
-      // if the activity is not cancelling/interrupting, it can simply be instantiated as
-      // a concurrent child of the scopeExecution
-      scopeExecution.executeActivitiesConcurrent(activitiesToInstantiate, variables, variablesLocal);
+      if (scopeExecution.getExecutions().isEmpty() && scopeExecution.getActivity() == null) {
+        // reuse the scope execution
+        scopeExecution.executeActivities(activitiesToInstantiate, variables, variablesLocal);
+      } else {
+        // if the activity is not cancelling/interrupting, it can simply be instantiated as
+        // a concurrent child of the scopeExecution
+        scopeExecution.executeActivitiesConcurrent(activitiesToInstantiate, variables, variablesLocal);
+
+      }
 
     }
 
