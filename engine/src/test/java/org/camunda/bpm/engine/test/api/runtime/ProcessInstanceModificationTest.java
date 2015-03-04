@@ -76,6 +76,10 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
     .matches(
       describeExecutionTree("task2").scope()
         .done());
+
+    // complete the process
+    completeTasksInOrder("task2");
+    assertProcessEnded(processInstanceId);
   }
 
   @Deployment(resources = PARALLEL_GATEWAY_PROCESS)
@@ -123,6 +127,10 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
       .done());
 
     assertEquals(2, taskService.createTaskQuery().count());
+
+    // complete the process
+    completeTasksInOrder("task1", "task2");
+    assertProcessEnded(processInstanceId);
   }
 
   @Deployment(resources = ONE_SCOPE_TASK_PROCESS)
@@ -157,6 +165,8 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
       .done());
 
     assertEquals(2, taskService.createTaskQuery().count());
+    completeTasksInOrder("theTask", "theTask");
+    assertProcessEnded(processInstanceId);
   }
 
   @Deployment(resources = EXCLUSIVE_GATEWAY_ASYNC_TASK_PROCESS)
@@ -210,6 +220,9 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
         .activity("task1")
         .activity("task2")
       .done());
+
+    completeTasksInOrder("theTask", "theTask");
+    assertProcessEnded(processInstanceId);
   }
 
   @Deployment(resources = SUBPROCESS_PROCESS)
@@ -242,6 +255,9 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
           .child(null).concurrent().noScope()
             .child("innerTask").scope()
         .done());
+
+    completeTasksInOrder("innerTask", "outerTask");
+    assertProcessEnded(processInstanceId);
   }
 
   @Deployment(resources = SUBPROCESS_BOUNDARY_EVENTS_PROCESS)
@@ -273,6 +289,7 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
 
     Task outerBoundaryTask = taskService.createTaskQuery().taskDefinitionKey("outerAfterBoundaryTask").singleResult();
     assertNotNull(outerBoundaryTask);
+
 
   }
 
@@ -360,6 +377,9 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
 
     assertEquals("procInstValue", runtimeService.getVariableLocal(processInstance.getId(), "procInstVar"));
     assertEquals("localValue", runtimeService.getVariableLocal(task2ExecutionId, "localVar"));
+
+    completeTasksInOrder("task1", "task2");
+    assertProcessEnded(processInstance.getId());
   }
 
   // TODO: move this test case somewhere so that it is only executed with appropriate
@@ -396,6 +416,9 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
     assertEquals("localVar", localVariable.getName());
     assertEquals("localValue", localVariable.getValue());
 
+    completeTasksInOrder("task1", "task2");
+    assertProcessEnded(processInstance.getId());
+
   }
 
   @Deployment(resources = EXCLUSIVE_GATEWAY_PROCESS)
@@ -426,6 +449,9 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
     .matches(
       describeExecutionTree("task2").scope()
       .done());
+
+    completeTasksInOrder("task2");
+    assertProcessEnded(processInstanceId);
   }
 
   // TODO: what happens with compensation?
@@ -475,6 +501,8 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
 
     taskService.complete(task.getId());
     assertEquals(2, runtimeService.createEventSubscriptionQuery().count());
+
+    // TODO: assert compensation can be executed
   }
 
   @Deployment
@@ -506,7 +534,7 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
     // TODO: trigger compensation and assert
   }
 
-  public String getInstanceIdForActivity(ActivityInstance activityInstance, String activityId) {
+  protected String getInstanceIdForActivity(ActivityInstance activityInstance, String activityId) {
     ActivityInstance instance = getChildInstanceForActivity(activityInstance, activityId);
     if (instance != null) {
       return instance.getId();
@@ -514,7 +542,7 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
     return null;
   }
 
-  public ActivityInstance getChildInstanceForActivity(ActivityInstance activityInstance, String activityId) {
+  protected ActivityInstance getChildInstanceForActivity(ActivityInstance activityInstance, String activityId) {
     if (activityId.equals(activityInstance.getActivityId())) {
       return activityInstance;
     }
@@ -527,5 +555,14 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
     }
 
     return null;
+  }
+
+  protected void completeTasksInOrder(String... taskNames) {
+    for (String taskName : taskNames) {
+      // complete any task with that name
+      List<Task> tasks = taskService.createTaskQuery().taskDefinitionKey(taskName).listPage(0, 1);
+      assertTrue("task for activity " + taskName + " does not exist", !tasks.isEmpty());
+      taskService.complete(tasks.get(0).getId());
+    }
   }
 }

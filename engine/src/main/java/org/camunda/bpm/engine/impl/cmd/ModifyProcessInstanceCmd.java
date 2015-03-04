@@ -18,7 +18,6 @@ import org.camunda.bpm.engine.impl.ProcessInstanceModificationBuilderImpl;
 import org.camunda.bpm.engine.impl.interceptor.Command;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
-import org.camunda.bpm.engine.impl.pvm.runtime.operation.PvmAtomicOperation;
 
 /**
  * @author Thorben Lindhauer

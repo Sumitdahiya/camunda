@@ -79,6 +79,10 @@ public class ProcessInstanceModificationEventTest extends PluggableProcessEngine
     assertNotNull(job);
     assertEquals(catchEventInstance.getExecutionIds()[0], job.getExecutionId());
 
+    completeTasksInOrder("task");
+    executeAvailableJobs();
+    assertProcessEnded(processInstanceId);
+
   }
 
   @Deployment(resources = MESSAGE_START_EVENT_PROCESS)
@@ -122,6 +126,9 @@ public class ProcessInstanceModificationEventTest extends PluggableProcessEngine
     EventSubscription subscription = runtimeService.createEventSubscriptionQuery().singleResult();
     assertNotNull(subscription);
     assertEquals(startEventSubscription.getId(), subscription.getId());
+
+    completeTasksInOrder("task", "task");
+    assertProcessEnded(processInstanceId);
   }
 
   @Deployment(resources = TIMER_START_EVENT_PROCESS)
@@ -162,6 +169,9 @@ public class ProcessInstanceModificationEventTest extends PluggableProcessEngine
     Job job = managementService.createJobQuery().singleResult();
     assertNotNull(job);
     assertEquals(startTimerJob.getId(), job.getId());
+
+    completeTasksInOrder("task", "task");
+    assertProcessEnded(processInstanceId);
   }
 
   @Deployment(resources = ONE_TASK_PROCESS)
@@ -233,6 +243,9 @@ public class ProcessInstanceModificationEventTest extends PluggableProcessEngine
       .matches(
         describeExecutionTree("theTask").scope()
           .done());
+
+    completeTasksInOrder("theTask");
+    assertProcessEnded(processInstanceId);
   }
 
   @Deployment(resources = TERMINATE_END_EVENT_PROCESS)
@@ -282,7 +295,7 @@ public class ProcessInstanceModificationEventTest extends PluggableProcessEngine
     assertEquals("afterCancellation", afterCancellationTask.getTaskDefinitionKey());
   }
 
-  public ActivityInstance getChildInstanceForActivity(ActivityInstance activityInstance, String activityId) {
+  protected ActivityInstance getChildInstanceForActivity(ActivityInstance activityInstance, String activityId) {
     for (ActivityInstance childInstance : activityInstance.getChildActivityInstances()) {
       if (childInstance.getActivityId().equals(activityId)) {
         return childInstance;
@@ -290,5 +303,14 @@ public class ProcessInstanceModificationEventTest extends PluggableProcessEngine
     }
 
     return null;
+  }
+
+  protected void completeTasksInOrder(String... taskNames) {
+    for (String taskName : taskNames) {
+      // complete any task with that name
+      List<Task> tasks = taskService.createTaskQuery().taskDefinitionKey(taskName).listPage(0, 1);
+      assertTrue("task for activity " + taskName + " does not exist", !tasks.isEmpty());
+      taskService.complete(tasks.get(0).getId());
+    }
   }
 }
