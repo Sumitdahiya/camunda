@@ -186,6 +186,7 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
     ActivityImpl activity = getActivity();
     if(isActive && activity != null) {
       performOperation(PvmAtomicOperation.FIRE_ACTIVITY_END);
+      leaveActivityInstance();
     }
 
     // set activity instance state back to 'default'
