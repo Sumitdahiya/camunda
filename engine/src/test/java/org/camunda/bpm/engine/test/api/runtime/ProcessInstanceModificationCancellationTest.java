@@ -1170,7 +1170,7 @@ public class ProcessInstanceModificationCancellationTest extends PluggableProces
 
   /**
    * Tests the case that an output mapping exists that expects variables
-   * that do not exist yet when the activites are cancelled
+   * that do not exist yet when the activities are cancelled
    */
   @Deployment(resources = FAILING_OUTPUT_MAPPINGS_PROCESS)
   public void testSkipOutputMappingsOnCancellation() {

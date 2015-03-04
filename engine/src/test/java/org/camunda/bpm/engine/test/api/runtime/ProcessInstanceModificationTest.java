@@ -221,7 +221,7 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
         .activity("task2")
       .done());
 
-    completeTasksInOrder("theTask", "theTask");
+    completeTasksInOrder("task1", "task2");
     assertProcessEnded(processInstanceId);
   }
 
@@ -256,7 +256,7 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
             .child("innerTask").scope()
         .done());
 
-    completeTasksInOrder("innerTask", "outerTask");
+    completeTasksInOrder("innerTask", "outerTask", "innerTask");
     assertProcessEnded(processInstanceId);
   }
 

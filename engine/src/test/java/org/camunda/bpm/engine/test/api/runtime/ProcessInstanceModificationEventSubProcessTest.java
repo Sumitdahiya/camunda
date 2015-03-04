@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.camunda.bpm.engine.impl.test.PluggableProcessEngineTestCase;
 import org.camunda.bpm.engine.runtime.ActivityInstance;
+import org.camunda.bpm.engine.runtime.Job;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.engine.test.Deployment;
@@ -39,7 +40,7 @@ public class ProcessInstanceModificationEventSubProcessTest extends PluggablePro
 
   // TODO: test that message event subscription of event subprocess is not lost
   // when an activity in the same flow scope as the sub process is first cancelled and
-  // another is instantiated
+  // another is instantiated (on process instance level)
 
   @Deployment(resources = INTERRUPTING_EVENT_SUBPROCESS)
   public void testStartBeforeTaskInsideEventSubProcess() {
@@ -762,6 +763,32 @@ public class ProcessInstanceModificationEventSubProcessTest extends PluggablePro
 
     completeTasksInOrder("task2", "eventSubProcessTask");
     assertProcessEnded(processInstanceId);
+  }
+
+  @Deployment
+  public void testTimerJobPreservationOnCancellationAndStart() {
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("timerEventSubProcess");
+
+    ActivityInstance tree = runtimeService.getActivityInstance(processInstance.getId());
+
+    Job timerJob = managementService.createJobQuery().singleResult();
+    assertNotNull(timerJob);
+
+    // when the process instance is bare intermediately due to cancellation
+    runtimeService
+      .createProcessInstanceModification(processInstance.getId())
+      .cancelActivityInstance(getInstanceIdForActivity(tree, "task"))
+      .startBeforeActivity("task")
+      .execute();
+
+    // then it is still the same job
+
+    Job remainingTimerJob = managementService.createJobQuery().singleResult();
+    assertNotNull(remainingTimerJob);
+
+    assertEquals(timerJob.getId(), remainingTimerJob.getId());
+    assertEquals(timerJob.getDuedate(), remainingTimerJob.getDuedate());
+
   }
 
   protected String getInstanceIdForActivity(ActivityInstance activityInstance, String activityId) {
