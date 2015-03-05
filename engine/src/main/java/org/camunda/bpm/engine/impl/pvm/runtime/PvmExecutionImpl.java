@@ -186,7 +186,6 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
     ActivityImpl activity = getActivity();
     if(isActive && activity != null) {
       performOperation(PvmAtomicOperation.FIRE_ACTIVITY_END);
-      leaveActivityInstance();
     }
 
     // set activity instance state back to 'default'
@@ -555,7 +554,6 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
       List<OutgoingExecution> outgoingExecutions = new ArrayList<OutgoingExecution>();
 
       recyclableExecutions.remove(concurrentRoot);
-      concurrentRoot.setActivity(null);
 
       log.fine("recyclable executions for reuse: " + recyclableExecutions);
 

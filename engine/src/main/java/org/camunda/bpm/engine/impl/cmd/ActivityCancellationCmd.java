@@ -95,6 +95,9 @@ public class ActivityCancellationCmd extends AbstractProcessInstanceModification
 
     if (topmostCancellableExecution.isProcessInstanceExecution()) {
       topmostCancellableExecution.cancelScope("Cancellation via API");
+      // TODO: the following instruction should go into #cancelScope but this breaks some things like
+      // transaction subprocesses
+      topmostCancellableExecution.leaveActivityInstance();
       topmostCancellableExecution.setActivity(null);
     } else {
       topmostCancellableExecution.deleteCascade("Cancellation via API");

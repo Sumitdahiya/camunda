@@ -286,8 +286,15 @@ public class ProcessInstanceModificationEventTest extends PluggableProcessEngine
 
     assertThat(updatedTree).hasStructure(
       describeActivityInstanceTree(processInstance.getProcessDefinitionId())
-        .activity("theTask")
+        .activity("afterCancellation")
       .done());
+
+    ExecutionTree executionTree = ExecutionTree.forExecution(processInstanceId, processEngine);
+
+    assertThat(executionTree)
+    .matches(
+      describeExecutionTree("afterCancellation").scope()
+        .done());
 
     Task afterCancellationTask = taskService.createTaskQuery().singleResult();
     assertNotNull(afterCancellationTask);
