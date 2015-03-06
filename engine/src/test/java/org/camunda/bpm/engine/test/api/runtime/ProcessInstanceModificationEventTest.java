@@ -315,6 +315,10 @@ public class ProcessInstanceModificationEventTest extends PluggableProcessEngine
     assertEquals("afterCancellation", afterCancellationTask.getTaskDefinitionKey());
   }
 
+  /**
+   * TODO: we have to fix instantiation to disregard event scope executions when creating concurrent
+   * executions
+   */
   @Deployment(resources = CANCEL_END_EVENT_PROCESS)
   public void testStartBeforeCancelEndEvent() {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("process");

@@ -20,6 +20,7 @@ import static org.camunda.bpm.engine.test.util.ExecutionAssert.describeExecution
 import java.util.Collections;
 import java.util.List;
 
+import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.delegate.ExecutionListener;
 import org.camunda.bpm.engine.history.HistoricVariableInstance;
 import org.camunda.bpm.engine.impl.test.PluggableProcessEngineTestCase;
@@ -32,14 +33,13 @@ import org.camunda.bpm.engine.test.Deployment;
 import org.camunda.bpm.engine.test.examples.bpmn.executionlistener.RecorderExecutionListener;
 import org.camunda.bpm.engine.test.examples.bpmn.executionlistener.RecorderExecutionListener.RecordedEvent;
 import org.camunda.bpm.engine.test.util.ExecutionTree;
+import org.camunda.bpm.engine.variable.Variables;
 
 /**
  * @author Thorben Lindhauer
  *
  */
 public class ProcessInstanceModificationTest extends PluggableProcessEngineTestCase {
-
-  // TODO: separate the individual aspects (history, listener, (boundary) events, variables, basics) into individual classes
 
   protected static final String PARALLEL_GATEWAY_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.parallelGateway.bpmn20.xml";
   protected static final String EXCLUSIVE_GATEWAY_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.exclusiveGateway.bpmn20.xml";
@@ -48,6 +48,7 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
   protected static final String SUBPROCESS_LISTENER_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.subprocessListeners.bpmn20.xml";
   protected static final String SUBPROCESS_BOUNDARY_EVENTS_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.subprocessBoundaryEvents.bpmn20.xml";
   protected static final String ONE_SCOPE_TASK_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.oneScopeTaskProcess.bpmn20.xml";
+  protected static final String TRANSITION_LISTENER_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.transitionListeners.bpmn20.xml";
 
   @Deployment(resources = PARALLEL_GATEWAY_PROCESS)
   public void testCancellation() {
@@ -98,7 +99,7 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
   }
 
   @Deployment(resources = EXCLUSIVE_GATEWAY_PROCESS)
-  public void testCreation() {
+  public void testStartBefore() {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("exclusiveGateway");
     String processInstanceId = processInstance.getId();
 
@@ -133,8 +134,156 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
     assertProcessEnded(processInstanceId);
   }
 
+  // TODO: test cases
+  // - start after activity with 0 or 1 outgoing transitions
+  // - start after should not respect the async:after property of the activity
+
+  @Deployment(resources = EXCLUSIVE_GATEWAY_PROCESS)
+  public void testStartTransition() {
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("exclusiveGateway");
+    String processInstanceId = processInstance.getId();
+
+    runtimeService
+      .createProcessInstanceModification(processInstance.getId())
+      .startTransition("flow4")
+      .execute();
+
+    ActivityInstance updatedTree = runtimeService.getActivityInstance(processInstanceId);
+    assertNotNull(updatedTree);
+    assertEquals(processInstanceId, updatedTree.getProcessInstanceId());
+
+    assertThat(updatedTree).hasStructure(
+      describeActivityInstanceTree(processInstance.getProcessDefinitionId())
+        .activity("task1")
+        .activity("task2")
+      .done());
+
+    ExecutionTree executionTree = ExecutionTree.forExecution(processInstanceId, processEngine);
+
+    assertThat(executionTree)
+    .matches(
+      describeExecutionTree(null).scope()
+        .child("task1").concurrent().noScope().up()
+        .child("task2").concurrent().noScope()
+      .done());
+
+    assertEquals(2, taskService.createTaskQuery().count());
+
+    // complete the process
+    completeTasksInOrder("task1", "task2");
+    assertProcessEnded(processInstanceId);
+  }
+
+  @Deployment(resources = EXCLUSIVE_GATEWAY_PROCESS)
+  public void testStartTransitionCase2() {
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("exclusiveGateway");
+    String processInstanceId = processInstance.getId();
+
+    runtimeService
+      .createProcessInstanceModification(processInstance.getId())
+      .startTransition("flow2")
+      .execute();
+
+    ActivityInstance updatedTree = runtimeService.getActivityInstance(processInstanceId);
+    assertNotNull(updatedTree);
+    assertEquals(processInstanceId, updatedTree.getProcessInstanceId());
+
+    assertThat(updatedTree).hasStructure(
+      describeActivityInstanceTree(processInstance.getProcessDefinitionId())
+        .activity("task1")
+        .activity("task1")
+      .done());
+
+    ExecutionTree executionTree = ExecutionTree.forExecution(processInstanceId, processEngine);
+
+    assertThat(executionTree)
+    .matches(
+      describeExecutionTree(null).scope()
+        .child("task1").concurrent().noScope().up()
+        .child("task1").concurrent().noScope()
+      .done());
+
+    assertEquals(2, taskService.createTaskQuery().count());
+
+    // complete the process
+    completeTasksInOrder("task1", "task1");
+    assertProcessEnded(processInstanceId);
+  }
+
+  @Deployment(resources = EXCLUSIVE_GATEWAY_PROCESS)
+  public void testStartTransitionInvalidTransitionId() {
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("exclusiveGateway");
+    String processInstanceId = processInstance.getId();
+
+    try {
+      runtimeService
+        .createProcessInstanceModification(processInstanceId)
+        .startTransition("invalidFlowId")
+        .execute();
+
+      fail("should not suceed");
+
+    } catch (ProcessEngineException e) {
+      // happy path
+    }
+  }
+
+  @Deployment(resources = EXCLUSIVE_GATEWAY_PROCESS)
+  public void testStartAfter() {
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("exclusiveGateway");
+    String processInstanceId = processInstance.getId();
+
+    runtimeService
+      .createProcessInstanceModification(processInstance.getId())
+      .startAfterActivity("theStart")
+      .execute();
+
+    ActivityInstance updatedTree = runtimeService.getActivityInstance(processInstanceId);
+    assertNotNull(updatedTree);
+    assertEquals(processInstanceId, updatedTree.getProcessInstanceId());
+
+    assertThat(updatedTree).hasStructure(
+      describeActivityInstanceTree(processInstance.getProcessDefinitionId())
+        .activity("task1")
+        .activity("task1")
+      .done());
+
+    ExecutionTree executionTree = ExecutionTree.forExecution(processInstanceId, processEngine);
+
+    assertThat(executionTree)
+    .matches(
+      describeExecutionTree(null).scope()
+        .child("task1").concurrent().noScope().up()
+        .child("task1").concurrent().noScope()
+      .done());
+
+    assertEquals(2, taskService.createTaskQuery().count());
+
+    // complete the process
+    completeTasksInOrder("task1", "task1");
+    assertProcessEnded(processInstanceId);
+  }
+
+  @Deployment(resources = EXCLUSIVE_GATEWAY_PROCESS)
+  public void testStartAfterActivityAmbiguousTransitions() {
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("exclusiveGateway");
+    String processInstanceId = processInstance.getId();
+
+    try {
+      runtimeService
+        .createProcessInstanceModification(processInstanceId)
+        .startAfterActivity("fork")
+        .execute();
+
+      fail("should not suceed since 'fork' has more than one outgoing sequence flow");
+
+    } catch (ProcessEngineException e) {
+      // happy path
+    }
+  }
+
   @Deployment(resources = ONE_SCOPE_TASK_PROCESS)
-  public void testScopeTaskCreation() {
+  public void testScopeTaskStartBefore() {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("oneTaskProcess");
     String processInstanceId = processInstance.getId();
 
@@ -169,8 +318,63 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
     assertProcessEnded(processInstanceId);
   }
 
+  @Deployment(resources = ONE_SCOPE_TASK_PROCESS)
+  public void testScopeTaskStartAfter() {
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("oneTaskProcess");
+    String processInstanceId = processInstance.getId();
+
+    // when starting after the task, essentially nothing changes in the process instance
+    runtimeService
+      .createProcessInstanceModification(processInstance.getId())
+      .startAfterActivity("theTask")
+      .execute();
+
+    ActivityInstance updatedTree = runtimeService.getActivityInstance(processInstanceId);
+    assertNotNull(updatedTree);
+    assertEquals(processInstanceId, updatedTree.getProcessInstanceId());
+
+    assertThat(updatedTree).hasStructure(
+      describeActivityInstanceTree(processInstance.getProcessDefinitionId())
+        .activity("theTask")
+      .done());
+
+    ExecutionTree executionTree = ExecutionTree.forExecution(processInstanceId, processEngine);
+
+    assertThat(executionTree)
+    .matches(
+      describeExecutionTree(null).scope()
+        .child("theTask").scope()
+      .done());
+
+    // when starting after the start event, regular concurrency happens
+
+    updatedTree = runtimeService.getActivityInstance(processInstanceId);
+    assertNotNull(updatedTree);
+    assertEquals(processInstanceId, updatedTree.getProcessInstanceId());
+
+    assertThat(updatedTree).hasStructure(
+      describeActivityInstanceTree(processInstance.getProcessDefinitionId())
+        .activity("theTask")
+        .activity("theTask")
+      .done());
+
+    executionTree = ExecutionTree.forExecution(processInstanceId, processEngine);
+
+    assertThat(executionTree)
+    .matches(
+      describeExecutionTree(null).scope()
+        .child(null).concurrent().noScope()
+          .child("theTask").scope().up().up()
+        .child(null).concurrent().noScope()
+          .child("theTask").scope()
+      .done());
+
+    completeTasksInOrder("theTask", "theTask");
+    assertProcessEnded(processInstanceId);
+  }
+
   @Deployment(resources = EXCLUSIVE_GATEWAY_ASYNC_TASK_PROCESS)
-  public void testCreationAsync() {
+  public void testStartBeforeAsync() {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("exclusiveGateway");
     String processInstanceId = processInstance.getId();
 
@@ -226,7 +430,7 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
   }
 
   @Deployment(resources = SUBPROCESS_PROCESS)
-  public void testCreationInNestedScope() {
+  public void testStartBeforeInNestedScope() {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("subprocess");
     String processInstanceId = processInstance.getId();
 
@@ -261,7 +465,7 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
   }
 
   @Deployment(resources = SUBPROCESS_BOUNDARY_EVENTS_PROCESS)
-  public void testCreationEventSubscription() {
+  public void testStartBeforeEventSubscription() {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("subprocess");
 
     runtimeService
@@ -294,7 +498,7 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
   }
 
   @Deployment(resources = SUBPROCESS_LISTENER_PROCESS)
-  public void testListenerInvocation() {
+  public void testActivityExecutionListenerInvocation() {
     RecorderExecutionListener.clear();
 
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey(
@@ -351,8 +555,94 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
     assertTrue(RecorderExecutionListener.getRecordedEvents().isEmpty());
   }
 
+  @Deployment(resources = TRANSITION_LISTENER_PROCESS)
+  public void testStartTransitionListenerInvocation() {
+    RecorderExecutionListener.clear();
+
+    ProcessInstance instance = runtimeService.startProcessInstanceByKey("transitionListenerProcess",
+        Variables.createVariables().putValue("listener", new RecorderExecutionListener()));
+
+    runtimeService.createProcessInstanceModification(instance.getId())
+      .startTransition("flow2")
+      .execute();
+
+    // transition listener should have been invoked
+    List<RecordedEvent> events = RecorderExecutionListener.getRecordedEvents();
+    assertEquals(1, events.size());
+
+    RecordedEvent event = events.get(0);
+    assertEquals("flow2", event.getTransitionId());
+
+    RecorderExecutionListener.clear();
+
+    ActivityInstance updatedTree = runtimeService.getActivityInstance(instance.getId());
+    assertNotNull(updatedTree);
+    assertEquals(instance.getId(), updatedTree.getProcessInstanceId());
+
+    assertThat(updatedTree).hasStructure(
+      describeActivityInstanceTree(instance.getProcessDefinitionId())
+        .activity("task1")
+        .activity("task2")
+      .done());
+
+    ExecutionTree executionTree = ExecutionTree.forExecution(instance.getId(), processEngine);
+
+    assertThat(executionTree)
+      .matches(
+        describeExecutionTree(null).scope()
+          .child("task1").concurrent().noScope().up()
+          .child("task2").concurrent().noScope()
+        .done());
+
+    completeTasksInOrder("task1", "task2", "task2");
+    assertProcessEnded(instance.getId());
+  }
+
+  @Deployment(resources = TRANSITION_LISTENER_PROCESS)
+  public void testStartAfterActivityListenerInvocation() {
+    RecorderExecutionListener.clear();
+
+    ProcessInstance instance = runtimeService.startProcessInstanceByKey("transitionListenerProcess",
+        Variables.createVariables().putValue("listener", new RecorderExecutionListener()));
+
+    runtimeService.createProcessInstanceModification(instance.getId())
+      .startTransition("flow2")
+      .execute();
+
+    // transition listener should have been invoked
+    List<RecordedEvent> events = RecorderExecutionListener.getRecordedEvents();
+    assertEquals(1, events.size());
+
+    RecordedEvent event = events.get(0);
+    assertEquals("flow2", event.getTransitionId());
+
+    RecorderExecutionListener.clear();
+
+    ActivityInstance updatedTree = runtimeService.getActivityInstance(instance.getId());
+    assertNotNull(updatedTree);
+    assertEquals(instance.getId(), updatedTree.getProcessInstanceId());
+
+    assertThat(updatedTree).hasStructure(
+      describeActivityInstanceTree(instance.getProcessDefinitionId())
+        .activity("task1")
+        .activity("task2")
+      .done());
+
+    ExecutionTree executionTree = ExecutionTree.forExecution(instance.getId(), processEngine);
+
+    assertThat(executionTree)
+      .matches(
+        describeExecutionTree(null).scope()
+          .child("task1").concurrent().noScope().up()
+          .child("task2").concurrent().noScope()
+        .done());
+
+    completeTasksInOrder("task1", "task2", "task2");
+    assertProcessEnded(instance.getId());
+  }
+
   @Deployment(resources = EXCLUSIVE_GATEWAY_PROCESS)
-  public void testCreationWithVariables() {
+  public void testStartBeforeWithVariables() {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("exclusiveGateway");
 
     runtimeService
@@ -385,7 +675,7 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
   // TODO: move this test case somewhere so that it is only executed with appropriate
   // history level
   @Deployment(resources = EXCLUSIVE_GATEWAY_PROCESS)
-  public void testCreationWithVariablesInHistory() {
+  public void testStartBeforeWithVariablesInHistory() {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("exclusiveGateway");
 
     runtimeService
@@ -422,7 +712,7 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
   }
 
   @Deployment(resources = EXCLUSIVE_GATEWAY_PROCESS)
-  public void testCancellationAndCreation() {
+  public void testCancellationAndStartBefore() {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("exclusiveGateway");
     String processInstanceId = processInstance.getId();
 

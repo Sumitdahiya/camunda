@@ -15,13 +15,13 @@ package org.camunda.bpm.engine.impl;
 import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.camunda.bpm.engine.exception.NotValidException;
 import org.camunda.bpm.engine.impl.cmd.AbstractProcessInstanceModificationCommand;
 import org.camunda.bpm.engine.impl.cmd.ActivityCancellationCmd;
+import org.camunda.bpm.engine.impl.cmd.ActivityInstantiationAfterCmd;
+import org.camunda.bpm.engine.impl.cmd.ActivityInstantiationBeforeCmd;
 import org.camunda.bpm.engine.impl.cmd.ActivityInstantiationCmd;
 import org.camunda.bpm.engine.impl.cmd.ModifyProcessInstanceCmd;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
@@ -66,7 +66,15 @@ public class ProcessInstanceModificationBuilderImpl implements ProcessInstanceMo
 
   public ProcessInstanceModificationBuilder startBeforeActivity(String activityId) {
     ensureNotNull("activityId", activityId);
-    currentActivity = new ActivityInstantiationCmd(processInstanceId, activityId);
+    currentActivity = new ActivityInstantiationBeforeCmd(processInstanceId, activityId);
+    operations.add(currentActivity);
+    return this;
+  }
+
+  public ProcessInstanceModificationBuilder startAfterActivity(String activityId, String transitionId) {
+    ensureNotNull("activityId", activityId);
+    ensureNotNull("transitionId", transitionId);
+    currentActivity = new ActivityInstantiationAfterCmd(processInstanceId, activityId, transitionId);
     operations.add(currentActivity);
     return this;
   }

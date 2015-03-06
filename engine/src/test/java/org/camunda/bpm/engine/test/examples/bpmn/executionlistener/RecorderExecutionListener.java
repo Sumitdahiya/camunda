@@ -39,13 +39,15 @@ public class RecorderExecutionListener implements ExecutionListener, Serializabl
     private final String activityName;
     private final String parameter;
     private final String activityInstanceId;
+    private final String transitionId;
 
-    public RecordedEvent(String activityId, String activityName, String eventName, String parameter, String activityInstanceId) {
+    public RecordedEvent(String activityId, String activityName, String eventName, String parameter, String activityInstanceId, String transitionId) {
       this.activityId = activityId;
       this.activityName = activityName;
       this.parameter = parameter;
       this.eventName = eventName;
       this.activityInstanceId = activityInstanceId;
+      this.transitionId = transitionId;
     }
 
     public String getActivityId() {
@@ -70,6 +72,10 @@ public class RecorderExecutionListener implements ExecutionListener, Serializabl
       return activityInstanceId;
     }
 
+    public String getTransitionId() {
+      return transitionId;
+    }
+
   }
 
   public void notify(DelegateExecution execution) throws Exception {
@@ -89,7 +95,8 @@ public class RecorderExecutionListener implements ExecutionListener, Serializabl
                     activityName,
                     execution.getEventName(),
                     parameterValue,
-                    execution.getActivityInstanceId()));
+                    execution.getActivityInstanceId(),
+                    execution.getCurrentTransitionId()));
   }
 
   public static void clear() {
