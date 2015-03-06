@@ -12,18 +12,14 @@
  */
 package org.camunda.bpm.engine.impl.pvm.runtime.operation;
 
-import org.camunda.bpm.engine.impl.core.model.CoreModelElement;
-import org.camunda.bpm.engine.impl.core.operation.AbstractEventAtomicOperation;
-import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
+
 
 /**
- * @author Daniel Meyer
- * @author Roman Smirnov
- * @author Sebastian Menski
- *
+ * @author Tom Baeyens
  */
-public abstract class AbstractPvmEventAtomicOperation extends AbstractEventAtomicOperation<PvmExecutionImpl> implements PvmAtomicOperation {
+public class PvmAtomicOperationStartTransitionNotifyListenerTake extends AbstractPvmAtomicOperationTransitionNotifyListenerTake {
 
-  protected abstract CoreModelElement getScope(PvmExecutionImpl execution);
-
+  public String getCanonicalName() {
+    return "start-transition-notify-listener-take";
+  }
 }

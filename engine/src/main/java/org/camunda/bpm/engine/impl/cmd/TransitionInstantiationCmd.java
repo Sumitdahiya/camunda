@@ -13,31 +13,30 @@
 package org.camunda.bpm.engine.impl.cmd;
 
 import org.camunda.bpm.engine.impl.core.model.CoreModelElement;
-import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
 import org.camunda.bpm.engine.impl.pvm.process.ProcessDefinitionImpl;
 import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
+import org.camunda.bpm.engine.impl.pvm.process.TransitionImpl;
 
 /**
  * @author Thorben Lindhauer
  *
  */
-public class ActivityInstantiationCmd extends AbstractInstantiationCmd {
+public class TransitionInstantiationCmd extends AbstractInstantiationCmd {
 
-  protected String activityId;
+  protected String transitionId;
 
-  public ActivityInstantiationCmd(String processInstanceId, String activityId) {
+  public TransitionInstantiationCmd(String processInstanceId, String transitionId) {
     super(processInstanceId);
-    this.activityId = activityId;
+    this.transitionId = transitionId;
   }
 
   protected ScopeImpl getTargetFlowScope(ProcessDefinitionImpl processDefinition) {
-    ActivityImpl activity = processDefinition.findActivity(activityId);
-    return activity.getFlowScope();
+    TransitionImpl transition = processDefinition.findTransition(transitionId);
+    return transition.getSource().getFlowScope();
   }
 
   protected CoreModelElement getTargetElement(ProcessDefinitionImpl processDefinition) {
-    ActivityImpl activity = processDefinition.findActivity(activityId);
-    return activity;
+    TransitionImpl transition = processDefinition.findTransition(transitionId);
+    return transition;
   }
-
 }

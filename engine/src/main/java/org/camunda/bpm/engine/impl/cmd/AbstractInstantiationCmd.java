@@ -20,9 +20,12 @@ import java.util.Set;
 import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.impl.ActivityExecutionMapping;
 import org.camunda.bpm.engine.impl.bpmn.parser.BpmnParse;
+import org.camunda.bpm.engine.impl.core.model.CoreModelElement;
+import org.camunda.bpm.engine.impl.core.variable.VariableMapImpl;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
 import org.camunda.bpm.engine.impl.pvm.PvmActivity;
+import org.camunda.bpm.engine.impl.pvm.PvmTransition;
 import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
 import org.camunda.bpm.engine.impl.pvm.process.ProcessDefinitionImpl;
 import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
@@ -33,19 +36,42 @@ import org.camunda.bpm.engine.variable.VariableMap;
  * @author Thorben Lindhauer
  *
  */
-public class ActivityInstantiationBeforeCmd extends ActivityInstantiationCmd {
+public abstract class AbstractInstantiationCmd extends AbstractProcessInstanceModificationCommand {
 
-  public ActivityInstantiationBeforeCmd(String processInstanceId, String activityId) {
-    super(processInstanceId, activityId);
+  protected VariableMap variables;
+  protected VariableMap variablesLocal;
+
+
+  public AbstractInstantiationCmd(String processInstanceId) {
+    super(processInstanceId);
+    this.variables = new VariableMapImpl();
+    this.variablesLocal = new VariableMapImpl();
+
+  }
+
+  public void addVariable(String name, Object value) {
+    this.variables.put(name, value);
+  }
+
+  public void addVariableLocal(String name, Object value) {
+    this.variablesLocal.put(name, value);
+  }
+
+  public VariableMap getVariables() {
+    return variables;
+  }
+
+  public VariableMap getVariablesLocal() {
+    return variablesLocal;
   }
 
   public Void execute(CommandContext commandContext) {
     ExecutionEntity processInstance = commandContext.getExecutionManager().findExecutionById(processInstanceId);
     ProcessDefinitionImpl processDefinition = processInstance.getProcessDefinition();
 
-    ActivityImpl activity = processDefinition.findActivity(activityId);
+    CoreModelElement elementToInstantiate = getTargetElement(processDefinition);
 
-    EnsureUtil.ensureNotNull("activity", activity);
+    EnsureUtil.ensureNotNull("element", elementToInstantiate);
 
     // rebuild the mapping because the execution tree changes with every iteration
     ActivityExecutionMapping mapping = new ActivityExecutionMapping(commandContext, processInstanceId);
@@ -61,10 +87,9 @@ public class ActivityInstantiationBeforeCmd extends ActivityInstantiationCmd {
     // This is typically the execution under which a new sub tree has to be created
 
     List<PvmActivity> activitiesToInstantiate = new ArrayList<PvmActivity>();
-    activitiesToInstantiate.add(activity);
 
     // builds the activity stack of flow scopes for which no executions exist yet
-    ScopeImpl flowScope = activity.getFlowScope();
+    ScopeImpl flowScope = getTargetFlowScope(processDefinition);
 
     Set<ExecutionEntity> flowScopeExecutions = mapping.getExecutions(flowScope);
     while (flowScopeExecutions.isEmpty()) {
@@ -87,9 +112,16 @@ public class ActivityInstantiationBeforeCmd extends ActivityInstantiationCmd {
     //   right away
     // - interrupting or cancelling activities for which we have to ensure that
     //   the interruption and cancellation takes place before we instantiate the activity stack
-    ActivityImpl topMostActivity = (ActivityImpl) activitiesToInstantiate.get(0);
+    ActivityImpl topMostActivity = null;
+    if (!activitiesToInstantiate.isEmpty()) {
+      topMostActivity = (ActivityImpl) activitiesToInstantiate.get(0);
+    }
+    else if (ActivityImpl.class.isAssignableFrom(elementToInstantiate.getClass())) {
+      topMostActivity = (ActivityImpl) elementToInstantiate;
+    }
+
     boolean isCancelScope = false;
-    if (topMostActivity.isCancelScope()) {
+    if (topMostActivity != null && topMostActivity.isCancelScope()) {
       if (activitiesToInstantiate.size() > 1) {
         // this is in BPMN relevant if there is an interrupting event sub process.
         // we have to distinguish between instantiation of the start event and any other activity.
@@ -122,30 +154,35 @@ public class ActivityInstantiationBeforeCmd extends ActivityInstantiationCmd {
           // perform interruption
           // TODO: the delete reason is a hack
           interruptedExecution.cancelScope("Interrupting event sub process "+ topMostActivity + " fired.");
-          interruptedExecution.executeActivities(activitiesToInstantiate, variables, variablesLocal);
+          instantiate(scopeExecution, activitiesToInstantiate);
+//          interruptedExecution.executeActivities(activitiesToInstantiate, activity, null, variables, variablesLocal);
         }
         else {
           // perform cancellation
           // TODO: the delete reason is a hack
           scopeExecution.cancelScope("Cancel scope activity " + topMostActivity + " executed.");
-          scopeExecution.executeActivities(activitiesToInstantiate, variables, variablesLocal);
+          instantiate(scopeExecution, activitiesToInstantiate);
+//          scopeExecution.executeActivities(activitiesToInstantiate, activity, null, variables, variablesLocal);
 
         }
       }
       else {
         // if there is nothing to cancel, the activity can simply be instantiated.
-        scopeExecution.executeActivitiesConcurrent(activitiesToInstantiate, variables, variablesLocal);
+        instantiateConcurrent(scopeExecution, activitiesToInstantiate);
+//        scopeExecution.executeActivitiesConcurrent(activitiesToInstantiate, activity, null, variables, variablesLocal);
 
       }
     }
     else {
       if (scopeExecution.getExecutions().isEmpty() && scopeExecution.getActivity() == null) {
         // reuse the scope execution
-        scopeExecution.executeActivities(activitiesToInstantiate, variables, variablesLocal);
+        instantiate(scopeExecution, activitiesToInstantiate);
+//        scopeExecution.executeActivities(activitiesToInstantiate, activity, null, variables, variablesLocal);
       } else {
         // if the activity is not cancelling/interrupting, it can simply be instantiated as
         // a concurrent child of the scopeExecution
-        scopeExecution.executeActivitiesConcurrent(activitiesToInstantiate, variables, variablesLocal);
+        instantiateConcurrent(scopeExecution, activitiesToInstantiate);
+//        scopeExecution.executeActivitiesConcurrent(activitiesToInstantiate, activity, null, variables, variablesLocal);
 
       }
 
@@ -153,4 +190,40 @@ public class ActivityInstantiationBeforeCmd extends ActivityInstantiationCmd {
 
     return null;
   }
+
+  protected void instantiate(ExecutionEntity ancestorScopeExecution, List<PvmActivity> parentFlowScopes) {
+    CoreModelElement targetElement = getTargetElement(ancestorScopeExecution.getProcessDefinition());
+
+    if (PvmTransition.class.isAssignableFrom(targetElement.getClass())) {
+      ancestorScopeExecution.executeActivities(parentFlowScopes, null, (PvmTransition) targetElement, variables, variablesLocal);
+    }
+    else if (PvmActivity.class.isAssignableFrom(targetElement.getClass())) {
+      ancestorScopeExecution.executeActivities(parentFlowScopes, (PvmActivity) targetElement, null, variables, variablesLocal);
+
+    }
+    else {
+      throw new ProcessEngineException("Cannot instantiate element " + targetElement);
+    }
+  }
+
+
+  protected void instantiateConcurrent(ExecutionEntity ancestorScopeExecution, List<PvmActivity> parentFlowScopes) {
+    CoreModelElement targetElement = getTargetElement(ancestorScopeExecution.getProcessDefinition());
+
+    if (PvmTransition.class.isAssignableFrom(targetElement.getClass())) {
+      ancestorScopeExecution.executeActivitiesConcurrent(parentFlowScopes, null, (PvmTransition) targetElement, variables, variablesLocal);
+    }
+    else if (PvmActivity.class.isAssignableFrom(targetElement.getClass())) {
+      ancestorScopeExecution.executeActivitiesConcurrent(parentFlowScopes, (PvmActivity) targetElement, null, variables, variablesLocal);
+
+    }
+    else {
+      throw new ProcessEngineException("Cannot instantiate element " + targetElement);
+    }
+  }
+
+  protected abstract ScopeImpl getTargetFlowScope(ProcessDefinitionImpl processDefinition);
+
+  protected abstract CoreModelElement getTargetElement(ProcessDefinitionImpl processDefinition);
+
 }

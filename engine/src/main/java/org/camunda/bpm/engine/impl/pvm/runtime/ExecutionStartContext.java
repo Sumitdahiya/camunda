@@ -25,7 +25,7 @@ import org.camunda.bpm.engine.impl.pvm.PvmActivity;
  */
 public class ExecutionStartContext {
 
-  protected List<PvmActivity> activityStack;
+  protected InstantiationStack instantiationStack;
   protected Map<String, Object> variables;
   protected Map<String, Object> variablesLocal;
 
@@ -51,12 +51,12 @@ public class ExecutionStartContext {
     execution.setVariablesLocal(variablesLocal);
   }
 
-  public List<PvmActivity> getActivityStack() {
-    return activityStack;
+  public InstantiationStack getInstantiationStack() {
+    return instantiationStack;
   }
 
-  public void setActivityStack(List<PvmActivity> activityStack) {
-    this.activityStack = activityStack;
+  public void setInstantiationStack(InstantiationStack instantiationStack) {
+    this.instantiationStack = instantiationStack;
   }
 
   public void setVariables(Map<String, Object> variables) {

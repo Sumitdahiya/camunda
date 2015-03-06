@@ -137,6 +137,8 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
   // TODO: test cases
   // - start after activity with 0 or 1 outgoing transitions
   // - start after should not respect the async:after property of the activity
+  // - assert that start transition with variables does not result in activity instance ids
+  //   of the following tasks for the historic variable events
 
   @Deployment(resources = EXCLUSIVE_GATEWAY_PROCESS)
   public void testStartTransition() {

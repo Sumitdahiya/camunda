@@ -35,6 +35,7 @@ import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
 import org.camunda.bpm.engine.impl.pvm.process.TransitionImpl;
 import org.camunda.bpm.engine.impl.pvm.runtime.operation.FoxAtomicOperationDeleteCascadeFireActivityEnd;
 import org.camunda.bpm.engine.impl.pvm.runtime.operation.PvmAtomicOperation;
+import org.camunda.bpm.engine.impl.util.EnsureUtil;
 
 /**
  * @author Daniel Meyer
@@ -312,12 +313,8 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
    *
    * @param activityStack The most deeply nested activity is the last element in the list
    */
-  public void executeActivitiesConcurrent(List<PvmActivity> activityStack,
-      Map<String, Object> variables, Map<String, Object> localVariables) {
-
-    if (activityStack.isEmpty()) {
-      return;
-    }
+  public void executeActivitiesConcurrent(List<PvmActivity> activityStack, PvmActivity targetActivity,
+      PvmTransition targetTransition, Map<String, Object> variables, Map<String, Object> localVariables) {
 
     // The following covers the three cases in which a concurrent execution may be created
     // (this execution is the root in each scenario):
@@ -394,7 +391,7 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
     propagatingExecution.setConcurrent(true);
     propagatingExecution.setScope(false);
 
-    propagatingExecution.executeActivities(activityStack, variables, localVariables);
+    propagatingExecution.executeActivities(activityStack, targetActivity, targetTransition, variables, localVariables);
 
   }
 
@@ -406,24 +403,34 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
    *
    * @param activityStack The most deeply nested activity is the last element in the list
    */
-  public void executeActivities(List<PvmActivity> activityStack,
-      Map<String, Object> variables, Map<String, Object> localVariables) {
+  public void executeActivities(List<PvmActivity> activityStack, PvmActivity targetActivity,
+      PvmTransition targetTransition, Map<String, Object> variables, Map<String, Object> localVariables) {
 
     ExecutionStartContext executionStartContext = new ExecutionStartContext();
-    executionStartContext.setActivityStack(activityStack);
+
+    InstantiationStack instantiationStack = new InstantiationStack(activityStack, targetActivity, targetTransition);
+    executionStartContext.setInstantiationStack(instantiationStack);
     executionStartContext.setVariables(variables);
     executionStartContext.setVariablesLocal(localVariables);
     setStartContext(executionStartContext);
 
-    if (activityStack.size() > 1) {
+    if (!activityStack.isEmpty()) {
       performOperation(PvmAtomicOperation.ACTIVITY_INIT_STACK);
 
-    } else {
+    }
+    else if (targetActivity != null) {
       setVariables(variables);
       setVariablesLocal(localVariables);
-      setActivity(activityStack.get(0));
+      setActivity(targetActivity);
       performOperation(PvmAtomicOperation.ACTIVITY_START_CREATE_SCOPE);
 
+    }
+    else if (targetTransition != null) {
+      setVariables(variables);
+      setVariablesLocal(localVariables);
+      setActivity(targetTransition.getSource());
+      setTransition((TransitionImpl) targetTransition);
+      performOperation(PvmAtomicOperation.TRANSITION_START_NOTIFY_LISTENER_TAKE);
     }
   }
 
