@@ -39,6 +39,8 @@ public class ActivityCancellationCmd extends AbstractProcessInstanceModification
     List<ActivityInstance> childrenForActivity = getInstancesForActivity(activityInstanceTree, activityId);
     for (ActivityInstance instance : childrenForActivity) {
       ActivityInstanceCancellationCmd cmd = new ActivityInstanceCancellationCmd(processInstanceId, instance.getId());
+      cmd.setSkipCustomListeners(skipCustomListeners);
+      cmd.setSkipIoMappings(skipIoMappings);
       cmd.execute(commandContext);
     }
 

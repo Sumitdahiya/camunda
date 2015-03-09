@@ -52,6 +52,8 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
   protected static final String TASK_LISTENER_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.taskListeners.bpmn20.xml";
   protected static final String IO_MAPPING_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.ioMapping.bpmn20.xml";
 
+  // TODO: test instantiation with explicit parent scope
+
   @Deployment(resources = PARALLEL_GATEWAY_PROCESS)
   public void testCancellation() {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("parallelGateway");
@@ -567,8 +569,7 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
       .cancelActivityInstance(innerTaskInstance.getId())
       .execute();
 
-    // this is due to skipCustomListeners configuration on deletion
-    assertTrue(RecorderExecutionListener.getRecordedEvents().isEmpty());
+    assertEquals(2, RecorderExecutionListener.getRecordedEvents().size());
   }
 
   @Deployment(resources = SUBPROCESS_LISTENER_PROCESS)

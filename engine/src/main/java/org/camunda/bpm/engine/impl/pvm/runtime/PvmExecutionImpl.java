@@ -162,22 +162,25 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
     }
   }
 
-  public void cancelScope(String reason) {
+  public void cancelScope(String reason, boolean skipCustomListeners, boolean skipIoMappings) {
+    this.skipCustomListeners = skipCustomListeners;
+    this.skipIoMapping = skipIoMappings;
+
     if(log.isLoggable(Level.FINE)) {
       log.fine("performing cancel scope behavior for execution "+this);
     }
 
     if (getSubProcessInstance() != null) {
-      getSubProcessInstance().deleteCascade(reason);
+      getSubProcessInstance().deleteCascade(reason, skipCustomListeners, skipIoMappings);
     }
 
     // remove all child executions and sub process instances:
     List<PvmExecutionImpl> executions = new ArrayList<PvmExecutionImpl>(getExecutions());
     for (PvmExecutionImpl childExecution : executions) {
       if (childExecution.getSubProcessInstance()!=null) {
-        childExecution.getSubProcessInstance().deleteCascade(reason);
+        childExecution.getSubProcessInstance().deleteCascade(reason, skipCustomListeners, skipIoMappings);
       }
-      childExecution.deleteCascade(reason);
+      childExecution.deleteCascade(reason, skipCustomListeners, skipIoMappings);
     }
 
     // set activity instance state to cancel
@@ -193,6 +196,10 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
     // -> execution will be reused for executing more activities and we want the state to
     // be default initially.
     activityInstanceState = ActivityInstanceState.DEFAULT.getStateCode();
+  }
+
+  public void cancelScope(String reason) {
+    cancelScope(reason, false, false);
   }
 
   /** removes an execution. if there are nested executions, those will be ended recursively.
@@ -233,10 +240,15 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
   }
 
   public void deleteCascade(String deleteReason, boolean skipCustomListeners) {
+    deleteCascade(deleteReason, skipCustomListeners, false);
+  }
+
+  public void deleteCascade(String deleteReason, boolean skipCustomListeners, boolean skipIoMappings) {
     this.deleteReason = deleteReason;
     this.deleteRoot = true;
     this.isEnded = true;
     this.skipCustomListeners = skipCustomListeners;
+    this.skipIoMapping = skipIoMappings;
     performOperation(PvmAtomicOperation.DELETE_CASCADE);
   }
 
@@ -314,7 +326,8 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
    * @param activityStack The most deeply nested activity is the last element in the list
    */
   public void executeActivitiesConcurrent(List<PvmActivity> activityStack, PvmActivity targetActivity,
-      PvmTransition targetTransition, Map<String, Object> variables, Map<String, Object> localVariables) {
+      PvmTransition targetTransition, Map<String, Object> variables, Map<String, Object> localVariables,
+      boolean skipCustomListeners, boolean skipIoMappings) {
 
     // The following covers the three cases in which a concurrent execution may be created
     // (this execution is the root in each scenario):
@@ -391,7 +404,8 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
     propagatingExecution.setConcurrent(true);
     propagatingExecution.setScope(false);
 
-    propagatingExecution.executeActivities(activityStack, targetActivity, targetTransition, variables, localVariables);
+    propagatingExecution.executeActivities(activityStack, targetActivity, targetTransition, variables, localVariables,
+        skipCustomListeners, skipIoMappings);
 
   }
 
@@ -404,7 +418,8 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
    * @param activityStack The most deeply nested activity is the last element in the list
    */
   public void executeActivities(List<PvmActivity> activityStack, PvmActivity targetActivity,
-      PvmTransition targetTransition, Map<String, Object> variables, Map<String, Object> localVariables) {
+      PvmTransition targetTransition, Map<String, Object> variables, Map<String, Object> localVariables,
+      boolean skipCustomListeners, boolean skipIoMappings) {
 
     ExecutionStartContext executionStartContext = new ExecutionStartContext();
 
@@ -413,6 +428,9 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
     executionStartContext.setVariables(variables);
     executionStartContext.setVariablesLocal(localVariables);
     setStartContext(executionStartContext);
+
+    this.skipCustomListeners = skipCustomListeners;
+    this.skipIoMapping = skipIoMappings;
 
     if (!activityStack.isEmpty()) {
       performOperation(PvmAtomicOperation.ACTIVITY_INIT_STACK);

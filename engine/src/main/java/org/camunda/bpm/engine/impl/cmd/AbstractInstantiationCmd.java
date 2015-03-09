@@ -161,37 +161,29 @@ public abstract class AbstractInstantiationCmd extends AbstractProcessInstanceMo
         if (scopeToCancel == topMostActivity.getFlowScope()) {
           // perform interruption
           // TODO: the delete reason is a hack
-          interruptedExecution.cancelScope("Interrupting event sub process "+ topMostActivity + " fired.");
+          interruptedExecution.cancelScope("Interrupting event sub process "+ topMostActivity + " fired.", skipCustomListeners, skipIoMappings);
           instantiate(scopeExecution, activitiesToInstantiate);
-//          interruptedExecution.executeActivities(activitiesToInstantiate, activity, null, variables, variablesLocal);
         }
         else {
           // perform cancellation
           // TODO: the delete reason is a hack
-          scopeExecution.cancelScope("Cancel scope activity " + topMostActivity + " executed.");
+          scopeExecution.cancelScope("Cancel scope activity " + topMostActivity + " executed.", skipCustomListeners, skipIoMappings);
           instantiate(scopeExecution, activitiesToInstantiate);
-//          scopeExecution.executeActivities(activitiesToInstantiate, activity, null, variables, variablesLocal);
-
         }
       }
       else {
         // if there is nothing to cancel, the activity can simply be instantiated.
         instantiateConcurrent(scopeExecution, activitiesToInstantiate);
-//        scopeExecution.executeActivitiesConcurrent(activitiesToInstantiate, activity, null, variables, variablesLocal);
-
       }
     }
     else {
       if (scopeExecution.getExecutions().isEmpty() && scopeExecution.getActivity() == null) {
         // reuse the scope execution
         instantiate(scopeExecution, activitiesToInstantiate);
-//        scopeExecution.executeActivities(activitiesToInstantiate, activity, null, variables, variablesLocal);
       } else {
         // if the activity is not cancelling/interrupting, it can simply be instantiated as
         // a concurrent child of the scopeExecution
         instantiateConcurrent(scopeExecution, activitiesToInstantiate);
-//        scopeExecution.executeActivitiesConcurrent(activitiesToInstantiate, activity, null, variables, variablesLocal);
-
       }
 
     }
@@ -203,10 +195,12 @@ public abstract class AbstractInstantiationCmd extends AbstractProcessInstanceMo
     CoreModelElement targetElement = getTargetElement(ancestorScopeExecution.getProcessDefinition());
 
     if (PvmTransition.class.isAssignableFrom(targetElement.getClass())) {
-      ancestorScopeExecution.executeActivities(parentFlowScopes, null, (PvmTransition) targetElement, variables, variablesLocal);
+      ancestorScopeExecution.executeActivities(parentFlowScopes, null, (PvmTransition) targetElement, variables, variablesLocal,
+          skipCustomListeners, skipIoMappings);
     }
     else if (PvmActivity.class.isAssignableFrom(targetElement.getClass())) {
-      ancestorScopeExecution.executeActivities(parentFlowScopes, (PvmActivity) targetElement, null, variables, variablesLocal);
+      ancestorScopeExecution.executeActivities(parentFlowScopes, (PvmActivity) targetElement, null, variables, variablesLocal,
+          skipCustomListeners, skipIoMappings);
 
     }
     else {
@@ -219,10 +213,12 @@ public abstract class AbstractInstantiationCmd extends AbstractProcessInstanceMo
     CoreModelElement targetElement = getTargetElement(ancestorScopeExecution.getProcessDefinition());
 
     if (PvmTransition.class.isAssignableFrom(targetElement.getClass())) {
-      ancestorScopeExecution.executeActivitiesConcurrent(parentFlowScopes, null, (PvmTransition) targetElement, variables, variablesLocal);
+      ancestorScopeExecution.executeActivitiesConcurrent(parentFlowScopes, null, (PvmTransition) targetElement, variables,
+          variablesLocal, skipCustomListeners, skipIoMappings);
     }
     else if (PvmActivity.class.isAssignableFrom(targetElement.getClass())) {
-      ancestorScopeExecution.executeActivitiesConcurrent(parentFlowScopes, (PvmActivity) targetElement, null, variables, variablesLocal);
+      ancestorScopeExecution.executeActivitiesConcurrent(parentFlowScopes, (PvmActivity) targetElement, null, variables,
+          variablesLocal, skipCustomListeners, skipIoMappings);
 
     }
     else {

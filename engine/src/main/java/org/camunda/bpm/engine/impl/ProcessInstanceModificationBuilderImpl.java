@@ -41,6 +41,9 @@ public class ProcessInstanceModificationBuilderImpl implements ProcessInstanceMo
 
   protected String processInstanceId;
 
+  protected boolean skipCustomListeners = false;
+  protected boolean skipIoMappings = false;
+
   protected List<AbstractProcessInstanceModificationCommand> operations = new ArrayList<AbstractProcessInstanceModificationCommand>();
 
   protected AbstractInstantiationCmd currentInstantiation;
@@ -111,16 +114,19 @@ public class ProcessInstanceModificationBuilderImpl implements ProcessInstanceMo
   }
 
   public void execute() {
+    execute(false, false);
+  }
+
+  public void execute(boolean skipCustomerListeners, boolean skipIoMappings) {
+    this.skipCustomListeners = skipCustomerListeners;
+    this.skipIoMappings = skipIoMappings;
+
     ModifyProcessInstanceCmd cmd = new ModifyProcessInstanceCmd(this);
     if (commandExecutor != null) {
       commandExecutor.execute(cmd);
     } else {
       cmd.execute(commandContext);
     }
-  }
-
-  public void execute(boolean skipCustomerListeners, boolean skipIoMappings) {
-    execute();
   }
 
   public CommandExecutor getCommandExecutor() {
@@ -139,5 +145,11 @@ public class ProcessInstanceModificationBuilderImpl implements ProcessInstanceMo
     return operations;
   }
 
+  public boolean isSkipCustomListeners() {
+    return skipCustomListeners;
+  }
 
+  public boolean isSkipIoMappings() {
+    return skipIoMappings;
+  }
 }

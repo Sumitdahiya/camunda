@@ -243,6 +243,9 @@ public class ExecutionEntity extends PvmExecutionImpl implements
       createdExecution.setStartContext(startContext);
     }
 
+    createdExecution.skipCustomListeners = this.skipCustomListeners;
+    createdExecution.skipIoMapping = this.skipIoMapping;
+
     if (log.isLoggable(Level.FINE)) {
       log.fine("Child execution "+createdExecution+" created with parent "+this);
     }
@@ -391,7 +394,7 @@ public class ExecutionEntity extends PvmExecutionImpl implements
 
     // execute Input Mappings (if they exist).
     ensureActivityInitialized();
-    if (activity != null && activity.getIoMapping() != null) {
+    if (activity != null && activity.getIoMapping() != null && !skipIoMapping) {
       activity.getIoMapping().executeInputParameters(this);
     }
 
@@ -440,7 +443,7 @@ public class ExecutionEntity extends PvmExecutionImpl implements
 
     // execute Output Mappings (if they exist).
     ensureActivityInitialized();
-    if (activity != null && activity.getIoMapping() != null) {
+    if (activity != null && activity.getIoMapping() != null && !skipIoMapping) {
       activity.getIoMapping().executeOutputParameters(this);
     }
 
@@ -462,12 +465,12 @@ public class ExecutionEntity extends PvmExecutionImpl implements
     removeIncidents();
   }
 
-  public void cancelScope(String reason) {
+  public void cancelScope(String reason, boolean skipCustomListeners, boolean skipIoMappings) {
 
     // remove all tasks associated with this execution.
     removeTasks(reason);
 
-    super.cancelScope(reason);
+    super.cancelScope(reason, skipCustomListeners, skipIoMappings);
 
   }
 

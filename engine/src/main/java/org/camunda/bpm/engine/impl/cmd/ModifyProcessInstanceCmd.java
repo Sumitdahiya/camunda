@@ -13,7 +13,6 @@
 package org.camunda.bpm.engine.impl.cmd;
 
 
-import org.camunda.bpm.engine.impl.ActivityExecutionMapping;
 import org.camunda.bpm.engine.impl.ProcessInstanceModificationBuilderImpl;
 import org.camunda.bpm.engine.impl.interceptor.Command;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
@@ -34,17 +33,16 @@ public class ModifyProcessInstanceCmd implements Command<Void> {
   public Void execute(CommandContext commandContext) {
     String processInstanceId = builder.getProcessInstanceId();
 
-    ActivityExecutionMapping priorMapping = new ActivityExecutionMapping(commandContext, processInstanceId);
-
     for (AbstractProcessInstanceModificationCommand instruction : builder.getModificationOperations()) {
-      instruction.setPriorMapping(priorMapping);
+      instruction.setSkipCustomListeners(builder.isSkipCustomListeners());
+      instruction.setSkipIoMappings(builder.isSkipIoMappings());
       instruction.execute(commandContext);
     }
 
     ExecutionEntity processInstance = commandContext.getExecutionManager().findExecutionById(processInstanceId);
     if (processInstance.getExecutions().isEmpty() && processInstance.getActivity() == null) {
       // TODO: deletion reason?
-      processInstance.deleteCascade("Cancellation via API");
+      processInstance.deleteCascade("Cancellation via API", builder.isSkipCustomListeners());
     }
 
 

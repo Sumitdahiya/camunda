@@ -20,7 +20,6 @@ import org.camunda.bpm.engine.impl.pvm.PvmTransition;
 import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
 import org.camunda.bpm.engine.impl.pvm.process.ProcessDefinitionImpl;
 import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
-import org.camunda.bpm.engine.impl.pvm.process.TransitionImpl;
 
 /**
  * @author Thorben Lindhauer
@@ -49,6 +48,8 @@ public class ActivityAfterInstantiationCmd extends AbstractInstantiationCmd {
       PvmTransition outgoingTransition = activity.getOutgoingTransitions().get(0);
       TransitionInstantiationCmd transitionInstantiationCmd =
           new TransitionInstantiationCmd(processInstanceId, outgoingTransition.getId());
+      transitionInstantiationCmd.setSkipCustomListeners(skipCustomListeners);
+      transitionInstantiationCmd.setSkipIoMappings(skipIoMappings);
       transitionInstantiationCmd.execute(commandContext);
     }
     else {

@@ -34,7 +34,6 @@ public class ActivityInstanceCancellationCmd extends AbstractProcessInstanceModi
 
   protected String activityInstanceId;
 
-
   public ActivityInstanceCancellationCmd(String processInstanceId, String activityInstanceId) {
     super(processInstanceId);
     this.activityInstanceId = activityInstanceId;
@@ -94,13 +93,13 @@ public class ActivityInstanceCancellationCmd extends AbstractProcessInstanceModi
     // TODO: cancel reason
 
     if (topmostCancellableExecution.isProcessInstanceExecution()) {
-      topmostCancellableExecution.cancelScope("Cancellation via API");
+      topmostCancellableExecution.cancelScope("Cancellation via API", skipCustomListeners, skipIoMappings);
       // TODO: the following instruction should go into #cancelScope but this breaks some things like
       // transaction subprocesses
       topmostCancellableExecution.leaveActivityInstance();
       topmostCancellableExecution.setActivity(null);
     } else {
-      topmostCancellableExecution.deleteCascade("Cancellation via API");
+      topmostCancellableExecution.deleteCascade("Cancellation via API", skipCustomListeners, skipIoMappings);
       topmostCancellableExecution.removeFromParentScope();
 
     }

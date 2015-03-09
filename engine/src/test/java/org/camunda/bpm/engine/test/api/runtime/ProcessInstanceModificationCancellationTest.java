@@ -1520,12 +1520,12 @@ public class ProcessInstanceModificationCancellationTest extends PluggableProces
     // cancel inner task
     runtimeService.createProcessInstanceModification(processInstance.getId())
       .cancelActivityInstance(getInstanceIdForActivity(tree, "innerTask"))
-      .execute();
+      .execute(false, true);
 
     // cancel outer task
     runtimeService.createProcessInstanceModification(processInstance.getId())
       .cancelActivityInstance(getInstanceIdForActivity(tree, "outerTask"))
-      .execute();
+      .execute(false, true);
 
     assertProcessEnded(processInstance.getId());
   }
