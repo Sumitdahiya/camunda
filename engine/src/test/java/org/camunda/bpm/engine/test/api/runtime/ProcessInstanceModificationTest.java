@@ -22,7 +22,6 @@ import java.util.List;
 
 import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.delegate.ExecutionListener;
-import org.camunda.bpm.engine.history.HistoricVariableInstance;
 import org.camunda.bpm.engine.impl.test.PluggableProcessEngineTestCase;
 import org.camunda.bpm.engine.runtime.ActivityInstance;
 import org.camunda.bpm.engine.runtime.Execution;
@@ -136,9 +135,6 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
 
   // TODO: test cases
   // - start after activity with 0 or 1 outgoing transitions
-  // - start after should not respect the async:after property of the activity
-  // - assert that start transition with variables does not result in activity instance ids
-  //   of the following tasks for the historic variable events
 
   @Deployment(resources = EXCLUSIVE_GATEWAY_PROCESS)
   public void testStartTransition() {
@@ -281,6 +277,26 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
 
     } catch (ProcessEngineException e) {
       // happy path
+      assertTextPresent("activity has more than one outgoing sequence flow", e.getMessage());
+    }
+  }
+
+  @Deployment(resources = EXCLUSIVE_GATEWAY_PROCESS)
+  public void testStartAfterActivityNoOutgoingTransitions() {
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("exclusiveGateway");
+    String processInstanceId = processInstance.getId();
+
+    try {
+      runtimeService
+        .createProcessInstanceModification(processInstanceId)
+        .startAfterActivity("theEnd")
+        .execute();
+
+      fail("should not suceed since 'theEnd' has no outgoing sequence flow");
+
+    } catch (ProcessEngineException e) {
+      // happy path
+      assertTextPresent("activity has no outgoing sequence flow to take", e.getMessage());
     }
   }
 
@@ -349,6 +365,10 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
       .done());
 
     // when starting after the start event, regular concurrency happens
+    runtimeService
+      .createProcessInstanceModification(processInstance.getId())
+      .startAfterActivity("theStart")
+      .execute();
 
     updatedTree = runtimeService.getActivityInstance(processInstanceId);
     assertNotNull(updatedTree);
@@ -431,38 +451,29 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
     assertProcessEnded(processInstanceId);
   }
 
-  @Deployment(resources = SUBPROCESS_PROCESS)
-  public void testStartBeforeInNestedScope() {
-    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("subprocess");
+  /**
+   * starting after a task should not respect that tasks asyncAfter setting
+   */
+  @Deployment
+  public void testStartAfterAsync() {
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("exclusiveGateway");
     String processInstanceId = processInstance.getId();
 
     runtimeService
       .createProcessInstanceModification(processInstance.getId())
-      .startBeforeActivity("innerTask")
+      .startAfterActivity("task2")
       .execute();
 
-    ActivityInstance updatedTree = runtimeService.getActivityInstance(processInstanceId);
-    assertNotNull(updatedTree);
-    assertEquals(processInstanceId, updatedTree.getProcessInstanceId());
+    // there is now a job for the end event after task2
+    Job job = managementService.createJobQuery().singleResult();
+    assertNotNull(job);
 
-    assertThat(updatedTree).hasStructure(
-      describeActivityInstanceTree(processInstance.getProcessDefinitionId())
-        .activity("outerTask")
-        .beginScope("subProcess")
-          .activity("innerTask")
-      .done());
+    Execution jobExecution = runtimeService.createExecutionQuery().activityId("end2").executionId(job.getExecutionId()).singleResult();
+    assertNotNull(jobExecution);
 
-    ExecutionTree executionTree = ExecutionTree.forExecution(processInstanceId, processEngine);
-
-    assertThat(executionTree)
-      .matches(
-        describeExecutionTree(null).scope()
-          .child("outerTask").concurrent().noScope().up()
-          .child(null).concurrent().noScope()
-            .child("innerTask").scope()
-        .done());
-
-    completeTasksInOrder("innerTask", "outerTask", "innerTask");
+    // end process
+    completeTasksInOrder("task1");
+    managementService.executeJob(job.getId());
     assertProcessEnded(processInstanceId);
   }
 
@@ -672,45 +683,6 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
 
     completeTasksInOrder("task1", "task2");
     assertProcessEnded(processInstance.getId());
-  }
-
-  // TODO: move this test case somewhere so that it is only executed with appropriate
-  // history level
-  @Deployment(resources = EXCLUSIVE_GATEWAY_PROCESS)
-  public void testStartBeforeWithVariablesInHistory() {
-    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("exclusiveGateway");
-
-    runtimeService
-      .createProcessInstanceModification(processInstance.getId())
-      .startBeforeActivity("task2")
-      .setVariable("procInstVar", "procInstValue")
-      .setVariableLocal("localVar", "localValue")
-      .execute();
-
-    ActivityInstance updatedTree = runtimeService.getActivityInstance(processInstance.getId());
-    ActivityInstance task2Instance = getChildInstanceForActivity(updatedTree, "task2");
-
-    HistoricVariableInstance procInstVariable = historyService.createHistoricVariableInstanceQuery()
-      .variableName("procInstVar")
-      .singleResult();
-
-    assertNotNull(procInstVariable);
-    assertEquals(updatedTree.getId(), procInstVariable.getActivityInstanceId());
-    assertEquals("procInstVar", procInstVariable.getName());
-    assertEquals("procInstValue", procInstVariable.getValue());
-
-    HistoricVariableInstance localVariable = historyService.createHistoricVariableInstanceQuery()
-      .variableName("localVar")
-      .singleResult();
-
-    assertNotNull(localVariable);
-    assertEquals(task2Instance.getId(), localVariable.getActivityInstanceId());
-    assertEquals("localVar", localVariable.getName());
-    assertEquals("localValue", localVariable.getValue());
-
-    completeTasksInOrder("task1", "task2");
-    assertProcessEnded(processInstance.getId());
-
   }
 
   @Deployment(resources = EXCLUSIVE_GATEWAY_PROCESS)

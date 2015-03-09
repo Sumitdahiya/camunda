@@ -122,13 +122,21 @@ public abstract class AbstractInstantiationCmd extends AbstractProcessInstanceMo
 
     boolean isCancelScope = false;
     if (topMostActivity != null && topMostActivity.isCancelScope()) {
-      if (activitiesToInstantiate.size() > 1) {
+      if (!activitiesToInstantiate.isEmpty()) {
         // this is in BPMN relevant if there is an interrupting event sub process.
         // we have to distinguish between instantiation of the start event and any other activity.
         // instantiation of the start event means interrupting behavior; instantiation
         // of any other task means no interruption.
         ActivityImpl initialActivity = (ActivityImpl) topMostActivity.getProperty(BpmnParse.PROPERTYNAME_INITIAL);
-        if (initialActivity == activitiesToInstantiate.get(1)) {
+        ActivityImpl secondTopMostActivity = null;
+        if (activitiesToInstantiate.size() > 1) {
+          secondTopMostActivity = (ActivityImpl) activitiesToInstantiate.get(1);
+        }
+        else if (ActivityImpl.class.isAssignableFrom(elementToInstantiate.getClass())) {
+          secondTopMostActivity = (ActivityImpl) elementToInstantiate;
+        }
+
+        if (initialActivity == secondTopMostActivity) {
           isCancelScope = true;
         }
       }

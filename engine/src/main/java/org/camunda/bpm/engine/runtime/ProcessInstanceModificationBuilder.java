@@ -20,6 +20,8 @@ public interface ProcessInstanceModificationBuilder {
 
   ProcessInstanceModificationBuilder cancelActivityInstance(String activityInstanceId);
 
+  ProcessInstanceModificationBuilder cancelAllInActivity(String activityId);
+
   ProcessInstanceModificationBuilder startBeforeActivity(String activityId);
 
   ProcessInstanceModificationBuilder startAfterActivity(String activityId);

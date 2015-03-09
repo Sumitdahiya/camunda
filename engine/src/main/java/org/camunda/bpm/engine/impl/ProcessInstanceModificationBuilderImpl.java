@@ -20,7 +20,9 @@ import java.util.List;
 import org.camunda.bpm.engine.exception.NotValidException;
 import org.camunda.bpm.engine.impl.cmd.AbstractInstantiationCmd;
 import org.camunda.bpm.engine.impl.cmd.AbstractProcessInstanceModificationCommand;
+import org.camunda.bpm.engine.impl.cmd.ActivityAfterInstantiationCmd;
 import org.camunda.bpm.engine.impl.cmd.ActivityCancellationCmd;
+import org.camunda.bpm.engine.impl.cmd.ActivityInstanceCancellationCmd;
 import org.camunda.bpm.engine.impl.cmd.ActivityInstantiationCmd;
 import org.camunda.bpm.engine.impl.cmd.ModifyProcessInstanceCmd;
 import org.camunda.bpm.engine.impl.cmd.TransitionInstantiationCmd;
@@ -60,7 +62,13 @@ public class ProcessInstanceModificationBuilderImpl implements ProcessInstanceMo
 
   public ProcessInstanceModificationBuilder cancelActivityInstance(String activityInstanceId) {
     ensureNotNull("activityInstanceId", activityInstanceId);
-    operations.add(new ActivityCancellationCmd(processInstanceId, activityInstanceId));
+    operations.add(new ActivityInstanceCancellationCmd(processInstanceId, activityInstanceId));
+    return this;
+  }
+
+  public ProcessInstanceModificationBuilder cancelAllInActivity(String activityId) {
+    ensureNotNull("activityId", activityId);
+    operations.add(new ActivityCancellationCmd(processInstanceId, activityId));
     return this;
   }
 
@@ -73,9 +81,8 @@ public class ProcessInstanceModificationBuilderImpl implements ProcessInstanceMo
 
   public ProcessInstanceModificationBuilder startAfterActivity(String activityId) {
     ensureNotNull("activityId", activityId);
-    // TODO Implement
-//    currentInstantiation = new ActivityInstantiationAfterCmd(processInstanceId, activityId);
-//    operations.add(currentInstantiation);
+    currentInstantiation = new ActivityAfterInstantiationCmd(processInstanceId, activityId);
+    operations.add(currentInstantiation);
     return this;
   }
 
