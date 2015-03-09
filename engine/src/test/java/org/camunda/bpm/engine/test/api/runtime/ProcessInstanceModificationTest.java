@@ -31,6 +31,7 @@ import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.engine.test.Deployment;
 import org.camunda.bpm.engine.test.examples.bpmn.executionlistener.RecorderExecutionListener;
 import org.camunda.bpm.engine.test.examples.bpmn.executionlistener.RecorderExecutionListener.RecordedEvent;
+import org.camunda.bpm.engine.test.examples.bpmn.tasklistener.RecorderTaskListener;
 import org.camunda.bpm.engine.test.util.ExecutionTree;
 import org.camunda.bpm.engine.variable.Variables;
 
@@ -48,6 +49,8 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
   protected static final String SUBPROCESS_BOUNDARY_EVENTS_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.subprocessBoundaryEvents.bpmn20.xml";
   protected static final String ONE_SCOPE_TASK_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.oneScopeTaskProcess.bpmn20.xml";
   protected static final String TRANSITION_LISTENER_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.transitionListeners.bpmn20.xml";
+  protected static final String TASK_LISTENER_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.taskListeners.bpmn20.xml";
+  protected static final String IO_MAPPING_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.ioMapping.bpmn20.xml";
 
   @Deployment(resources = PARALLEL_GATEWAY_PROCESS)
   public void testCancellation() {
@@ -566,6 +569,105 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
 
     // this is due to skipCustomListeners configuration on deletion
     assertTrue(RecorderExecutionListener.getRecordedEvents().isEmpty());
+  }
+
+  @Deployment(resources = SUBPROCESS_LISTENER_PROCESS)
+  public void testSkipListenerInvocation() {
+    RecorderExecutionListener.clear();
+
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey(
+        "subprocess",
+        Collections.<String, Object>singletonMap("listener", new RecorderExecutionListener()));
+
+    String processInstanceId = processInstance.getId();
+
+    assertTrue(RecorderExecutionListener.getRecordedEvents().isEmpty());
+
+    // when I start an activity with "skip listeners" setting
+    runtimeService
+      .createProcessInstanceModification(processInstanceId)
+      .startBeforeActivity("innerTask")
+      .execute(true, false);
+
+    // then no listeners are invoked
+    assertTrue(RecorderExecutionListener.getRecordedEvents().isEmpty());
+
+    // when I cancel an activity with "skip listeners" setting
+    ActivityInstance activityInstanceTree = runtimeService.getActivityInstance(processInstanceId);
+
+    runtimeService
+      .createProcessInstanceModification(processInstance.getId())
+      .cancelActivityInstance(getChildInstanceForActivity(activityInstanceTree, "innerTask").getId())
+      .execute(true, false);
+
+    // then no listeners are invoked
+    assertTrue(RecorderExecutionListener.getRecordedEvents().isEmpty());
+
+    // when I cancel an activity that ends the process instance
+    runtimeService
+      .createProcessInstanceModification(processInstance.getId())
+      .cancelActivityInstance(getChildInstanceForActivity(activityInstanceTree, "outerTask").getId())
+      .execute(true, false);
+
+    // then no listeners are invoked
+    assertTrue(RecorderExecutionListener.getRecordedEvents().isEmpty());
+  }
+
+  @Deployment(resources = TASK_LISTENER_PROCESS)
+  public void testSkipTaskListenerInvocation() {
+    RecorderTaskListener.clear();
+
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey(
+        "taskListenerProcess",
+        Collections.<String, Object>singletonMap("listener", new RecorderTaskListener()));
+
+    String processInstanceId = processInstance.getId();
+
+    assertTrue(RecorderTaskListener.getRecordedEvents().isEmpty());
+
+    // when I start an activity with "skip listeners" setting
+    runtimeService
+      .createProcessInstanceModification(processInstanceId)
+      .startBeforeActivity("task")
+      .execute(true, false);
+
+    // then no listeners are invoked
+    assertTrue(RecorderTaskListener.getRecordedEvents().isEmpty());
+
+    // when I cancel an activity with "skip listeners" setting
+    ActivityInstance activityInstanceTree = runtimeService.getActivityInstance(processInstanceId);
+
+    runtimeService
+      .createProcessInstanceModification(processInstance.getId())
+      .cancelActivityInstance(getChildInstanceForActivity(activityInstanceTree, "task").getId())
+      .execute(true, false);
+
+    // then no listeners are invoked
+    assertTrue(RecorderTaskListener.getRecordedEvents().isEmpty());
+  }
+
+  @Deployment(resources = IO_MAPPING_PROCESS)
+  public void testSkipIoMappings() {
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("ioMappingProcess");
+
+    // when I start task2
+    runtimeService.createProcessInstanceModification(processInstance.getId())
+      .startBeforeActivity("task2")
+      .execute(false, true);
+
+    // then the input mapping should not have executed
+    Execution task2Execution = runtimeService.createExecutionQuery().activityId("task2").singleResult();
+    assertNotNull(task2Execution);
+
+    assertNull(runtimeService.getVariable(task2Execution.getId(), "inputMappingExecuted"));
+
+    // when I cancel task2
+    runtimeService.createProcessInstanceModification(processInstance.getId())
+      .cancelAllInActivity("task2")
+      .execute(false, true);
+
+    // then the output mapping should not have executed
+    assertNull(runtimeService.getVariable(processInstance.getId(), "outputMappingExecuted"));
   }
 
   @Deployment(resources = TRANSITION_LISTENER_PROCESS)

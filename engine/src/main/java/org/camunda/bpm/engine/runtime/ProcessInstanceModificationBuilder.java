@@ -34,6 +34,8 @@ public interface ProcessInstanceModificationBuilder {
 
   void execute();
 
+  void execute(boolean skipCustomListeners, boolean skipIoMappings);
+
 
 
 }

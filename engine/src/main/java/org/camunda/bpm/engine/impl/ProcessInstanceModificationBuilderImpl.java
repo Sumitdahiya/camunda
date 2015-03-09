@@ -119,6 +119,10 @@ public class ProcessInstanceModificationBuilderImpl implements ProcessInstanceMo
     }
   }
 
+  public void execute(boolean skipCustomerListeners, boolean skipIoMappings) {
+    execute();
+  }
+
   public CommandExecutor getCommandExecutor() {
     return commandExecutor;
   }
