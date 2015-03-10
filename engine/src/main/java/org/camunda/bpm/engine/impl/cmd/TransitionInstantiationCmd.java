@@ -26,7 +26,12 @@ public class TransitionInstantiationCmd extends AbstractInstantiationCmd {
   protected String transitionId;
 
   public TransitionInstantiationCmd(String processInstanceId, String transitionId) {
-    super(processInstanceId);
+    this(processInstanceId, transitionId, null);
+  }
+
+  public TransitionInstantiationCmd(String processInstanceId, String transitionId,
+      String ancestorActivityInstanceId) {
+    super(processInstanceId, ancestorActivityInstanceId);
     this.transitionId = transitionId;
   }
 

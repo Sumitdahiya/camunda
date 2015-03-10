@@ -30,6 +30,7 @@ import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
 import org.camunda.bpm.engine.impl.pvm.process.ProcessDefinitionImpl;
 import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
 import org.camunda.bpm.engine.impl.util.EnsureUtil;
+import org.camunda.bpm.engine.runtime.ActivityInstance;
 import org.camunda.bpm.engine.variable.VariableMap;
 
 /**
@@ -40,13 +41,13 @@ public abstract class AbstractInstantiationCmd extends AbstractProcessInstanceMo
 
   protected VariableMap variables;
   protected VariableMap variablesLocal;
+  protected String ancestorActivityInstanceId;
 
-
-  public AbstractInstantiationCmd(String processInstanceId) {
+  public AbstractInstantiationCmd(String processInstanceId, String ancestorActivityInstanceId) {
     super(processInstanceId);
+    this.ancestorActivityInstanceId = ancestorActivityInstanceId;
     this.variables = new VariableMapImpl();
     this.variablesLocal = new VariableMapImpl();
-
   }
 
   public void addVariable(String name, Object value) {
@@ -76,6 +77,18 @@ public abstract class AbstractInstantiationCmd extends AbstractProcessInstanceMo
     // rebuild the mapping because the execution tree changes with every iteration
     ActivityExecutionMapping mapping = new ActivityExecutionMapping(commandContext, processInstanceId);
 
+    // determine ancestor activity scope execution and activity
+    ExecutionEntity ancestorScopeExecution = null;
+    ScopeImpl ancestorScope = null;
+    if (ancestorActivityInstanceId != null) {
+      ActivityInstance tree = new GetActivityInstanceCmd(processInstanceId).execute(commandContext);
+      ActivityInstance ancestorInstance = findActivityInstance(tree, ancestorActivityInstanceId);
+
+      ancestorScopeExecution = getScopeExecutionForActivityInstance(processInstance,
+          mapping, ancestorInstance);
+      ancestorScope = getScopeForActivityInstance(processDefinition, ancestorInstance);
+    }
+
     // before instantiating an activity, two things have to be determined:
     //
     // activityStack:
@@ -83,16 +96,26 @@ public abstract class AbstractInstantiationCmd extends AbstractProcessInstanceMo
     // for which no executions exist yet and that have to be instantiated
     //
     // scopeExecution:
-    // The execution of the first parent/ancestor flow scope that has an execution.
-    // This is typically the execution under which a new sub tree has to be created
+    // This is typically the execution under which a new sub tree has to be created.
+    // if an explicit ancestor activity instance is set:
+    //   - this is the scope execution for that ancestor activity instance
+    //   - throws exception if that scope execution is not in the parent hierarchy
+    //     of the activity to be started
+    // if no explicit ancestor activity instance is set:
+    //   - this is the execution of the first parent/ancestor flow scope that has an execution
+    //   - throws an exception if there is more than one such execution
 
     List<PvmActivity> activitiesToInstantiate = new ArrayList<PvmActivity>();
-
     // builds the activity stack of flow scopes for which no executions exist yet
     ScopeImpl flowScope = getTargetFlowScope(processDefinition);
 
     Set<ExecutionEntity> flowScopeExecutions = mapping.getExecutions(flowScope);
-    while (flowScopeExecutions.isEmpty()) {
+    // TODO: refactor this condition
+    while (flowScope != processDefinition &&
+            (flowScopeExecutions.isEmpty() ||
+                (ancestorScopeExecution != null
+                && !(flowScopeExecutions.contains(ancestorScopeExecution)
+                && flowScope == ancestorScope)))) {
       ActivityImpl flowScopeActivity = (ActivityImpl) flowScope;
       activitiesToInstantiate.add(flowScopeActivity);
 
@@ -100,12 +123,25 @@ public abstract class AbstractInstantiationCmd extends AbstractProcessInstanceMo
       flowScopeExecutions = mapping.getExecutions(flowScope);
     }
 
-    if (flowScopeExecutions.size() > 1) {
-      throw new ProcessEngineException("Execution is ambiguous for activity " + flowScope);
+    // determine the parent scope execution
+    ExecutionEntity scopeExecution = null;
+    if (ancestorScopeExecution != null) {
+      if (!flowScopeExecutions.contains(ancestorScopeExecution)) {
+        throw new ProcessEngineException("Could not find scope execution for " + ancestorActivityInstanceId +
+            " in parent hierarchy of flow element " + elementToInstantiate);
+      }
+
+      scopeExecution = ancestorScopeExecution;
+    }
+    else {
+      if (flowScopeExecutions.size() > 1) {
+        throw new ProcessEngineException("Ancestor activity execution is ambiguous for activity " + flowScope);
+      }
+
+      scopeExecution = flowScopeExecutions.iterator().next();
     }
 
     Collections.reverse(activitiesToInstantiate);
-    ExecutionEntity scopeExecution = flowScopeExecutions.iterator().next();
 
     // We have to make a distinction between
     // - "regular" activities for which the activity stack can be instantiated and started

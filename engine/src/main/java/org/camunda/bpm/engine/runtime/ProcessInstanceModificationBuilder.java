@@ -24,9 +24,15 @@ public interface ProcessInstanceModificationBuilder {
 
   ProcessInstanceModificationBuilder startBeforeActivity(String activityId);
 
+  ProcessInstanceModificationBuilder startBeforeActivity(String activityId, String ancestorActivityInstanceId);
+
   ProcessInstanceModificationBuilder startAfterActivity(String activityId);
 
+  ProcessInstanceModificationBuilder startAfterActivity(String activityId, String ancestorActivityInstanceId);
+
   ProcessInstanceModificationBuilder startTransition(String transitionId);
+
+  ProcessInstanceModificationBuilder startTransition(String transitionId, String ancestorActivityInstanceId);
 
   ProcessInstanceModificationBuilder setVariable(String name, Object value);
 

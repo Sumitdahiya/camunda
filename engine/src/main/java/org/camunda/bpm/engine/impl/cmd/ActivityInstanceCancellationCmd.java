@@ -12,18 +12,9 @@
  */
 package org.camunda.bpm.engine.impl.cmd;
 
-import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
-
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.impl.ActivityExecutionMapping;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
-import org.camunda.bpm.engine.impl.pvm.process.ProcessDefinitionImpl;
-import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
 import org.camunda.bpm.engine.runtime.ActivityInstance;
 
 /**
@@ -42,37 +33,13 @@ public class ActivityInstanceCancellationCmd extends AbstractProcessInstanceModi
 
   public Void execute(CommandContext commandContext) {
     ExecutionEntity processInstance = commandContext.getExecutionManager().findExecutionById(processInstanceId);
-    ProcessDefinitionImpl processDefinition = processInstance.getProcessDefinition();
-
-    ActivityInstance activityInstanceTree = new GetActivityInstanceCmd(processInstanceId).execute(commandContext);
-
-    ActivityInstance instance = findActivityInstance(activityInstanceTree, activityInstanceId);
-    ensureNotNull("activityInstance", instance);
-
-    String activityId = instance.getActivityId();
-    ScopeImpl activity = processDefinition.findActivity(activityId);
 
     // rebuild the mapping because the execution tree changes with every iteration
     ActivityExecutionMapping mapping = new ActivityExecutionMapping(commandContext, processInstanceId);
 
-    Set<ExecutionEntity> executions = mapping.getExecutions(activity);
-    Set<String> activityInstanceExecutions = new HashSet<String>(Arrays.asList(instance.getExecutionIds()));
-
-    // find the scope execution for the given activity instance
-    Set<ExecutionEntity> retainedExecutionsForInstance = new HashSet<ExecutionEntity>();
-    for (ExecutionEntity execution : executions) {
-      if (activityInstanceExecutions.contains(execution.getId())) {
-        retainedExecutionsForInstance.add(execution);
-      }
-    }
-
-    if (retainedExecutionsForInstance.size() != 1) {
-      throw new ProcessEngineException("There are " + retainedExecutionsForInstance.size()
-          + " (!= 1) executions for activity instance " + activityInstanceId);
-    }
-
-    ExecutionEntity scopeExecution = retainedExecutionsForInstance.iterator().next();
-
+    ActivityInstance instance = new GetActivityInstanceCmd(processInstanceId).execute(commandContext);
+    ActivityInstance instanceToCancel = findActivityInstance(instance, activityInstanceId);
+    ExecutionEntity scopeExecution = getScopeExecutionForActivityInstance(processInstance, mapping, instanceToCancel);
 
     // Outline:
     // 1. find topmost scope execution beginning at scopeExecution that has exactly
@@ -119,18 +86,5 @@ public class ActivityInstanceCancellationCmd extends AbstractProcessInstanceModi
     return parent;
   }
 
-  protected ActivityInstance findActivityInstance(ActivityInstance tree, String activityInstanceId) {
-    if (activityInstanceId.equals(tree.getId())) {
-      return tree;
-    } else {
-      for (ActivityInstance child : tree.getChildActivityInstances()) {
-        ActivityInstance matchingChildInstance = findActivityInstance(child, activityInstanceId);
-        if (matchingChildInstance != null) {
-          return matchingChildInstance;
-        }
-      }
-    }
 
-    return null;
-  }
 }

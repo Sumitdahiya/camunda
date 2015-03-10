@@ -82,9 +82,25 @@ public class ProcessInstanceModificationBuilderImpl implements ProcessInstanceMo
     return this;
   }
 
+  public ProcessInstanceModificationBuilder startBeforeActivity(String activityId, String ancestorActivityInstanceId) {
+    ensureNotNull("activityId", activityId);
+    ensureNotNull("ancestorActivityInstanceId", ancestorActivityInstanceId);
+    currentInstantiation = new ActivityInstantiationCmd(processInstanceId, activityId, ancestorActivityInstanceId);
+    operations.add(currentInstantiation);
+    return this;
+  }
+
   public ProcessInstanceModificationBuilder startAfterActivity(String activityId) {
     ensureNotNull("activityId", activityId);
     currentInstantiation = new ActivityAfterInstantiationCmd(processInstanceId, activityId);
+    operations.add(currentInstantiation);
+    return this;
+  }
+
+  public ProcessInstanceModificationBuilder startAfterActivity(String activityId, String ancestorActivityInstanceId) {
+    ensureNotNull("activityId", activityId);
+    ensureNotNull("ancestorActivityInstanceId", ancestorActivityInstanceId);
+    currentInstantiation = new ActivityAfterInstantiationCmd(processInstanceId, activityId, ancestorActivityInstanceId);
     operations.add(currentInstantiation);
     return this;
   }
@@ -96,6 +112,13 @@ public class ProcessInstanceModificationBuilderImpl implements ProcessInstanceMo
     return this;
   }
 
+  public ProcessInstanceModificationBuilder startTransition(String transitionId, String ancestorActivityInstanceId) {
+    ensureNotNull("transitionId", transitionId);
+    ensureNotNull("ancestorActivityInstanceId", ancestorActivityInstanceId);
+    currentInstantiation = new TransitionInstantiationCmd(processInstanceId, transitionId, ancestorActivityInstanceId);
+    operations.add(currentInstantiation);
+    return this;
+  }
 
   public ProcessInstanceModificationBuilder setVariable(String name, Object value) {
     ensureNotNull(NotValidException.class, "Variable name must not be null", "name", name);
@@ -152,4 +175,6 @@ public class ProcessInstanceModificationBuilderImpl implements ProcessInstanceMo
   public boolean isSkipIoMappings() {
     return skipIoMappings;
   }
+
+
 }

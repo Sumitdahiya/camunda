@@ -30,10 +30,16 @@ public class ActivityAfterInstantiationCmd extends AbstractInstantiationCmd {
   protected String activityId;
 
   public ActivityAfterInstantiationCmd(String processInstanceId, String activityId) {
-    super(processInstanceId);
+    this(processInstanceId, activityId, null);
+  }
+
+  public ActivityAfterInstantiationCmd(String processInstanceId, String activityId,
+      String ancestorActivityInstanceId) {
+    super(processInstanceId, ancestorActivityInstanceId);
     this.activityId = activityId;
   }
 
+  // TODO: refactor class structure
   public Void execute(CommandContext commandContext) {
     ExecutionEntity processInstance = commandContext.getExecutionManager().findExecutionById(processInstanceId);
     ProcessDefinitionImpl processDefinition = processInstance.getProcessDefinition();
@@ -46,8 +52,9 @@ public class ActivityAfterInstantiationCmd extends AbstractInstantiationCmd {
     }
     else if (activity.getOutgoingTransitions().size() == 1) {
       PvmTransition outgoingTransition = activity.getOutgoingTransitions().get(0);
+
       TransitionInstantiationCmd transitionInstantiationCmd =
-          new TransitionInstantiationCmd(processInstanceId, outgoingTransition.getId());
+          new TransitionInstantiationCmd(processInstanceId, outgoingTransition.getId(), ancestorActivityInstanceId);
       transitionInstantiationCmd.setSkipCustomListeners(skipCustomListeners);
       transitionInstantiationCmd.setSkipIoMappings(skipIoMappings);
       transitionInstantiationCmd.execute(commandContext);
@@ -56,9 +63,6 @@ public class ActivityAfterInstantiationCmd extends AbstractInstantiationCmd {
       throw new ProcessEngineException("Cannot start after activity " + activityId + "; "
           + "activity has more than one outgoing sequence flow");
     }
-
-    // TODO: refactor class structure
-
 
     return null;
   }

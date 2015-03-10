@@ -12,7 +12,20 @@
  */
 package org.camunda.bpm.engine.impl.cmd;
 
+import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.camunda.bpm.engine.ProcessEngineException;
+import org.camunda.bpm.engine.impl.ActivityExecutionMapping;
 import org.camunda.bpm.engine.impl.interceptor.Command;
+import org.camunda.bpm.engine.impl.interceptor.CommandContext;
+import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
+import org.camunda.bpm.engine.impl.pvm.process.ProcessDefinitionImpl;
+import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
+import org.camunda.bpm.engine.runtime.ActivityInstance;
 
 /**
  * @author Thorben Lindhauer
@@ -34,5 +47,58 @@ public abstract class AbstractProcessInstanceModificationCommand implements Comm
 
   public void setSkipIoMappings(boolean skipIoMappings) {
     this.skipIoMappings = skipIoMappings;
+  }
+
+  protected ActivityInstance findActivityInstance(ActivityInstance tree, String activityInstanceId) {
+    if (activityInstanceId.equals(tree.getId())) {
+      return tree;
+    } else {
+      for (ActivityInstance child : tree.getChildActivityInstances()) {
+        ActivityInstance matchingChildInstance = findActivityInstance(child, activityInstanceId);
+        if (matchingChildInstance != null) {
+          return matchingChildInstance;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  protected ScopeImpl getScopeForActivityInstance(ProcessDefinitionImpl processDefinition,
+      ActivityInstance activityInstance) {
+    String scopeId = activityInstance.getActivityId();
+
+    if (processDefinition.getId().equals(scopeId)) {
+      return processDefinition;
+    }
+    else {
+      return processDefinition.findActivity(scopeId);
+    }
+  }
+
+  protected ExecutionEntity getScopeExecutionForActivityInstance(ExecutionEntity processInstance,
+      ActivityExecutionMapping mapping, ActivityInstance activityInstance) {
+    ensureNotNull("activityInstance", activityInstance);
+
+    ProcessDefinitionImpl processDefinition = processInstance.getProcessDefinition();
+    ScopeImpl scope = getScopeForActivityInstance(processDefinition, activityInstance);
+
+    Set<ExecutionEntity> executions = mapping.getExecutions(scope);
+    Set<String> activityInstanceExecutions = new HashSet<String>(Arrays.asList(activityInstance.getExecutionIds()));
+
+    // find the scope execution for the given activity instance
+    Set<ExecutionEntity> retainedExecutionsForInstance = new HashSet<ExecutionEntity>();
+    for (ExecutionEntity execution : executions) {
+      if (activityInstanceExecutions.contains(execution.getId())) {
+        retainedExecutionsForInstance.add(execution);
+      }
+    }
+
+    if (retainedExecutionsForInstance.size() != 1) {
+      throw new ProcessEngineException("There are " + retainedExecutionsForInstance.size()
+          + " (!= 1) executions for activity instance " + activityInstance.getId());
+    }
+
+    return retainedExecutionsForInstance.iterator().next();
   }
 }

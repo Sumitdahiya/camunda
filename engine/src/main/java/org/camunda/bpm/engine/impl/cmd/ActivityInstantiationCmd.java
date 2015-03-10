@@ -26,7 +26,12 @@ public class ActivityInstantiationCmd extends AbstractInstantiationCmd {
   protected String activityId;
 
   public ActivityInstantiationCmd(String processInstanceId, String activityId) {
-    super(processInstanceId);
+    this(processInstanceId, activityId, null);
+  }
+
+  public ActivityInstantiationCmd(String processInstanceId, String activityId,
+      String ancestorActivityInstanceId) {
+    super(processInstanceId, ancestorActivityInstanceId);
     this.activityId = activityId;
   }
 
