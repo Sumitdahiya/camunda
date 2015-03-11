@@ -1071,7 +1071,8 @@ public class ExecutionEntity extends PvmExecutionImpl implements
     // has been initialized. The effect is that the activity instance id of the historic variable instances
     // will be the activity instance id of the start event.
 
-    return processInstanceStartContext == null && startContext == null;
+    return processInstanceStartContext == null &&
+        (startContext == null || (startContext != null && !startContext.isDelayFireHistoricVariableEvents()));
   }
 
   public void fireHistoricVariableInstanceCreateEvents() {

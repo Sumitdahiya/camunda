@@ -421,18 +421,19 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
       PvmTransition targetTransition, Map<String, Object> variables, Map<String, Object> localVariables,
       boolean skipCustomListeners, boolean skipIoMappings) {
 
-    ExecutionStartContext executionStartContext = new ExecutionStartContext();
-
-    InstantiationStack instantiationStack = new InstantiationStack(activityStack, targetActivity, targetTransition);
-    executionStartContext.setInstantiationStack(instantiationStack);
-    executionStartContext.setVariables(variables);
-    executionStartContext.setVariablesLocal(localVariables);
-    setStartContext(executionStartContext);
 
     this.skipCustomListeners = skipCustomListeners;
     this.skipIoMapping = skipIoMappings;
 
     if (!activityStack.isEmpty()) {
+      ExecutionStartContext executionStartContext = new ExecutionStartContext(false);
+
+      InstantiationStack instantiationStack = new InstantiationStack(activityStack, targetActivity, targetTransition);
+      executionStartContext.setInstantiationStack(instantiationStack);
+      executionStartContext.setVariables(variables);
+      executionStartContext.setVariablesLocal(localVariables);
+      setStartContext(executionStartContext);
+
       performOperation(PvmAtomicOperation.ACTIVITY_INIT_STACK);
 
     }
