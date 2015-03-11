@@ -18,6 +18,7 @@ import org.camunda.bpm.engine.history.HistoricDetail;
 import org.camunda.bpm.engine.history.HistoricVariableInstance;
 import org.camunda.bpm.engine.impl.test.PluggableProcessEngineTestCase;
 import org.camunda.bpm.engine.runtime.ActivityInstance;
+import org.camunda.bpm.engine.runtime.Job;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.engine.test.Deployment;
@@ -28,16 +29,8 @@ import org.camunda.bpm.engine.test.Deployment;
  */
 public class ProcessInstanceModificationHistoryTest extends PluggableProcessEngineTestCase {
 
-  protected static final String PARALLEL_GATEWAY_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.parallelGateway.bpmn20.xml";
   protected static final String EXCLUSIVE_GATEWAY_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.exclusiveGateway.bpmn20.xml";
   protected static final String EXCLUSIVE_GATEWAY_ASYNC_TASK_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.exclusiveGatewayAsyncTask.bpmn20.xml";
-  protected static final String SUBPROCESS_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.subprocess.bpmn20.xml";
-  protected static final String SUBPROCESS_LISTENER_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.subprocessListeners.bpmn20.xml";
-  protected static final String SUBPROCESS_BOUNDARY_EVENTS_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.subprocessBoundaryEvents.bpmn20.xml";
-  protected static final String ONE_SCOPE_TASK_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.oneScopeTaskProcess.bpmn20.xml";
-  protected static final String TRANSITION_LISTENER_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.transitionListeners.bpmn20.xml";
-
-  // TODO: test historic activity instance IDs after async
 
   @Deployment(resources = EXCLUSIVE_GATEWAY_PROCESS)
   public void testStartBeforeWithVariablesInHistory() {
@@ -83,6 +76,60 @@ public class ProcessInstanceModificationHistoryTest extends PluggableProcessEngi
     assertEquals(updatedTree.getId(), localInstanceVarDetail.getActivityInstanceId());
 
     completeTasksInOrder("task1", "task2");
+    assertProcessEnded(processInstance.getId());
+
+  }
+
+  @Deployment(resources = EXCLUSIVE_GATEWAY_ASYNC_TASK_PROCESS)
+  public void testStartBeforeAsyncWithVariablesInHistory() {
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("exclusiveGateway");
+
+    runtimeService
+      .createProcessInstanceModification(processInstance.getId())
+      .startBeforeActivity("task2")
+      .setVariable("procInstVar", "procInstValue")
+      .setVariableLocal("localVar", "localValue")
+      .execute();
+
+    ActivityInstance updatedTree = runtimeService.getActivityInstance(processInstance.getId());
+
+    HistoricVariableInstance procInstVariable = historyService.createHistoricVariableInstanceQuery()
+      .variableName("procInstVar")
+      .singleResult();
+
+    assertNotNull(procInstVariable);
+    assertEquals(updatedTree.getId(), procInstVariable.getActivityInstanceId());
+    assertEquals("procInstVar", procInstVariable.getName());
+    assertEquals("procInstValue", procInstVariable.getValue());
+
+    HistoricDetail procInstanceVarDetail = historyService.createHistoricDetailQuery()
+        .variableInstanceId(procInstVariable.getId()).singleResult();
+    assertNotNull(procInstanceVarDetail);
+    // current limitation: the variables do not appear in the history as if they
+    // were set from within the activity to be started
+    assertEquals(updatedTree.getId(), procInstanceVarDetail.getActivityInstanceId());
+
+    HistoricVariableInstance localVariable = historyService.createHistoricVariableInstanceQuery()
+      .variableName("localVar")
+      .singleResult();
+
+    assertNotNull(localVariable);
+    assertEquals(updatedTree.getId(), localVariable.getActivityInstanceId());
+    assertEquals("localVar", localVariable.getName());
+    assertEquals("localValue", localVariable.getValue());
+
+    HistoricDetail localInstanceVarDetail = historyService.createHistoricDetailQuery()
+        .variableInstanceId(localVariable.getId()).singleResult();
+    assertNotNull(localInstanceVarDetail);
+    assertEquals(updatedTree.getId(), localInstanceVarDetail.getActivityInstanceId());
+
+    // end process instance
+    completeTasksInOrder("task1");
+
+    Job job = managementService.createJobQuery().singleResult();
+    managementService.executeJob(job.getId());
+
+    completeTasksInOrder("task2");
     assertProcessEnded(processInstance.getId());
 
   }

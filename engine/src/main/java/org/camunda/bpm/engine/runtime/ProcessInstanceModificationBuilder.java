@@ -148,8 +148,8 @@ public interface ProcessInstanceModificationBuilder {
   /**
    * @param skipCustomListeners specifies whether custom listeners (task and execution)
    *   should be invoked when executing the instructions
-   * @param skipIoMappings specifies whether input output mappings for tasks should be invoked
-   *   when executing the instructions
+   * @param skipIoMappings specifies whether input/output mappings for tasks should be invoked
+   *   throughout the transaction when executing the instructions
    */
   void execute(boolean skipCustomListeners, boolean skipIoMappings);
 
