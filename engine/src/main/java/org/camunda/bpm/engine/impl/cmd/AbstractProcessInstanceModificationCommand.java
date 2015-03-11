@@ -20,6 +20,7 @@ import java.util.Set;
 
 import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.impl.ActivityExecutionMapping;
+import org.camunda.bpm.engine.impl.context.Context;
 import org.camunda.bpm.engine.impl.interceptor.Command;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
@@ -85,6 +86,19 @@ public abstract class AbstractProcessInstanceModificationCommand implements Comm
 
     Set<ExecutionEntity> executions = mapping.getExecutions(scope);
     Set<String> activityInstanceExecutions = new HashSet<String>(Arrays.asList(activityInstance.getExecutionIds()));
+
+    // TODO: this is a hack around the activity instance tree
+    // remove with fix of CAM-3574
+    for (String activityInstanceExecutionId : activityInstance.getExecutionIds()) {
+      ExecutionEntity execution = Context.getCommandContext()
+          .getExecutionManager()
+          .findExecutionById(activityInstanceExecutionId);
+      if (execution.isConcurrent() && !execution.getExecutions().isEmpty()) {
+        // concurrent executions have at most one child
+        ExecutionEntity child = execution.getExecutions().get(0);
+        activityInstanceExecutions.add(child.getId());
+      }
+    }
 
     // find the scope execution for the given activity instance
     Set<ExecutionEntity> retainedExecutionsForInstance = new HashSet<ExecutionEntity>();

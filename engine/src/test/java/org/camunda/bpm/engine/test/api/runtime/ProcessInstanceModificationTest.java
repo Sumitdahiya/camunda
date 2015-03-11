@@ -200,9 +200,13 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
       // happy path
     }
 
+    Task task = taskService.createTaskQuery().list().get(0);
+    taskService.complete(task.getId());
+
     // when I start the inner subprocess task with an explicit ancestor activity instance id
     ActivityInstance updatedTree = runtimeService.getActivityInstance(processInstanceId);
     ActivityInstance randomSubProcessInstance = getChildInstanceForActivity(updatedTree, "subProcess");
+
 
     // then the command suceeds
     runtimeService.createProcessInstanceModification(processInstanceId)

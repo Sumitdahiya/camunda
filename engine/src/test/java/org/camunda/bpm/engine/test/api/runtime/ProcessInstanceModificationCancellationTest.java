@@ -696,6 +696,44 @@ public class ProcessInstanceModificationCancellationTest extends PluggableProces
     assertProcessEnded(processInstanceId);
   }
 
+  @Deployment(resources = NESTED_PARALLEL_ONE_TASK_PROCESS)
+  public void testScopeCancellationInNestedOneTaskProcess() {
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("nestedOneTaskProcess");
+    String processInstanceId = processInstance.getId();
+
+    ActivityInstance tree = runtimeService.getActivityInstance(processInstance.getId());
+
+    runtimeService
+      .createProcessInstanceModification(processInstance.getId())
+      .cancelActivityInstance(getInstanceIdForActivity(tree, "subProcess"))
+      .execute();
+
+    assertProcessNotEnded(processInstanceId);
+
+    // assert activity instance
+    ActivityInstance updatedTree = runtimeService.getActivityInstance(processInstanceId);
+    assertNotNull(updatedTree);
+    assertEquals(processInstanceId, updatedTree.getProcessInstanceId());
+
+    assertThat(updatedTree).hasStructure(
+      describeActivityInstanceTree(processInstance.getProcessDefinitionId())
+        .activity("outerTask")
+      .done());
+
+    // assert executions
+    ExecutionTree executionTree = ExecutionTree.forExecution(processInstanceId, processEngine);
+
+    assertThat(executionTree)
+    .matches(
+      describeExecutionTree("outerTask").scope()
+      .done());
+
+    // assert successful completion of process
+    Task task = taskService.createTaskQuery().singleResult();
+    taskService.complete(task.getId());
+    assertProcessEnded(processInstanceId);
+  }
+
   /**
    * TODO: fix CAM-3574
    */
