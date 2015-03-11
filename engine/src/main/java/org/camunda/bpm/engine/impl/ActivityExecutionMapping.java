@@ -71,6 +71,11 @@ public class ActivityExecutionMapping {
 
   protected void assignExecutionsToActivities(List<ExecutionEntity> leaves) {
     for (ExecutionEntity leaf : leaves) {
+      if (leaf.isEventScope()) {
+        // TODO: this is not correct; should consider parent then?
+        continue;
+      }
+
       ScopeImpl activity = leaf.getActivity();
 
       if (activity != null) {

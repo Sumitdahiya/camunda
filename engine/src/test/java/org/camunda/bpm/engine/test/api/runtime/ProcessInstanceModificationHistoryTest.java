@@ -37,6 +37,8 @@ public class ProcessInstanceModificationHistoryTest extends PluggableProcessEngi
   protected static final String ONE_SCOPE_TASK_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.oneScopeTaskProcess.bpmn20.xml";
   protected static final String TRANSITION_LISTENER_PROCESS = "org/camunda/bpm/engine/test/api/runtime/ProcessInstanceModificationTest.transitionListeners.bpmn20.xml";
 
+  // TODO: test historic activity instance IDs after async
+
   @Deployment(resources = EXCLUSIVE_GATEWAY_PROCESS)
   public void testStartBeforeWithVariablesInHistory() {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("exclusiveGateway");
