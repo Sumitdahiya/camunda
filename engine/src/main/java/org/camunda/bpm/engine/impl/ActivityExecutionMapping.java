@@ -71,11 +71,6 @@ public class ActivityExecutionMapping {
 
   protected void assignExecutionsToActivities(List<ExecutionEntity> leaves) {
     for (ExecutionEntity leaf : leaves) {
-      if (leaf.isEventScope()) {
-        // TODO: this is not correct; should consider parent then?
-        continue;
-      }
-
       ScopeImpl activity = leaf.getActivity();
 
       if (activity != null) {
@@ -127,11 +122,21 @@ public class ActivityExecutionMapping {
     List<ExecutionEntity> leaves = new ArrayList<ExecutionEntity>();
 
     for (ExecutionEntity execution : executions) {
-      if (execution.getExecutions().isEmpty()) {
+      if (isLeaf(execution)) {
         leaves.add(execution);
       }
     }
 
     return leaves;
+  }
+
+  protected boolean isLeaf(ExecutionEntity execution) {
+    for (ExecutionEntity child : execution.getExecutions()) {
+      if (!child.isEventScope()) {
+        return false;
+      }
+    }
+
+    return !execution.isEventScope();
   }
 }

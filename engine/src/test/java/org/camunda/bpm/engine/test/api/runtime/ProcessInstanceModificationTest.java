@@ -1296,9 +1296,8 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
       .cancelActivityInstance(getInstanceIdForActivity(tree, "innerTask2"))
       .execute();
 
-    // TODO: is this correct?
-    // then there should still be the compensation subscription for innerTask
-    assertEquals(1, runtimeService.createEventSubscriptionQuery().count());
+    // then the innerTask compensation should be removed
+    assertEquals(0, runtimeService.createEventSubscriptionQuery().count());
   }
 
   @Deployment
