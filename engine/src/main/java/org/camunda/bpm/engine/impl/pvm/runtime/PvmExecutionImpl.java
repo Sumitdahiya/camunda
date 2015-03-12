@@ -35,7 +35,6 @@ import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
 import org.camunda.bpm.engine.impl.pvm.process.TransitionImpl;
 import org.camunda.bpm.engine.impl.pvm.runtime.operation.FoxAtomicOperationDeleteCascadeFireActivityEnd;
 import org.camunda.bpm.engine.impl.pvm.runtime.operation.PvmAtomicOperation;
-import org.camunda.bpm.engine.impl.util.EnsureUtil;
 
 /**
  * @author Daniel Meyer
@@ -330,7 +329,12 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
       boolean skipCustomListeners, boolean skipIoMappings) {
 
     // The following covers the three cases in which a concurrent execution may be created
-    // (this execution is the root in each scenario):
+    // (this execution is the root in each scenario).
+    //
+    // Note: this should only consider non-event-scope executions. Event-scope executions
+    // are not relevant for the tree structure and should remain under their original parent.
+    //
+    //
     // (1) A compacted tree:
     //
     // Before:               After:
@@ -375,8 +379,8 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
     //  -------    -------      -------  -------  -------
     //
     // eX+1 is concurrent and the new root for the activity stack to instantiate
+    List<? extends PvmExecutionImpl> children = getNonEventScopeExecutions();
 
-    List<? extends PvmExecutionImpl> children = getExecutions();
     if (children.isEmpty()) {
       // (1)
       PvmExecutionImpl replacingExecution = createExecution();
@@ -396,7 +400,7 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
       child.setParent(concurrentReplacingExecution);
       // TODO: the next instruction should be part of the #setParent method; should then also be fixed at the other occurrences
       ((List) concurrentReplacingExecution.getExecutions()).add(child);
-      children.remove(child);
+      getExecutions().remove(child);
     }
 
     // (1), (2), and (3)
@@ -669,6 +673,19 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
   // executions ///////////////////////////////////////////////////////////////
 
   public abstract List<? extends PvmExecutionImpl> getExecutions();
+
+  public List<? extends PvmExecutionImpl> getNonEventScopeExecutions() {
+    List<? extends PvmExecutionImpl> children = getExecutions();
+    List<PvmExecutionImpl> result = new ArrayList<PvmExecutionImpl>();
+
+    for (PvmExecutionImpl child : children) {
+      if (!child.isEventScope()) {
+        result.add(child);
+      }
+    }
+
+    return result;
+  }
 
   public PvmExecutionImpl findExecution(String activityId) {
     if ( (getActivity()!=null)
