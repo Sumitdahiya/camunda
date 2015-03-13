@@ -25,8 +25,10 @@ import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
 import org.camunda.bpm.engine.impl.util.EnsureUtil;
 
 /**
- * @author Thorben Lindhauer
+ * Maps an activity (plain activities + their containing flow scopes) to the scope executions
+ * that are executing them. For every instance of a scope, there is one such execution.
  *
+ * @author Thorben Lindhauer
  */
 public class ActivityExecutionMapping {
 
@@ -91,7 +93,8 @@ public class ActivityExecutionMapping {
     if (execution.isProcessInstanceExecution()) {
       submitExecution(execution, activity.getProcessDefinition());
 
-    } else {
+    }
+    else {
 
       if(!activity.isScope() && execution.isScope()) {
         assignToActivity(execution, activity.getParentScope());
@@ -130,6 +133,9 @@ public class ActivityExecutionMapping {
     return leaves;
   }
 
+  /**
+   * event-scope executions are not considered in this mapping and must be ignored
+   */
   protected boolean isLeaf(ExecutionEntity execution) {
     for (ExecutionEntity child : execution.getExecutions()) {
       if (!child.isEventScope()) {

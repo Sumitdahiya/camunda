@@ -324,6 +324,7 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
    *
    * @param activityStack The most deeply nested activity is the last element in the list
    */
+  @SuppressWarnings("unchecked")
   public void executeActivitiesConcurrent(List<PvmActivity> activityStack, PvmActivity targetActivity,
       PvmTransition targetTransition, Map<String, Object> variables, Map<String, Object> localVariables,
       boolean skipCustomListeners, boolean skipIoMappings) {
@@ -398,8 +399,7 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
       concurrentReplacingExecution.setConcurrent(true);
       concurrentReplacingExecution.setScope(false);
       child.setParent(concurrentReplacingExecution);
-      // TODO: the next instruction should be part of the #setParent method; should then also be fixed at the other occurrences
-      ((List) concurrentReplacingExecution.getExecutions()).add(child);
+      ((List<PvmExecutionImpl>) concurrentReplacingExecution.getExecutions()).add(child);
       getExecutions().remove(child);
     }
 
@@ -457,6 +457,7 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void removeFromParentScope() {
     PvmExecutionImpl parent = getParent();
 
@@ -481,8 +482,7 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
         // a concurrent execution has exactly one child
         PvmExecutionImpl childScopeExecution = concurrentChild.getExecutions().get(0);
         childScopeExecution.setParent(parent);
-        // TODO: the following instruction should be part of #setParent
-        ((List) parent.getExecutions()).add(childScopeExecution);
+        ((List<PvmExecutionImpl>) parent.getExecutions()).add(childScopeExecution);
       }
 
       concurrentChild.remove();

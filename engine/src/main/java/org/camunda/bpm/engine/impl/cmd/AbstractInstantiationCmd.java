@@ -79,8 +79,6 @@ public abstract class AbstractInstantiationCmd extends AbstractProcessInstanceMo
     // rebuild the mapping because the execution tree changes with every iteration
     final ActivityExecutionMapping mapping = new ActivityExecutionMapping(commandContext, processInstanceId);
 
-
-
     // before instantiating an activity, two things have to be determined:
     //
     // activityStack:
@@ -97,7 +95,6 @@ public abstract class AbstractInstantiationCmd extends AbstractProcessInstanceMo
     //   - this is the execution of the first parent/ancestor flow scope that has an execution
     //   - throws an exception if there is more than one such execution
 
-    // builds the activity stack of flow scopes for which no executions exist yet
     ScopeImpl flowScope = getTargetFlowScope(processDefinition);
 
     // prepare to walk up the flow scope hierarchy and collect the flow scope activities
@@ -209,13 +206,11 @@ public abstract class AbstractInstantiationCmd extends AbstractProcessInstanceMo
         // cancellation (e.g. boundary event)
         if (scopeToCancel == topMostActivity.getFlowScope()) {
           // perform interruption
-          // TODO: the delete reason is a hack
           interruptedExecution.cancelScope("Interrupting event sub process "+ topMostActivity + " fired.", skipCustomListeners, skipIoMappings);
           instantiate(scopeExecution, activitiesToInstantiate);
         }
         else {
           // perform cancellation
-          // TODO: the delete reason is a hack
           scopeExecution.cancelScope("Cancel scope activity " + topMostActivity + " executed.", skipCustomListeners, skipIoMappings);
           instantiate(scopeExecution, activitiesToInstantiate);
         }

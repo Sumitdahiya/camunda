@@ -41,10 +41,8 @@ public class ModifyProcessInstanceCmd implements Command<Void> {
 
     ExecutionEntity processInstance = commandContext.getExecutionManager().findExecutionById(processInstanceId);
     if (processInstance.getExecutions().isEmpty() && processInstance.getActivity() == null) {
-      // TODO: deletion reason?
-      processInstance.deleteCascade("Cancellation via API", builder.isSkipCustomListeners());
+      processInstance.deleteCascade("Cancellation due to process instance modification", builder.isSkipCustomListeners(), builder.isSkipIoMappings());
     }
-
 
     return null;
   }

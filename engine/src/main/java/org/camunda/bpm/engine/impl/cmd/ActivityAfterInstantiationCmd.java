@@ -16,10 +16,10 @@ import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.impl.core.model.CoreModelElement;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
-import org.camunda.bpm.engine.impl.pvm.PvmTransition;
 import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
 import org.camunda.bpm.engine.impl.pvm.process.ProcessDefinitionImpl;
 import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
+import org.camunda.bpm.engine.impl.pvm.process.TransitionImpl;
 
 /**
  * @author Thorben Lindhauer
@@ -39,7 +39,6 @@ public class ActivityAfterInstantiationCmd extends AbstractInstantiationCmd {
     this.activityId = activityId;
   }
 
-  // TODO: refactor class structure
   public Void execute(CommandContext commandContext) {
     ExecutionEntity processInstance = commandContext.getExecutionManager().findExecutionById(processInstanceId);
     ProcessDefinitionImpl processDefinition = processInstance.getProcessDefinition();
@@ -50,28 +49,25 @@ public class ActivityAfterInstantiationCmd extends AbstractInstantiationCmd {
       throw new ProcessEngineException("Cannot start after activity " + activityId + "; activity "
           + "has no outgoing sequence flow to take");
     }
-    else if (activity.getOutgoingTransitions().size() == 1) {
-      PvmTransition outgoingTransition = activity.getOutgoingTransitions().get(0);
-
-      TransitionInstantiationCmd transitionInstantiationCmd =
-          new TransitionInstantiationCmd(processInstanceId, outgoingTransition.getId(), ancestorActivityInstanceId);
-      transitionInstantiationCmd.setSkipCustomListeners(skipCustomListeners);
-      transitionInstantiationCmd.setSkipIoMappings(skipIoMappings);
-      transitionInstantiationCmd.execute(commandContext);
-    }
-    else {
+    else if (activity.getOutgoingTransitions().size() > 1) {
       throw new ProcessEngineException("Cannot start after activity " + activityId + "; "
           + "activity has more than one outgoing sequence flow");
     }
 
-    return null;
+    return super.execute(commandContext);
   }
 
   protected ScopeImpl getTargetFlowScope(ProcessDefinitionImpl processDefinition) {
-    return null;
+    ActivityImpl sourceActivity = processDefinition.findActivity(activityId);
+    TransitionImpl transition = (TransitionImpl) sourceActivity.getOutgoingTransitions().get(0);
+
+    return transition.getDestination().getFlowScope();
   }
 
   protected CoreModelElement getTargetElement(ProcessDefinitionImpl processDefinition) {
-    return null;
+    ActivityImpl sourceActivity = processDefinition.findActivity(activityId);
+    TransitionImpl transition = (TransitionImpl) sourceActivity.getOutgoingTransitions().get(0);
+
+    return transition;
   }
 }
