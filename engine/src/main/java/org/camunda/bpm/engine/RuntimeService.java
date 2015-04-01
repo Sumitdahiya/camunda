@@ -372,18 +372,18 @@ public interface RuntimeService {
    * @param messageName
    *          the 'name' of the message as specified as an attribute on the
    *          bpmn20 {@code <message name="messageName" />} element, cannot be null.
-   * @param processDefinitionId 
+   * @param processDefinitionId
    * 		  the id of the process definition, cannot be null.
    * @return the {@link ProcessInstance} object representing the started process instance
    *
-   * @throws ProcessEngineException 
-   * 		  if no subscription to a message with the given name exists for the 
+   * @throws ProcessEngineException
+   * 		  if no subscription to a message with the given name exists for the
    * 		  specified version of process definition.
    *
    * @since 7.3
    */
   ProcessInstance startProcessInstanceByMessageAndProcessDefinitionId(String messageName, String processDefinitionId);
-  
+
   /**
    * <p>Signals the process engine that a message is received and starts a new
    * {@link ProcessInstance}.</p>
@@ -394,20 +394,20 @@ public interface RuntimeService {
    * @param messageName
    *          the 'name' of the message as specified as an attribute on the
    *          bpmn20 {@code <message name="messageName" />} element, cannot be null.
-   * @param processDefinitionId 
+   * @param processDefinitionId
    * 		  the id of the process definition, cannot be null.
    * @param businessKey
    *          the business key which is added to the started process instance
    * @return the {@link ProcessInstance} object representing the started process instance
    *
-   * @throws ProcessEngineException 
-   * 		  if no subscription to a message with the given name exists for the 
+   * @throws ProcessEngineException
+   * 		  if no subscription to a message with the given name exists for the
    * 		  specified version of process definition.
    *
    * @since 7.3
    */
   ProcessInstance startProcessInstanceByMessageAndProcessDefinitionId(String messageName, String processDefinitionId, String businessKey);
-  
+
   /**
    * <p>Signals the process engine that a message is received and starts a new
    * {@link ProcessInstance}.</p>
@@ -418,21 +418,21 @@ public interface RuntimeService {
    * @param messageName
    *          the 'name' of the message as specified as an attribute on the
    *          bpmn20 {@code <message name="messageName" />} element, cannot be null.
-   * @param processDefinitionId 
+   * @param processDefinitionId
    * 		  the id of the process definition, cannot be null.
    * @param processVariables
    *          the 'payload' of the message. The variables are added as processes
    *          variables to the started process instance.
    * @return the {@link ProcessInstance} object representing the started process instance
    *
-   * @throws ProcessEngineException 
-   * 		  if no subscription to a message with the given name exists for the 
+   * @throws ProcessEngineException
+   * 		  if no subscription to a message with the given name exists for the
    * 		  specified version of process definition.
    *
    * @since 7.3
    */
   ProcessInstance startProcessInstanceByMessageAndProcessDefinitionId(String messageName, String processDefinitionId, Map<String, Object> processVariables);
-  
+
   /**
    * <p>Signals the process engine that a message is received and starts a new
    * {@link ProcessInstance}.</p>
@@ -443,7 +443,7 @@ public interface RuntimeService {
    * @param messageName
    *          the 'name' of the message as specified as an attribute on the
    *          bpmn20 {@code <message name="messageName" />} element, cannot be null.
-   * @param processDefinitionId 
+   * @param processDefinitionId
    * 		  the id of the process definition, cannot be null.
    * @param businessKey
    *          the business key which is added to the started process instance
@@ -452,14 +452,14 @@ public interface RuntimeService {
    *          variables to the started process instance.
    * @return the {@link ProcessInstance} object representing the started process instance
    *
-   * @throws ProcessEngineException 
-   * 		  if no subscription to a message with the given name exists for the 
+   * @throws ProcessEngineException
+   * 		  if no subscription to a message with the given name exists for the
    * 		  specified version of process definition.
    *
    * @since 7.3
    */
   ProcessInstance startProcessInstanceByMessageAndProcessDefinitionId(String messageName, String processDefinitionId, String businessKey, Map<String, Object> processVariables);
-  
+
   /** Delete an existing runtime process instance.
    * @param processInstanceId id of process instance to delete, cannot be null.
    * @param deleteReason reason for deleting, which will be stored in the history. Can be null.
@@ -1185,4 +1185,6 @@ public interface RuntimeService {
    * @param processInstanceId the process instance to modify
    */
   ProcessInstanceModificationBuilder createProcessInstanceModification(String processInstanceId);
+
+  ProcessInstance startProcessInstanceByKeyAtActivity(String processDefinitionKey, String activityId);
 }

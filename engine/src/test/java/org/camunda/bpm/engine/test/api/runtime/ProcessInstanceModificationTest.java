@@ -140,6 +140,32 @@ public class ProcessInstanceModificationTest extends PluggableProcessEngineTestC
   }
 
   @Deployment(resources = EXCLUSIVE_GATEWAY_PROCESS)
+  public void testStartAtActivity() {
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKeyAtActivity("exclusiveGateway", "task2");
+    String processInstanceId = processInstance.getId();
+
+    ActivityInstance updatedTree = runtimeService.getActivityInstance(processInstanceId);
+    assertNotNull(updatedTree);
+    assertEquals(processInstanceId, updatedTree.getProcessInstanceId());
+
+    assertThat(updatedTree).hasStructure(
+      describeActivityInstanceTree(processInstance.getProcessDefinitionId())
+        .activity("task2")
+      .done());
+
+    ExecutionTree executionTree = ExecutionTree.forExecution(processInstanceId, processEngine);
+
+    assertThat(executionTree)
+    .matches(
+      describeExecutionTree("task2").scope()
+      .done());
+
+    // complete the process
+    completeTasksInOrder("task2");
+    assertProcessEnded(processInstanceId);
+  }
+
+  @Deployment(resources = EXCLUSIVE_GATEWAY_PROCESS)
   public void testStartBeforeWithAncestorInstanceId() {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("exclusiveGateway");
     String processInstanceId = processInstance.getId();
