@@ -17,27 +17,22 @@ import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
 
 /**
  * @author Daniel Meyer
- * @author Thorben Lindhauer
  *
  */
-public abstract class PvmAtomicOperationInterruptScope implements PvmAtomicOperation {
+public class PvmAtomicOperationActivityStartInterruptEventScope extends PvmAtomicOperationInterruptScope {
 
-  public void execute(PvmExecutionImpl execution) {
-
-    PvmActivity interruptingActivity = getInterruptingActivity(execution);
-
-    execution.interrupt("Interrupting activity "+interruptingActivity+" executed.");
-
-    execution.setActivity(interruptingActivity);
-    scopeInterrupted(execution);
+  public String getCanonicalName() {
+    return "activity-start-interrupt-scope";
   }
 
-  protected abstract void scopeInterrupted(PvmExecutionImpl execution);
+  protected void scopeInterrupted(PvmExecutionImpl execution) {
+    execution.performOperation(ACTIVITY_START_CREATE_SCOPE);
+  }
 
-  protected abstract PvmActivity getInterruptingActivity(PvmExecutionImpl execution);
-
-  public boolean isAsync(PvmExecutionImpl execution) {
-    return false;
+  protected PvmActivity getInterruptingActivity(PvmExecutionImpl execution) {
+    PvmActivity nextActivity = execution.getNextActivity();
+    execution.setNextActivity(null);
+    return nextActivity;
   }
 
 }

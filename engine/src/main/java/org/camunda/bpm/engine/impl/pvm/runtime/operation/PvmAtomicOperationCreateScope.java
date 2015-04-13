@@ -14,7 +14,7 @@ package org.camunda.bpm.engine.impl.pvm.runtime.operation;
 
 import java.util.logging.Logger;
 
-import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
+import org.camunda.bpm.engine.impl.pvm.PvmActivity;
 import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
 
 /**
@@ -31,7 +31,7 @@ public abstract class PvmAtomicOperationCreateScope implements PvmAtomicOperatio
     execution.setActivityInstanceId(execution.getParentActivityInstanceId());
 
     PvmExecutionImpl propagatingExecution = null;
-    ActivityImpl activity = execution.getActivity();
+    PvmActivity activity = execution.getActivity();
     if (activity.isScope()) {
       propagatingExecution = execution.createExecution();
       propagatingExecution.setActivity(activity);

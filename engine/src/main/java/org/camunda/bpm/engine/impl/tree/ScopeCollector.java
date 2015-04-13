@@ -10,19 +10,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.camunda.bpm.engine.impl.tree;
 
-package org.camunda.bpm.engine.impl.bpmn.behavior;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution;
+import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
 
 /**
  * @author Daniel Meyer
+ *
  */
-public class EventBasedGatewayActivityBehavior extends FlowNodeActivityBehavior {
+public class ScopeCollector implements Collector<ScopeImpl> {
 
-  @Override
-  public void execute(ActivityExecution execution) throws Exception {
-    // wait state
+  protected List<ScopeImpl> scopes = new ArrayList<ScopeImpl>();
+
+  public void collect(ScopeImpl obj) {
+    if(obj.isScope()) {
+      scopes.add(obj);
+    }
+  }
+
+  public List<ScopeImpl> getScopes() {
+    return scopes;
   }
 
 }

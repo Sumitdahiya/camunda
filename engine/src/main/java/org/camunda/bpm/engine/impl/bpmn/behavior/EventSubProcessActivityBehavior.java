@@ -13,6 +13,7 @@
 package org.camunda.bpm.engine.impl.bpmn.behavior;
 
 import org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution;
+import org.camunda.bpm.engine.impl.pvm.runtime.LegacyBehavior;
 
 /**
  * @author Daniel Meyer
@@ -21,11 +22,15 @@ import org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution;
 public class EventSubProcessActivityBehavior extends SubProcessActivityBehavior {
 
   public void complete(ActivityExecution scopeExecution) {
-    scopeExecution.end(false);
+    if(!LegacyBehavior.get().eventSubprocessComplete(scopeExecution)) {
+      super.complete(scopeExecution);
+    }
   }
 
   public void concurrentChildExecutionEnded(ActivityExecution scopeExecution, ActivityExecution endedExecution) {
-    endedExecution.end(false);
+    if(!LegacyBehavior.get().eventSubprocessConcurrentChildExecutionEnded(scopeExecution, endedExecution)) {
+      super.concurrentChildExecutionEnded(scopeExecution, endedExecution);
+    }
   }
 
 }

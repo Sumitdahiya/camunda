@@ -12,8 +12,8 @@
  */
 package org.camunda.bpm.engine.impl.pvm.runtime.operation;
 
-import org.camunda.bpm.engine.ProcessEngineException;
-import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
+import org.camunda.bpm.engine.impl.pvm.PvmActivity;
+import org.camunda.bpm.engine.impl.pvm.runtime.LegacyBehavior;
 import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
 
 import java.util.logging.Logger;
@@ -21,6 +21,8 @@ import java.util.logging.Logger;
 
 /**
  * @author Tom Baeyens
+ * @author Daniel Meyer
+ * @author Thorben Lindhauer
  */
 public class PvmAtomicOperationTransitionDestroyScope implements PvmAtomicOperation {
 
@@ -35,17 +37,17 @@ public class PvmAtomicOperationTransitionDestroyScope implements PvmAtomicOperat
     // calculate the propagating execution
     PvmExecutionImpl propagatingExecution = null;
 
-    ActivityImpl activity = execution.getActivity();
+    PvmActivity activity = execution.getActivity();
 
     // check whether the current scope needs to be destroyed
     if (activity.isScope()) {
 
-      if(!execution.isScope()) {
-        // TODO: remove this
-        throw new ProcessEngineException("Unexpected non-scope execution "+ execution+"  leaving scope activity "+activity);
+      if (execution.isConcurrent()) {
+        // legacy behavior
+        LegacyBehavior.get().destroyConcurrentScope(execution);
+        propagatingExecution = execution;
       }
-
-      if (!execution.isConcurrent()) {
+      else {
         propagatingExecution = execution.getParent();
         propagatingExecution.setActivity(execution.getActivity());
         propagatingExecution.setTransition(execution.getTransition());
@@ -54,16 +56,9 @@ public class PvmAtomicOperationTransitionDestroyScope implements PvmAtomicOperat
         execution.destroy();
         execution.remove();
       }
-      else {
-        log.fine("scoped concurrent "+execution+" becomes concurrent and remains under "+execution.getParent());
-
-        // TODO!
-        execution.destroy();
-        propagatingExecution = execution;
-
-      }
 
     } else {
+      // activity is not scope => nothing to do
       propagatingExecution = execution;
     }
 

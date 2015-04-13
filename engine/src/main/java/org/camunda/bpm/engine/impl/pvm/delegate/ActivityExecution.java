@@ -13,6 +13,7 @@
 package org.camunda.bpm.engine.impl.pvm.delegate;
 
 import java.util.List;
+import java.util.Map;
 
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.impl.cmmn.execution.CmmnCaseInstance;
@@ -20,6 +21,7 @@ import org.camunda.bpm.engine.impl.cmmn.model.CmmnCaseDefinition;
 import org.camunda.bpm.engine.impl.pvm.PvmActivity;
 import org.camunda.bpm.engine.impl.pvm.PvmProcessDefinition;
 import org.camunda.bpm.engine.impl.pvm.PvmProcessInstance;
+import org.camunda.bpm.engine.impl.pvm.PvmScope;
 import org.camunda.bpm.engine.impl.pvm.PvmTransition;
 import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
 import org.camunda.bpm.engine.impl.pvm.process.TransitionImpl;
@@ -220,7 +222,7 @@ public interface ActivityExecution extends DelegateExecution {
    * Called when an execution is interrupted. This will remove all associated entities
    * such as event subscriptions, jobs, ...
    */
-  void interruptScope(String reason);
+  void interrupt(String reason);
 
   /** An activity which is to be started next. */
   PvmActivity getNextActivity();
@@ -230,8 +232,6 @@ public interface ActivityExecution extends DelegateExecution {
   void destroy();
 
   void signal(String string, Object signalData);
-
-  void cancelScope(String string);
 
   void setActivity(PvmActivity activity);
 
@@ -249,6 +249,8 @@ public interface ActivityExecution extends DelegateExecution {
    * @param targetScope scope activity or process definition for which the scope execution should be found
    * @return
    */
-  public PvmExecutionImpl findExecutionForScope(ScopeImpl targetScope);
+  public ActivityExecution findExecutionForFlowScope(PvmScope targetScope);
+
+  public Map<ScopeImpl, PvmExecutionImpl> createActivityExecutionMapping();
 
 }

@@ -23,9 +23,11 @@ import org.camunda.bpm.engine.impl.bpmn.parser.ErrorEventDefinition;
 import org.camunda.bpm.engine.impl.persistence.entity.CompensateEventSubscriptionEntity;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
 import org.camunda.bpm.engine.impl.pvm.PvmActivity;
+import org.camunda.bpm.engine.impl.pvm.PvmScope;
 import org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution;
 import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
 import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
+import org.camunda.bpm.engine.impl.pvm.runtime.LegacyBehavior;
 import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
 import org.camunda.bpm.engine.impl.tree.Collector;
 import org.camunda.bpm.engine.impl.tree.TreeWalker;
@@ -49,8 +51,7 @@ public class AbstractBpmnActivityBehavior extends FlowNodeActivityBehavior {
   /**
    * Subclasses that call leave() will first pass through this method, before
    * the regular {@link FlowNodeActivityBehavior#leave(ActivityExecution)} is
-   * called. This way, we can check if the activity has loop characteristics,
-   * and delegate to the behavior if this is the case.
+   * called.
    */
   protected void leave(ActivityExecution execution) {
     PvmActivity currentActivity = execution.getActivity();
@@ -73,10 +74,13 @@ public class AbstractBpmnActivityBehavior extends FlowNodeActivityBehavior {
 
   protected void createCompensateEventSubscription(ActivityExecution execution, ActivityImpl compensationHandler) {
 
-    ScopeImpl compensationHandlerScope = compensationHandler.getScope();
-    PvmExecutionImpl compensateEventScopeExecution = execution.findExecutionForScope(compensationHandlerScope);
+    PvmActivity currentActivity = execution.getActivity();
+    PvmScope levelOfSubprocessScope = currentActivity.getLevelOfSubprocessScope();
 
-    CompensateEventSubscriptionEntity compensateEventSubscriptionEntity = CompensateEventSubscriptionEntity.createAndInsert((ExecutionEntity) compensateEventScopeExecution);
+    // the compensate event subscription is created "at the level of subprocess" of the the current activity.
+    ActivityExecution levelOfSubprocessScopeExecution = execution.findExecutionForFlowScope(levelOfSubprocessScope);
+
+    CompensateEventSubscriptionEntity compensateEventSubscriptionEntity = CompensateEventSubscriptionEntity.createAndInsert((ExecutionEntity) levelOfSubprocessScopeExecution);
     compensateEventSubscriptionEntity.setActivity(compensationHandler);
   }
 
@@ -94,24 +98,35 @@ public class AbstractBpmnActivityBehavior extends FlowNodeActivityBehavior {
 
   protected void propagateError(String errorCode, Exception origException, ActivityExecution execution) throws Exception {
 
-    // get the scope activity or process defintion for the current exection
-    ScopeImpl scope = getCurrentScope(execution);
+    // get the scope activity or process definition for the current execution
+    ScopeImpl scope = getCurrentFlowScope(execution);
 
     // make sure we start with the scope execution for the current scope
-    execution = execution.isScope() ? execution : execution.getParent();
+    PvmExecutionImpl scopeExecution = (PvmExecutionImpl) (execution.isScope() ? execution : execution.getParent());
 
     // walk the tree of parent scope executions and activities and search a scope in both trees which catches the error
-    ExecutionScopeHierarchyWalker scopeHierarchyWalker = new ExecutionScopeHierarchyWalker((PvmExecutionImpl) execution, true);
-    ErrorDeclarationFinder errorDeclarationFinder = new ErrorDeclarationFinder(scope, errorCode, origException);
+    ExecutionScopeHierarchyWalker scopeHierarchyWalker = new ExecutionScopeHierarchyWalker(scopeExecution, true);
+    ErrorDeclarationFinder errorDeclarationFinder = new ErrorDeclarationFinder(scope, errorCode, origException, (PvmExecutionImpl) execution);
     scopeHierarchyWalker.addPreCollector(errorDeclarationFinder);
-    PvmExecutionImpl errorHandlingExecution = scopeHierarchyWalker.walkWhile(errorDeclarationFinder);
+    scopeHierarchyWalker.walkWhile(errorDeclarationFinder);
 
-    ActivityImpl errorHandlingActivity = errorDeclarationFinder.getErrorHandlerActivity();
+
+    PvmActivity errorHandlingActivity = errorDeclarationFinder.getErrorHandlerActivity();
+    PvmExecutionImpl errorHandlingExecution = null;
+    if(errorHandlingActivity != null) {
+      // Why is this necessary (or: why can we not just use the last execution the ExecutionScopeHierarchyWalker looked at?)
+      // => legacy behavior: the execution hierarchy may be out of sync with the scope hierarchy. findExecutionForFlowScope()
+      // will return the correct scope execution even for trees which are out of sync
+      // TODO: maybe all of this can be simplified? However: in order to handle the "out of sync tree case", we always need to create the complete
+      // tree scope for the process instance which handles the error. Otherwise we cannot detect out of sync trees.
+      errorHandlingExecution = errorDeclarationFinder.getLastLeafExecution().findExecutionForFlowScope(errorHandlingActivity.getEventScope());
+    }
+
     if (errorHandlingExecution == null) {
       if (origException == null) {
         LOG.info(execution.getActivity().getId() + " throws error event with errorCode '"
             + errorCode + "', but no catching boundary event was defined. "
-            +   "Execution will simply be ended (none end event semantics).");
+            +   "Execution is ended (none end event semantics).");
         execution.end(true);
       } else {
         // throw original exception
@@ -128,19 +143,20 @@ public class AbstractBpmnActivityBehavior extends FlowNodeActivityBehavior {
    *
    * @return the scope for the transition or activity the execution is currently executing
    */
-  protected ScopeImpl getCurrentScope(ActivityExecution execution) {
+  protected ScopeImpl getCurrentFlowScope(ActivityExecution execution) {
     ScopeImpl scope = null;
     if(execution.getTransition() != null) {
-      // error may be thrown from a sequence flow listener
-      scope = execution.getTransition().getDestination().getParent();
+      // error may be thrown from a sequence flow listener(?)
+      scope = execution.getTransition().getDestination().getFlowScope();
     }
     else {
       scope = (ScopeImpl) execution.getActivity();
     }
-    // the current scope may not be a scope
-    while (!scope.isScope()) {
-      scope = scope.getParent();
-    }
+
+    // the execution may currently not be executing a scope activity
+    scope = scope.isScope() ? scope : scope.getFlowScope();
+    scope = LegacyBehavior.get().normalizeSecondNonScope(scope);
+
     return scope;
   }
 
@@ -193,12 +209,14 @@ public class AbstractBpmnActivityBehavior extends FlowNodeActivityBehavior {
     protected ScopeImpl currentScope;
     protected String errorCode;
     protected Exception exception;
-    protected ActivityImpl errorHandlerActivity;
+    protected PvmActivity errorHandlerActivity;
+    protected PvmExecutionImpl lastLeafExecution;
 
-    public ErrorDeclarationFinder(ScopeImpl currentScope, String errorCode, Exception exception) {
+    public ErrorDeclarationFinder(ScopeImpl currentScope, String errorCode, Exception exception, PvmExecutionImpl lastLeafExecution) {
       this.currentScope = currentScope;
       this.errorCode = errorCode;
       this.exception = exception;
+      this.lastLeafExecution = lastLeafExecution;
     }
 
     public boolean isFulfilled(PvmExecutionImpl element) {
@@ -222,7 +240,7 @@ public class AbstractBpmnActivityBehavior extends FlowNodeActivityBehavior {
     }
 
     public void collect(PvmExecutionImpl obj) {
-      currentScope = currentScope.getParent();
+      currentScope = currentScope.getFlowScope();
 
       // if process definition was already reached, go one process definition up
       if (currentScope == null) {
@@ -230,18 +248,23 @@ public class AbstractBpmnActivityBehavior extends FlowNodeActivityBehavior {
 
         if (superExecution != null) {
           currentScope = superExecution.getActivity();
+          lastLeafExecution = superExecution;
         }
       }
 
       if (currentScope != null) {
-        while (!currentScope.isScope()) {
-          currentScope = currentScope.getParent();
-        }
+        // the execution may currently not be executing a scope activity
+        currentScope = currentScope.isScope() ? currentScope : currentScope.getFlowScope();
+        currentScope = LegacyBehavior.get().normalizeSecondNonScope(currentScope);
       }
     }
 
-    public ActivityImpl getErrorHandlerActivity() {
+    public PvmActivity getErrorHandlerActivity() {
       return errorHandlerActivity;
+    }
+
+    public PvmExecutionImpl getLastLeafExecution() {
+      return lastLeafExecution;
     }
 
   }

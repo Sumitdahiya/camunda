@@ -12,6 +12,7 @@
  */
 package org.camunda.bpm.engine.impl.tree;
 
+import org.camunda.bpm.engine.impl.pvm.PvmActivity;
 import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
 import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
 
@@ -28,7 +29,7 @@ public class FlowScopeWalker extends TreeWalker<ScopeImpl> {
 
   protected ScopeImpl nextElement() {
     if (currentElement != null && ActivityImpl.class.isAssignableFrom(currentElement.getClass())) {
-      return ((ActivityImpl) currentElement).getFlowScope();
+      return ((PvmActivity) currentElement).getFlowScope();
 
     }
     else {

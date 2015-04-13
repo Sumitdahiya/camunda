@@ -10,29 +10,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.camunda.bpm.engine.impl.pvm.runtime.operation;
+package org.camunda.bpm.engine.impl.tree;
 
-import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
 import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
 
 /**
  * @author Daniel Meyer
  *
  */
-public class PvmAtomicOperationActivityStartInterruptScope extends PvmAtomicOperationInterruptScope {
+public class ExecutionWalker extends TreeWalker<PvmExecutionImpl> {
 
-  public String getCanonicalName() {
-    return "activity-start-interrupt-scope";
+  public ExecutionWalker(PvmExecutionImpl initialElement) {
+    super(initialElement);
   }
 
-  protected void scopeInterrupted(PvmExecutionImpl execution) {
-    execution.performOperation(ACTIVITY_START_CREATE_SCOPE);
-  }
-
-  protected ActivityImpl getInterruptingActivity(PvmExecutionImpl execution) {
-    ActivityImpl nextActivity = execution.getNextActivity();
-    execution.setNextActivity(null);
-    return nextActivity;
+  protected PvmExecutionImpl nextElement() {
+    return currentElement.getParent();
   }
 
 }

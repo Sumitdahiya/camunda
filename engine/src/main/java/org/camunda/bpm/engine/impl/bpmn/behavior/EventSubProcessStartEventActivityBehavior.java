@@ -20,7 +20,7 @@ import org.camunda.bpm.engine.impl.pvm.PvmActivity;
  *
  * The corresponding activity must either be
  * <ul>
- *  <li>{@link PvmActivity#isInterruptScope()} in case of an interrupting event subprocess. In this case
+ *  <li>{@link PvmActivity#isInterrupting()} in case of an interrupting event subprocess. In this case
  *  the scope will already be interrupted when this behavior is executed.</li>
  *  <li>{@link PvmActivity#isConcurrent()} in case of a non-interrupting event subprocess. In this case
  *  the new concurrent execution will already be created when this behavior is executed.</li>

@@ -33,16 +33,22 @@ public abstract class TreeWalker<T> {
     currentElement = initialElement;
   }
 
-  public void addPreCollector(Collector<T> collector) {
+  public TreeWalker<T> addPreCollector(Collector<T> collector) {
     this.preCollectors.add(collector);
+    return this;
   }
 
-  public void addPostCollector(Collector<T> collector) {
+  public TreeWalker<T> addPostCollector(Collector<T> collector) {
     this.postCollectors.add(collector);
+    return this;
   }
 
-  public void walk() {
+  public void walkWhile() {
     walkWhile(new NullCondition<T>());
+  }
+
+  public void walkUntil() {
+    walkUntil(new NullCondition<T>());
   }
 
   public T walkWhile(WalkCondition<T> condition) {

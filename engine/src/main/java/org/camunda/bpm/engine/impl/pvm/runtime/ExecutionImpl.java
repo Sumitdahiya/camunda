@@ -161,7 +161,7 @@ public class ExecutionImpl extends PvmExecutionImpl implements
   public void initialize() {
   }
 
-  public void interruptScope(String reason) {
+  public void interrupt(String reason) {
   }
 
   // parent ///////////////////////////////////////////////////////////////////

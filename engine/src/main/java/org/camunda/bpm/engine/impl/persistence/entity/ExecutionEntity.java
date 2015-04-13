@@ -445,6 +445,9 @@ public class ExecutionEntity extends PvmExecutionImpl implements
     performOperation(PvmAtomicOperation.PROCESS_START);
   }
 
+  /**
+   * Method used for destroying a scope in a way that the execution can be removed afterwards.
+   */
   public void destroy() {
     super.destroy();
     ensureParentInitialized();
@@ -473,18 +476,7 @@ public class ExecutionEntity extends PvmExecutionImpl implements
     removeIncidents();
   }
 
-  public void cancelScope(String reason, boolean skipCustomListeners, boolean skipIoMappings) {
-
-    // remove all tasks associated with this execution.
-    removeTasks(reason);
-
-    // removed jobs directly associated with the current activity (e.g. async continuations)
-    removeActivityJobs(reason);
-
-    super.cancelScope(reason, skipCustomListeners, skipIoMappings);
-  }
-
-  public void interruptScope(String reason, boolean skipCustomListeners, boolean skipIoMappings) {
+  public void interrupt(String reason, boolean skipCustomListeners, boolean skipIoMappings) {
 
     // remove Jobs
     removeJobs();
@@ -493,7 +485,7 @@ public class ExecutionEntity extends PvmExecutionImpl implements
 
     removeEventSubscriptionsExceptCompensation();
 
-    super.interruptScope(reason, skipCustomListeners, skipIoMappings);
+    super.interrupt(reason, skipCustomListeners, skipIoMappings);
   }
 
   protected void removeActivityJobs(String reason) {

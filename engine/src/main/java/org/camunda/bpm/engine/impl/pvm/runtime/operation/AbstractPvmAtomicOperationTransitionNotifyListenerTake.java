@@ -12,26 +12,36 @@
  */
 package org.camunda.bpm.engine.impl.pvm.runtime.operation;
 
+import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.delegate.ExecutionListener;
 import org.camunda.bpm.engine.impl.core.model.CoreModelElement;
-import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
+import org.camunda.bpm.engine.impl.pvm.PvmActivity;
 import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
 
 
 /**
+ *
  * @author Tom Baeyens
+ * @author Daniel Meyer
+ * @author Thorben Lindhauer
  */
 public abstract class AbstractPvmAtomicOperationTransitionNotifyListenerTake extends AbstractPvmEventAtomicOperation {
 
   protected void eventNotificationsCompleted(PvmExecutionImpl execution) {
-    ActivityImpl destination = execution.getTransition().getDestination();
+    PvmActivity destination = execution.getTransition().getDestination();
 
-    if (destination.isInterruptScope()) {
-      execution.setActivity(null);
-      execution.performOperation(TRANSITION_INTERRUPT_SCOPE);
-    } else {
+    // check start behavior of next activity
+    switch (destination.getActivityStartBehavior()) {
+    case DEFAULT:
       execution.setActivity(destination);
       execution.performOperation(TRANSITION_CREATE_SCOPE);
+      break;
+    case INTERRUPT_FLOW_SCOPE:
+      execution.setActivity(null);
+      execution.performOperation(TRANSITION_INTERRUPT_FLOW_SCOPE);
+    default:
+      throw new ProcessEngineException("Unsupported start behavior for activity '"+destination
+          +"' started from a sequence flow: "+destination.getActivityBehavior());
     }
   }
 

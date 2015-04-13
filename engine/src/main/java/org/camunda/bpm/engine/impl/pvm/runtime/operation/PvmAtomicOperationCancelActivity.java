@@ -12,22 +12,25 @@
  */
 package org.camunda.bpm.engine.impl.pvm.runtime.operation;
 
-import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
+import org.camunda.bpm.engine.impl.pvm.PvmActivity;
+import org.camunda.bpm.engine.impl.pvm.process.ActivityStartBehavior;
+import org.camunda.bpm.engine.impl.pvm.runtime.LegacyBehavior;
 import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
 
 /**
+ * Implements {@link ActivityStartBehavior#CANCEL_EVENT_SCOPE}.
  *
  * @author Throben Lindhauer
  * @author Daniel Meyer
  * @author Roman Smirnov
  *
  */
-public abstract class PvmAtomicOperationCancelScope implements PvmAtomicOperation {
+public abstract class PvmAtomicOperationCancelActivity implements PvmAtomicOperation {
 
   public void execute(PvmExecutionImpl execution) {
 
     // Assumption: execution is scope
-    ActivityImpl cancellingActivity = execution.getNextActivity();
+    PvmActivity cancellingActivity = execution.getNextActivity();
     execution.setNextActivity(null);
 
     // first, cancel and destroy the current scope
@@ -36,26 +39,27 @@ public abstract class PvmAtomicOperationCancelScope implements PvmAtomicOperatio
     PvmExecutionImpl propagatingExecution = null;
 
     if(execution.isConcurrent()) {
-      execution.cancelScope("Cancel scope activity "+cancellingActivity+" executed.");
-      execution.destroy();
-      execution.setActivity(cancellingActivity.getParentActivity());
-      execution.leaveActivityInstance();
-      execution.cancelScope("Cancel scope activity "+cancellingActivity+" executed.");
-      // execution is concurrent: continue with execution which remains concurrent
-      // NOTE: this can happen only if executions can be both scope AND concurrent
+      // this is legacy behavior
+      LegacyBehavior.get().cancelConcurrentScope(execution, cancellingActivity);
       propagatingExecution = execution;
     }
     else {
+      // Unlike PvmAtomicOperationTransitionDestroyScope this needs to use delete() (instead of destroy() and remove()).
+      // The reason is that PvmAtomicOperationTransitionDestroyScope is executed when a scope (or non scope) is left using
+      // a sequence flow. In that case the execution will have completed all the work inside the current activity
+      // and will have no more child executions. In PvmAtomicOperationCancelScope the scope is cancelled due to
+      // a boundary event firing. In that case the execution has not completed all the work in the current scope / activity
+      // and it is necessary to delete the complete hierarchy of executions below and including the execution itself.
       execution.deleteCascade("Cancel scope activity "+cancellingActivity+" executed.");
       propagatingExecution = execution.getParent();
     }
 
     propagatingExecution.setActivity(cancellingActivity);
     propagatingExecution.setActive(true);
-    scopeCancelled(propagatingExecution);
+    activityCancelled(propagatingExecution);
   }
 
-  protected abstract void scopeCancelled(PvmExecutionImpl execution);
+  protected abstract void activityCancelled(PvmExecutionImpl execution);
 
   public boolean isAsync(PvmExecutionImpl execution) {
     return false;

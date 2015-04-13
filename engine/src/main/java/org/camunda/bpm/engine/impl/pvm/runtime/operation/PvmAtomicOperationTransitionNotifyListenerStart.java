@@ -13,7 +13,7 @@
 package org.camunda.bpm.engine.impl.pvm.runtime.operation;
 
 import org.camunda.bpm.engine.delegate.ExecutionListener;
-import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
+import org.camunda.bpm.engine.impl.pvm.PvmActivity;
 import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
 import org.camunda.bpm.engine.impl.pvm.process.TransitionImpl;
 import org.camunda.bpm.engine.impl.pvm.runtime.ExecutionStartContext;
@@ -38,7 +38,7 @@ public class PvmAtomicOperationTransitionNotifyListenerStart extends PvmAtomicOp
     super.eventNotificationsCompleted(execution);
 
     TransitionImpl transition = execution.getTransition();
-    ActivityImpl destination;
+    PvmActivity destination;
     if(transition == null) { // this is null after async cont. -> transition is not stored in execution
       destination = execution.getActivity();
     } else {

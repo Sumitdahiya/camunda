@@ -50,7 +50,7 @@ public abstract class AbstractEventHandler implements EventHandler {
       // hack around the fact that the start event is refrenced by event subscriptions for event subprocesses
       // and not the subprocess itself
       if (activity.getActivityBehavior() instanceof EventSubProcessStartEventActivityBehavior) {
-        activity = activity.getParentActivity();
+        activity = (ActivityImpl) activity.getFlowScope();
       }
 
       execution.executeEventHandlerActivity(activity);

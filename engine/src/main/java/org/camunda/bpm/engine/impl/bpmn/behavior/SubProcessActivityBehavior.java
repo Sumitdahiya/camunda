@@ -21,7 +21,6 @@ import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
 import org.camunda.bpm.engine.impl.pvm.PvmActivity;
 import org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution;
 import org.camunda.bpm.engine.impl.pvm.delegate.CompositeActivityBehavior;
-import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
 
 
 /**
@@ -34,7 +33,7 @@ public class SubProcessActivityBehavior extends AbstractBpmnActivityBehavior imp
 
   public void execute(ActivityExecution execution) throws Exception {
     PvmActivity activity = execution.getActivity();
-    ActivityImpl initialActivity = (ActivityImpl) activity.getProperty(BpmnParse.PROPERTYNAME_INITIAL);
+    PvmActivity initialActivity = (PvmActivity) activity.getProperty(BpmnParse.PROPERTYNAME_INITIAL);
 
     ensureNotNull("No initial activity found for subprocess " + execution.getActivity().getId(), "initialActivity", initialActivity);
 

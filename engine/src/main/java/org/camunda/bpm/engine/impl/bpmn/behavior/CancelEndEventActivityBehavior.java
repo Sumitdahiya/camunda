@@ -18,9 +18,10 @@ import java.util.List;
 import org.camunda.bpm.engine.impl.bpmn.helper.CompensationUtil;
 import org.camunda.bpm.engine.impl.persistence.entity.CompensateEventSubscriptionEntity;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
+import org.camunda.bpm.engine.impl.pvm.PvmActivity;
 import org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution;
-import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
-import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
+import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
+import org.camunda.bpm.engine.impl.pvm.runtime.LegacyBehavior;
 import org.camunda.bpm.engine.impl.util.EnsureUtil;
 
 
@@ -30,7 +31,7 @@ import org.camunda.bpm.engine.impl.util.EnsureUtil;
  */
 public class CancelEndEventActivityBehavior extends AbstractBpmnActivityBehavior {
 
-  protected ActivityImpl cancelBoundaryEvent;
+  protected PvmActivity cancelBoundaryEvent;
 
   @Override
   public void execute(ActivityExecution execution) throws Exception {
@@ -50,7 +51,10 @@ public class CancelEndEventActivityBehavior extends AbstractBpmnActivityBehavior
   }
 
   protected void leave(ActivityExecution execution) {
-    PvmExecutionImpl boundaryEventScopeExecution = execution.findExecutionForScope(cancelBoundaryEvent.getScope());
+    ScopeImpl flowScope = cancelBoundaryEvent.getFlowScope();
+    flowScope = LegacyBehavior.get().normalizeSecondNonScope(flowScope);
+
+    ActivityExecution boundaryEventScopeExecution = execution.findExecutionForFlowScope(flowScope);
     boundaryEventScopeExecution.executeActivity(cancelBoundaryEvent);
   }
 
@@ -64,11 +68,11 @@ public class CancelEndEventActivityBehavior extends AbstractBpmnActivityBehavior
     }
   }
 
-  public void setCancelBoundaryEvent(ActivityImpl cancelBoundaryEvent) {
+  public void setCancelBoundaryEvent(PvmActivity cancelBoundaryEvent) {
     this.cancelBoundaryEvent = cancelBoundaryEvent;
   }
 
-  public ActivityImpl getCancelBoundaryEvent() {
+  public PvmActivity getCancelBoundaryEvent() {
     return cancelBoundaryEvent;
   }
 

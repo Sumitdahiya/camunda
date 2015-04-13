@@ -26,6 +26,7 @@ import org.camunda.bpm.engine.impl.core.variable.VariableMapImpl;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
 import org.camunda.bpm.engine.impl.pvm.PvmActivity;
+import org.camunda.bpm.engine.impl.pvm.PvmScope;
 import org.camunda.bpm.engine.impl.pvm.PvmTransition;
 import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
 import org.camunda.bpm.engine.impl.pvm.process.ProcessDefinitionImpl;
@@ -143,7 +144,7 @@ public abstract class AbstractInstantiationCmd extends AbstractProcessInstanceMo
       // determine ancestor activity scope execution and activity
       final ExecutionEntity ancestorScopeExecution = getScopeExecutionForActivityInstance(processInstance,
             mapping, ancestorInstance);
-      final ScopeImpl ancestorScope = getScopeForActivityInstance(processDefinition, ancestorInstance);
+      final PvmScope ancestorScope = getScopeForActivityInstance(processDefinition, ancestorInstance);
 
       // walk until the scope of the ancestor scope execution is reached
       walker.walkWhile(new WalkCondition<ScopeImpl>() {
@@ -182,19 +183,19 @@ public abstract class AbstractInstantiationCmd extends AbstractProcessInstanceMo
     }
 
     boolean isCancelScope = false;
-    if (topMostActivity != null && topMostActivity.isCancelScope()) {
+    if (topMostActivity != null && topMostActivity.isCancelActivity()) {
       if (!activitiesToInstantiate.isEmpty()) {
         // this is in BPMN relevant if there is an interrupting event sub process.
         // we have to distinguish between instantiation of the start event and any other activity.
         // instantiation of the start event means interrupting behavior; instantiation
         // of any other task means no interruption.
-        ActivityImpl initialActivity = (ActivityImpl) topMostActivity.getProperty(BpmnParse.PROPERTYNAME_INITIAL);
-        ActivityImpl secondTopMostActivity = null;
+        PvmActivity initialActivity = (PvmActivity) topMostActivity.getProperty(BpmnParse.PROPERTYNAME_INITIAL);
+        PvmActivity secondTopMostActivity = null;
         if (activitiesToInstantiate.size() > 1) {
-          secondTopMostActivity = (ActivityImpl) activitiesToInstantiate.get(1);
+          secondTopMostActivity = (PvmActivity) activitiesToInstantiate.get(1);
         }
         else if (ActivityImpl.class.isAssignableFrom(elementToInstantiate.getClass())) {
-          secondTopMostActivity = (ActivityImpl) elementToInstantiate;
+          secondTopMostActivity = (PvmActivity) elementToInstantiate;
         }
 
         if (initialActivity == secondTopMostActivity) {

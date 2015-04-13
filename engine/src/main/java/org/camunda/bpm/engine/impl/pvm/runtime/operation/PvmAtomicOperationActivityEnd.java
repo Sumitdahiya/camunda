@@ -14,10 +14,10 @@
 package org.camunda.bpm.engine.impl.pvm.runtime.operation;
 
 import org.camunda.bpm.engine.ProcessEngineException;
+import org.camunda.bpm.engine.impl.pvm.PvmActivity;
+import org.camunda.bpm.engine.impl.pvm.PvmScope;
 import org.camunda.bpm.engine.impl.pvm.delegate.ActivityBehavior;
 import org.camunda.bpm.engine.impl.pvm.delegate.CompositeActivityBehavior;
-import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
-import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
 import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
 
 /**
@@ -27,7 +27,7 @@ import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
  */
 public class PvmAtomicOperationActivityEnd implements PvmAtomicOperation {
 
-  protected ScopeImpl getScope(PvmExecutionImpl execution) {
+  protected PvmScope getScope(PvmExecutionImpl execution) {
     return execution.getActivity();
   }
 
@@ -46,7 +46,7 @@ public class PvmAtomicOperationActivityEnd implements PvmAtomicOperation {
       }
     }
 
-    ActivityImpl activity = execution.getActivity();
+    PvmActivity activity = execution.getActivity();
 
     PvmExecutionImpl propagatingExecution = execution;
 
@@ -59,7 +59,7 @@ public class PvmAtomicOperationActivityEnd implements PvmAtomicOperation {
       }
     }
 
-    ScopeImpl flowScope = activity.getFlowScope();
+    PvmScope flowScope = activity.getFlowScope();
 
     // 1. flow scope = Process Definition
     if(flowScope == activity.getProcessDefinition()) {
@@ -76,7 +76,7 @@ public class PvmAtomicOperationActivityEnd implements PvmAtomicOperation {
     }
     else {
       // 2. flowScope != process definition
-      ActivityImpl flowScopeActivity = (ActivityImpl) flowScope;
+      PvmActivity flowScopeActivity = (PvmActivity) flowScope;
       propagatingExecution.setActivity(flowScopeActivity);
 
       ActivityBehavior activityBehavior = flowScopeActivity.getActivityBehavior();

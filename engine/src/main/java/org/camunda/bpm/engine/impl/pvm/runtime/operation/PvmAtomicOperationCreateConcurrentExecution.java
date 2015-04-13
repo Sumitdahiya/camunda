@@ -14,7 +14,8 @@ package org.camunda.bpm.engine.impl.pvm.runtime.operation;
 
 import java.util.List;
 
-import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
+import org.camunda.bpm.engine.impl.pvm.PvmActivity;
+import org.camunda.bpm.engine.impl.pvm.runtime.LegacyBehavior;
 import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
 
 /**
@@ -31,10 +32,9 @@ public abstract class PvmAtomicOperationCreateConcurrentExecution implements Pvm
 
   public void execute(PvmExecutionImpl execution) {
 
-    // Assuption: execution is the Scope Execution for the scope in which the activity
-    // should be executed concurrently.
+    // Invariant: execution is the Scope Execution for the activity's flow scope.
 
-    ActivityImpl activityToStart = execution.getNextActivity();
+    PvmActivity activityToStart = execution.getNextActivity();
     execution.setNextActivity(null);
 
     // The following covers the three cases in which a concurrent execution may be created
@@ -76,8 +76,20 @@ public abstract class PvmAtomicOperationCreateConcurrentExecution implements Pvm
     // e3 is created and is concurrent;
     // e4 is the new root for the activity stack to instantiate
     //
+    // (2b: LEGACY behavior)
+    // Before:               After:
+    //       -------               -------
+    //       |  e1 |               |  e1 |
+    //       -------               -------
+    //          |                  /     \
+    //       -------           -------  -------
+    //       |  e2 |           |  e2 |  |  e3 |
+    //       -------           -------  -------
     //
-    // (3) A single child that is a scope execution
+    // e2 remains under e1 but is now scope AND concurrent
+    // e3 is a new, non-scope activity
+    //
+    // (3) Existing concurrent execution(s)
     // Before:               After:
     //       -------                    ---------
     //       |  e1 |                    |   e1  |
@@ -103,12 +115,17 @@ public abstract class PvmAtomicOperationCreateConcurrentExecution implements Pvm
       // (2)
       PvmExecutionImpl child = children.get(0);
 
-      PvmExecutionImpl concurrentReplacingExecution = execution.createExecution();
-      concurrentReplacingExecution.setConcurrent(true);
-      concurrentReplacingExecution.setScope(false);
-      child.setParent(concurrentReplacingExecution);
-      ((List<PvmExecutionImpl>) concurrentReplacingExecution.getExecutions()).add(child);
-      execution.getExecutions().remove(child);
+      if(LegacyBehavior.get().isConcurrentScopeExecutionEnabled()) {
+        // 2b) legacy behavior
+        LegacyBehavior.get().createConcurrentScope(child);
+      } else {
+        PvmExecutionImpl concurrentReplacingExecution = execution.createExecution();
+        concurrentReplacingExecution.setConcurrent(true);
+        concurrentReplacingExecution.setScope(false);
+        child.setParent(concurrentReplacingExecution);
+        ((List<PvmExecutionImpl>) concurrentReplacingExecution.getExecutions()).add(child);
+        execution.getExecutions().remove(child);
+      }
     }
 
     // (1), (2), and (3)

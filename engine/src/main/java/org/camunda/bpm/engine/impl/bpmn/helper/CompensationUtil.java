@@ -23,9 +23,9 @@ import org.camunda.bpm.engine.impl.context.Context;
 import org.camunda.bpm.engine.impl.persistence.entity.CompensateEventSubscriptionEntity;
 import org.camunda.bpm.engine.impl.persistence.entity.EventSubscriptionEntity;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
+import org.camunda.bpm.engine.impl.pvm.PvmActivity;
+import org.camunda.bpm.engine.impl.pvm.PvmScope;
 import org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution;
-import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
-import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
 import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
 
 
@@ -83,10 +83,10 @@ public class CompensationUtil {
    */
   public static void createEventScopeExecution(ExecutionEntity execution) {
 
-    ActivityImpl activity = execution.getActivity();
-    ScopeImpl levelOfSubprocess = activity.getLevelOfScubprocessScope();
+    PvmActivity activity = execution.getActivity();
+    PvmScope levelOfSubprocess = activity.getLevelOfSubprocessScope();
 
-    ExecutionEntity levelOfSubprocessScopeExecution = (ExecutionEntity) execution.findExecutionForScope(levelOfSubprocess);
+    ExecutionEntity levelOfSubprocessScopeExecution = (ExecutionEntity) execution.findExecutionForFlowScope(levelOfSubprocess);
 
     List<CompensateEventSubscriptionEntity> eventSubscriptions = execution.getCompensateEventSubscriptions();
 

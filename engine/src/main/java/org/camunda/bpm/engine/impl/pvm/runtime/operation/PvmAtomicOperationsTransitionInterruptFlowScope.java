@@ -12,7 +12,7 @@
  */
 package org.camunda.bpm.engine.impl.pvm.runtime.operation;
 
-import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
+import org.camunda.bpm.engine.impl.pvm.PvmActivity;
 import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
 
 /**
@@ -21,17 +21,21 @@ import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
  * @author Daniel Meyer
  *
  */
-public class PvmAtomicOperationsTransitionInterruptScope extends PvmAtomicOperationInterruptScope {
+public class PvmAtomicOperationsTransitionInterruptFlowScope extends PvmAtomicOperationInterruptScope {
 
   public String getCanonicalName() {
     return "transition-interrupt-scope";
+  }
+
+  public void execute(PvmExecutionImpl execution) {
+    super.execute(!execution.isScope() ? execution.getParent() : execution);
   }
 
   protected void scopeInterrupted(PvmExecutionImpl execution) {
     execution.performOperation(TRANSITION_CREATE_SCOPE);
   }
 
-  protected ActivityImpl getInterruptingActivity(PvmExecutionImpl execution) {
+  protected PvmActivity getInterruptingActivity(PvmExecutionImpl execution) {
     return execution.getTransition().getDestination();
   }
 
