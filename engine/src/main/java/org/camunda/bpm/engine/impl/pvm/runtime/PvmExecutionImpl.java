@@ -13,6 +13,8 @@
 package org.camunda.bpm.engine.impl.pvm.runtime;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,9 +74,14 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
   /** the activity which is to be started next */
   protected transient PvmActivity nextActivity;
 
-  /** current sequence flow. is null when there is no transition being taken. */
-  protected transient TransitionImpl transition = null;
+  /** the transition that is currently being taken */
+  protected transient TransitionImpl transition;
 
+  /** A list of outgoing transitions from the current activity
+   * that are going to be taken */
+  protected transient List<PvmTransition> transitionsToTake = null;
+
+  // TODO: what is this for? seems only to be used with inclusive gw
   /** transition that will be taken.  is null when there is no transition being taken. */
   protected transient TransitionImpl transitionBeingTaken = null;
 
@@ -266,6 +273,110 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
     removeEventScopes();
   }
 
+  public PvmExecutionImpl createConcurrentExecution() {
+    if (!isScope()) {
+      throw new ProcessEngineException("Cannot create concurrent execution for " + this);
+    }
+
+    // The following covers the three cases in which a concurrent execution may be created
+    // (this execution is the root in each scenario).
+    //
+    // Note: this should only consider non-event-scope executions. Event-scope executions
+    // are not relevant for the tree structure and should remain under their original parent.
+    //
+    //
+    // (1) A compacted tree:
+    //
+    // Before:               After:
+    //       -------               -------
+    //       |  e1  |              |  e1 |
+    //       -------               -------
+    //                             /     \
+    //                         -------  -------
+    //                         |  e2 |  |  e3 |
+    //                         -------  -------
+    //
+    // e2 replaces e1; e3 is the new root for the activity stack to instantiate
+    //
+    //
+    // (2) A single child that is a scope execution
+    // Before:               After:
+    //       -------               -------
+    //       |  e1 |               |  e1 |
+    //       -------               -------
+    //          |                  /     \
+    //       -------           -------  -------
+    //       |  e2 |           |  e3 |  |  e4 |
+    //       -------           -------  -------
+    //                            |
+    //                         -------
+    //                         |  e2 |
+    //                         -------
+    //
+    //
+    // e3 is created and is concurrent;
+    // e4 is the new root for the activity stack to instantiate
+    //
+    // (2b: LEGACY behavior)
+    // Before:               After:
+    //       -------               -------
+    //       |  e1 |               |  e1 |
+    //       -------               -------
+    //          |                  /     \
+    //       -------           -------  -------
+    //       |  e2 |           |  e2 |  |  e3 |
+    //       -------           -------  -------
+    //
+    // e2 remains under e1 but is now scope AND concurrent
+    // e3 is a new, non-scope activity
+    //
+    // (3) Existing concurrent execution(s)
+    // Before:               After:
+    //       -------                    ---------
+    //       |  e1 |                    |   e1  |
+    //       -------                    ---------
+    //       /     \                   /    |    \
+    //  -------    -------      -------  -------  -------
+    //  |  e2 | .. |  eX |      |  e2 |..|  eX |  | eX+1|
+    //  -------    -------      -------  -------  -------
+    //
+    // eX+1 is concurrent and the new root for the activity stack to instantiate
+    List<? extends PvmExecutionImpl> children = this.getNonEventScopeExecutions();
+
+    if (children.isEmpty()) {
+      // (1)
+      PvmExecutionImpl replacingExecution = this.createExecution();
+      replacingExecution.setConcurrent(true);
+      replacingExecution.setScope(false);
+      replacingExecution.replace(this);
+      this.setActivity(null);
+
+    }
+    else if (children.size() == 1) {
+      // (2)
+      PvmExecutionImpl child = children.get(0);
+
+      if(LegacyBehavior.get().isConcurrentScopeExecutionEnabled()) {
+        // 2b) legacy behavior
+        LegacyBehavior.get().createConcurrentScope(child);
+      } else {
+        PvmExecutionImpl concurrentReplacingExecution = this.createExecution();
+        concurrentReplacingExecution.setConcurrent(true);
+        concurrentReplacingExecution.setScope(false);
+        child.setParent(concurrentReplacingExecution);
+        ((List<PvmExecutionImpl>) concurrentReplacingExecution.getExecutions()).add(child);
+        this.getExecutions().remove(child);
+      }
+    }
+
+    // (1), (2), and (3)
+    PvmExecutionImpl concurrentExecution = this.createExecution();
+    concurrentExecution.setConcurrent(true);
+    concurrentExecution.setScope(false);
+
+    return concurrentExecution;
+  }
+
   public boolean tryPruneLastConcurrentChild() {
 
     if (getNonEventScopeExecutions().size() == 1) {
@@ -391,7 +502,7 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
     TransitionImpl transitionImpl = (TransitionImpl) transition;
     setActivity(transitionImpl.getSource());
     setTransition(transitionImpl);
-    performOperation(PvmAtomicOperation.TRANSITION_NOTIFY_LISTENER_END);
+    performOperation(PvmAtomicOperation.TRANSITION_NOTIFY_LISTENER_TAKE);
   }
 
   /**
@@ -656,9 +767,33 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
     return childExecutions;
   }
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
-  public void takeAll(List<PvmTransition> _transitions, List<? extends ActivityExecution> _recyclableExecutions) {
-    ArrayList<TransitionImpl> transitions = new ArrayList<TransitionImpl>((List)_transitions);
+  public void leaveActivityViaTransition(PvmTransition outgoingTransition) {
+    leaveActivityViaTransitions(Arrays.asList(outgoingTransition), Collections.<ActivityExecution>emptyList());
+  }
+
+  public void leaveActivityViaTransitions(List<PvmTransition> _transitions, List<? extends ActivityExecution> _recyclableExecutions) {
+    List<? extends ActivityExecution> recyclableExecutions = new ArrayList<ActivityExecution>(_recyclableExecutions);
+    recyclableExecutions.remove(this);
+    for (ActivityExecution execution : recyclableExecutions) {
+      execution.end(_transitions.isEmpty());
+    }
+
+    // ending a recyclable execution might have replaced this execution as well
+    PvmExecutionImpl propagatingExecution = this;
+    if (getReplacedBy() != null) {
+      propagatingExecution = getReplacedBy();
+    }
+
+    if (_transitions.isEmpty()) {
+      propagatingExecution.end(!isConcurrent());
+    }
+    else {
+      propagatingExecution.setTransitionsToTake(_transitions);
+      propagatingExecution.performOperation(PvmAtomicOperation.TRANSITION_NOTIFY_LISTENER_END);
+    }
+
+
+    /*ArrayList<TransitionImpl> transitions = new ArrayList<TransitionImpl>((List)_transitions);
     ArrayList<PvmExecutionImpl> recyclableExecutions = (_recyclableExecutions!=null ? new ArrayList<PvmExecutionImpl>((List)_recyclableExecutions) : new ArrayList<PvmExecutionImpl>());
 
     if (recyclableExecutions.size()>1) {
@@ -756,7 +891,7 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
       if (isConcurrentEnd) {
         concurrentRoot.end(true);
       }
-    }
+    }*/
   }
 
   protected boolean hasConcurrentSiblings(PvmExecutionImpl concurrentRoot) {
@@ -1194,6 +1329,14 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
 
   public TransitionImpl getTransition() {
     return transition;
+  }
+
+  public List<PvmTransition> getTransitionsToTake() {
+    return transitionsToTake;
+  }
+
+  public void setTransitionsToTake(List<PvmTransition> transitionsToTake) {
+    this.transitionsToTake = transitionsToTake;
   }
 
   public String getCurrentTransitionId() {

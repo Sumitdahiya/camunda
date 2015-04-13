@@ -211,7 +211,9 @@ public interface ActivityExecution extends DelegateExecution {
    * Takes the given outgoing transitions, and potentially reusing
    * the given list of executions that were previously joined.
    */
-  void takeAll(List<PvmTransition> outgoingTransitions, List<? extends ActivityExecution> joinedExecutions);
+  void leaveActivityViaTransitions(List<PvmTransition> outgoingTransitions, List<? extends ActivityExecution> joinedExecutions);
+
+  void leaveActivityViaTransition(PvmTransition outgoingTransition);
 
   /**
    * Executes the {@link ActivityBehavior} associated with the given activity.

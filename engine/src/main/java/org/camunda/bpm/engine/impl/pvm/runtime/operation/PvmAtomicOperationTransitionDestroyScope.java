@@ -12,11 +12,16 @@
  */
 package org.camunda.bpm.engine.impl.pvm.runtime.operation;
 
-import org.camunda.bpm.engine.impl.pvm.PvmActivity;
-import org.camunda.bpm.engine.impl.pvm.runtime.LegacyBehavior;
-import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
-
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
+
+import org.camunda.bpm.engine.ProcessEngineException;
+import org.camunda.bpm.engine.impl.pvm.PvmActivity;
+import org.camunda.bpm.engine.impl.pvm.PvmTransition;
+import org.camunda.bpm.engine.impl.pvm.runtime.LegacyBehavior;
+import org.camunda.bpm.engine.impl.pvm.runtime.OutgoingExecution;
+import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
 
 
 /**
@@ -38,6 +43,8 @@ public class PvmAtomicOperationTransitionDestroyScope implements PvmAtomicOperat
     PvmExecutionImpl propagatingExecution = null;
 
     PvmActivity activity = execution.getActivity();
+    List<PvmTransition> transitionsToTake = execution.getTransitionsToTake();
+    execution.setTransitionsToTake(null);
 
     // check whether the current scope needs to be destroyed
     if (activity.isScope()) {
@@ -62,10 +69,49 @@ public class PvmAtomicOperationTransitionDestroyScope implements PvmAtomicOperat
       propagatingExecution = execution;
     }
 
-    // while executing the transition, the activityInstance is 'null'
-    // (we are not executing an activity)
-    propagatingExecution.setActivityInstanceId(null);
-    propagatingExecution.performOperation(TRANSITION_NOTIFY_LISTENER_TAKE);
+
+    if (transitionsToTake.isEmpty()) {
+      throw new ProcessEngineException(execution.toString() + ": No outgoing transitions from "
+          + "activity " + activity);
+    }
+    else if (transitionsToTake.size() == 1) {
+      // while executing the transition, the activityInstance is 'null'
+      // (we are not executing an activity)
+      propagatingExecution.setActivityInstanceId(null);
+      propagatingExecution.take(transitionsToTake.get(0));
+    }
+    else {
+      List<OutgoingExecution> outgoingExecutions = new ArrayList<OutgoingExecution>();
+
+      for (int i = 0; i < transitionsToTake.size(); i++) {
+        PvmTransition transition = transitionsToTake.get(i);
+
+        PvmExecutionImpl scopeExecution = propagatingExecution.isScope() ?
+            propagatingExecution : propagatingExecution.getParent();
+
+        // reuse concurrent, propagating execution for first transition
+        PvmExecutionImpl concurrentExecution = null;
+        if (i == 0) {
+          concurrentExecution = propagatingExecution;
+        }
+        else {
+          concurrentExecution = scopeExecution.createConcurrentExecution();
+          if (i == 1 && !propagatingExecution.isConcurrent()) {
+            outgoingExecutions.remove(0);
+            // FIXME: huge hack to get ahold of the concurrent execution that replaced the
+            // scope propagating execution
+            outgoingExecutions.add(new OutgoingExecution(propagatingExecution.getExecutions().get(0), transitionsToTake.get(0)));
+          }
+        }
+
+        outgoingExecutions.add(new OutgoingExecution(concurrentExecution, transition));
+      }
+
+      for (OutgoingExecution outgoingExecution : outgoingExecutions) {
+        outgoingExecution.take();
+      }
+    }
+
   }
 
   public String getCanonicalName() {

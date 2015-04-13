@@ -83,7 +83,7 @@ public class InclusiveGatewayActivityBehavior extends GatewayActivityBehavior {
       }
 
       // take the flows found
-      execution.takeAll(transitionsToTake, joinedExecutions);
+      execution.leaveActivityViaTransitions(transitionsToTake, joinedExecutions);
     } else {
       if (log.isLoggable(Level.FINE)) {
         log.fine("Inclusive gateway '" + activity.getId() + "' does not activate");

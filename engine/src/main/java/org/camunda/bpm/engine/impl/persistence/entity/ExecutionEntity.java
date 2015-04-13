@@ -143,7 +143,7 @@ public class ExecutionEntity extends PvmExecutionImpl implements
 
   /** when execution structure is pruned during a takeAll, then
    * the original execution has to be resolved to the replaced execution.
-   * @see {@link #takeAll(List, List)} {@link OutgoingExecution} */
+   * @see {@link #leaveActivityViaTransitions(List, List)} {@link OutgoingExecution} */
   protected transient ExecutionEntity replacedBy;
 
   protected int suspensionState = SuspensionState.ACTIVE.getStateCode();

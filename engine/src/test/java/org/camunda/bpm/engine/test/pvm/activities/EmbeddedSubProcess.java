@@ -51,7 +51,7 @@ public class EmbeddedSubProcess implements CompositeActivityBehavior {
     if(outgoingTransitions.isEmpty()) {
       execution.end(true);
     }else {
-      execution.takeAll(outgoingTransitions, Collections.EMPTY_LIST);
+      execution.leaveActivityViaTransitions(outgoingTransitions, Collections.EMPTY_LIST);
     }
   }
 
