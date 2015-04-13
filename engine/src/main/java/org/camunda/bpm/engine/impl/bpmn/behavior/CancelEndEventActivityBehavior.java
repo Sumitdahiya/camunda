@@ -54,8 +54,8 @@ public class CancelEndEventActivityBehavior extends AbstractBpmnActivityBehavior
     ScopeImpl flowScope = cancelBoundaryEvent.getFlowScope();
     flowScope = LegacyBehavior.get().normalizeSecondNonScope(flowScope);
 
-    ActivityExecution boundaryEventScopeExecution = execution.findExecutionForFlowScope(flowScope);
-    boundaryEventScopeExecution.executeActivity(cancelBoundaryEvent);
+//    ActivityExecution boundaryEventScopeExecution = execution.findExecutionForFlowScope(flowScope);
+    execution.executeActivity(cancelBoundaryEvent);
   }
 
   public void signal(ActivityExecution execution, String signalName, Object signalData) throws Exception {

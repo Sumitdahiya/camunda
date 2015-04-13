@@ -689,7 +689,7 @@ public class BpmnParse extends Parse {
           if(isForCompensation == null || !(Boolean) isForCompensation) {
             addError("compensation boundary catch must be connected to element with isForCompensation=true", associationElement);
           } else {
-            ActivityImpl compensatedActivity = sourceActivity.getParentFlowScopeActivity();
+            ActivityImpl compensatedActivity = (ActivityImpl) sourceActivity.getEventScope();
             compensatedActivity.setProperty(PROPERTYNAME_COMPENSATION_HANDLER_ID, targetActivity.getId());
           }
         }
@@ -2766,6 +2766,7 @@ public class BpmnParse extends Parse {
     parseAsynchronousContinuation(transactionElement, activity);
 
     activity.setScope(true);
+    activity.setSubProcessScope(true);
     activity.setActivityBehavior(new TransactionActivityBehavior());
     activity.setProperty(PROPERTYNAME_TRIGGERED_BY_EVENT, false);
     parseScope(transactionElement, activity);

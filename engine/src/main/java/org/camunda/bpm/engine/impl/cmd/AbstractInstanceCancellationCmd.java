@@ -12,6 +12,9 @@
  */
 package org.camunda.bpm.engine.impl.cmd;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
 
@@ -45,9 +48,13 @@ public abstract class AbstractInstanceCancellationCmd extends AbstractProcessIns
     }
 
     if (topmostCancellableExecution.isProcessInstanceExecution()) {
-      topmostCancellableExecution.cancelScope("Cancelled due to process instance modification", skipCustomListeners, skipIoMappings);
-      // TODO: the following instruction should go into #cancelScope but this breaks some things like
-      // transaction subprocesses
+      List<ExecutionEntity> children = new ArrayList<ExecutionEntity>(topmostCancellableExecution.getExecutions());
+
+      for (ExecutionEntity childExecution : children) {
+        childExecution.deleteCascade("Cancelled due to process instance modification", skipCustomListeners, skipIoMappings);
+      }
+      // TODO: this must also remove the current tasks of the topMostCancellableExecution
+      // and jobs related to its activity (cf old cancel scope behavior), call listeners, etc.
       topmostCancellableExecution.leaveActivityInstance();
       topmostCancellableExecution.setActivity(null);
     } else {
