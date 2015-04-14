@@ -171,6 +171,8 @@ public class BpmnParse extends Parse {
   public static final String PROPERTYNAME_EVENT_SUBSCRIPTION_DECLARATION = "eventDefinitions";
   public static final String PROPERTYNAME_TRIGGERED_BY_EVENT = "triggeredByEvent";
   public static final String PROPERTYNAME_TYPE = "type";
+  public static final String PROPERTYNAME_CONSUMES_COMPENSATION = "consumesCompensation";
+
 
   /* process start authorization specific finals */
   protected static final String POTENTIAL_STARTER = "potentialStarter";
@@ -1297,9 +1299,9 @@ public class BpmnParse extends Parse {
     }
 
     // ensure there is only one cancel boundary event
-    for (ActivityImpl child : transaction.getActivities()) {
-      if("cancelBoundaryCatch".equals(child.getProperty("type"))
-        && child != activity ) {
+    for (ActivityImpl sibling : activity.getFlowScope().getActivities()) {
+      if("cancelBoundaryCatch".equals(sibling.getProperty("type"))
+        && sibling != activity && sibling.getEventScope() == transaction) {
         addError("multiple boundary events with cancelEventDefinition not supported on same transaction subprocess", cancelEventDefinition);
       }
     }
@@ -2417,7 +2419,6 @@ public class BpmnParse extends Parse {
         }
       }
       boundaryEventActivity.setEventScope(eventScopeActivity);
-      eventScopeActivity.setScope(true);
 
       // determine start behavior
       String cancelActivityAttr = boundaryEventElement.attribute("cancelActivity", "true");
@@ -2432,21 +2433,26 @@ public class BpmnParse extends Parse {
       // Catch event behavior is the same for most types
       ActivityBehavior behavior = new BoundaryEventActivityBehavior();
       if (timerEventDefinition != null) {
+        eventScopeActivity.setScope(true);
         parseBoundaryTimerEventDefinition(timerEventDefinition, isCancelActivity, boundaryEventActivity);
 
       } else if (errorEventDefinition != null) {
+        eventScopeActivity.setScope(true);
         parseBoundaryErrorEventDefinition(errorEventDefinition, boundaryEventActivity);
 
       } else if (signalEventDefinition != null) {
+        eventScopeActivity.setScope(true);
         parseBoundarySignalEventDefinition(signalEventDefinition, isCancelActivity, boundaryEventActivity);
 
       } else if (cancelEventDefinition != null) {
+        eventScopeActivity.setScope(true);
         behavior = parseBoundaryCancelEventDefinition(cancelEventDefinition, boundaryEventActivity);
 
       } else if(compensateEventDefinition != null) {
         parseCatchCompensateEventDefinition(compensateEventDefinition, boundaryEventActivity);
 
       } else if(messageEventDefinition != null) {
+        eventScopeActivity.setScope(true);
         parseBoundaryMessageEventDefinition(messageEventDefinition, isCancelActivity, boundaryEventActivity);
 
       } else {
@@ -2742,6 +2748,7 @@ public class BpmnParse extends Parse {
 
     Boolean isTriggeredByEvent = parseBooleanAttribute(subProcessElement.attribute(PROPERTYNAME_TRIGGERED_BY_EVENT), false);
     subProcessActivity.setProperty(PROPERTYNAME_TRIGGERED_BY_EVENT, isTriggeredByEvent);
+    subProcessActivity.setProperty(PROPERTYNAME_CONSUMES_COMPENSATION, !isTriggeredByEvent);
 
     if(isTriggeredByEvent) {
       subProcessActivity.setScope(LegacyBehavior.get().isEventSubprocessScope());

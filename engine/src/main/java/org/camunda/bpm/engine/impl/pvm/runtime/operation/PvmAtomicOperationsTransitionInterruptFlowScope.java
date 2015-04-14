@@ -27,10 +27,6 @@ public class PvmAtomicOperationsTransitionInterruptFlowScope extends PvmAtomicOp
     return "transition-interrupt-scope";
   }
 
-  public void execute(PvmExecutionImpl execution) {
-    super.execute(!execution.isScope() ? execution.getParent() : execution);
-  }
-
   protected void scopeInterrupted(PvmExecutionImpl execution) {
     execution.performOperation(TRANSITION_CREATE_SCOPE);
   }

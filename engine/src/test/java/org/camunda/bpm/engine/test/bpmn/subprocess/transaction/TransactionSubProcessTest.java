@@ -386,7 +386,7 @@ public class TransactionSubProcessTest extends PluggableProcessEngineTestCase {
     assertEquals(0, runtimeService.createEventSubscriptionQuery().count());
 
     // TODO: should all instances of the transaction subprocess be compensated or only the
-    // instance which threw the cancel event.
+    // instance which threw the cancel event. => Only one
     assertEquals(5, runtimeService.getVariable(processInstance.getId(), "undoBookHotel"));
     assertEquals(5, runtimeService.getVariable(processInstance.getId(), "undoBookFlight"));
 

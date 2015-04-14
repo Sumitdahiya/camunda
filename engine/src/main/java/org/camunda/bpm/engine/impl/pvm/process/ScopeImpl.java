@@ -80,7 +80,7 @@ public abstract class ScopeImpl extends CoreActivity implements PvmScope {
       throw new ProcessEngineException("This is not a sub process scope.");
     }
     ActivityImpl activity = findActivity(activityId);
-    if(activity.getLevelOfSubprocessScope() != this) {
+    if(activity == null || activity.getLevelOfSubprocessScope() != this) {
       return null;
     }
     else {

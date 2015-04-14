@@ -186,14 +186,14 @@ public class LegacyBehavior {
   }
 
   public boolean eventSubprocessConcurrentChildExecutionEnded(ActivityExecution scopeExecution, ActivityExecution endedExecution) {
-    boolean perfromLegacyBehavior = isLegacyBehaviorRequired(endedExecution, isEventSubprocessScope);
+    boolean performLegacyBehavior = isLegacyBehaviorRequired(endedExecution, isEventSubprocessScope);
 
-    if(perfromLegacyBehavior) {
+    if(performLegacyBehavior) {
       log.fine("[LEGACY BEHAVIOR]: end concurrent execution in event subprocess.");
       endedExecution.end(false);
     }
 
-    return perfromLegacyBehavior;
+    return performLegacyBehavior;
   }
 
   // non-scopes which should be scopes ////////////////////////////
@@ -242,9 +242,10 @@ public class LegacyBehavior {
 
     // first create the mapping:
     Map<ScopeImpl, PvmExecutionImpl> activityExecutionMapping = scopeExecution.createActivityExecutionMapping();
-    // if the activity is not in the mapping, no execution was created for it.
+    // if the scope execution for the current activity is the same as for the parent scope
     // -> we need to perform legacy behavior
-    return !activityExecutionMapping.containsKey(scopeExecution.getActivity());
+    PvmActivity activity = scopeExecution.getActivity();
+    return activityExecutionMapping.get(activity) == activityExecutionMapping.get(activity.getFlowScope());
   }
 
   /**
@@ -307,9 +308,10 @@ public class LegacyBehavior {
     // process definition / process instance.
     mapping.put(scopes.get(0), scopeExecutions.get(0));
     // nested activities
+    int executionCounter = 0;
     for(int i = 1; i < scopes.size(); i++) {
       ActivityImpl scope = (ActivityImpl) scopes.get(i);
-      PvmExecutionImpl execution = scopeExecutions.get(i);
+      PvmExecutionImpl execution = scopeExecutions.get(executionCounter);
       if(numOfMissingExecutions > 0) {
         ActivityBehavior activityBehavior = scope.getActivityBehavior();
         ActivityBehavior parentActivityBehavior = (ActivityBehavior) (scope.getFlowScope() != null ? scope.getFlowScope().getActivityBehavior() : null);
@@ -317,9 +319,10 @@ public class LegacyBehavior {
             || (isSequentialMiSubprocessScope && activityBehavior instanceof SubProcessActivityBehavior
                   && parentActivityBehavior instanceof SequentialMultiInstanceActivityBehavior)) {
           // found a missing scope
-          i++;
           numOfMissingExecutions--;
-          continue;
+        }
+        else {
+          executionCounter++;
         }
       }
       mapping.put(scope, execution);

@@ -1237,7 +1237,9 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
     currentActivity = currentActivity.isScope() ? currentActivity : currentActivity.getFlowScope();
     currentActivity = LegacyBehavior.get().normalizeSecondNonScope(currentActivity);
 
-    return createActivityExecutionMapping(currentActivity);
+    PvmExecutionImpl scopeExecution = isScope() ? this : getParent();
+
+    return scopeExecution.createActivityExecutionMapping(currentActivity);
   }
 
   public Map<ScopeImpl, PvmExecutionImpl> createActivityExecutionMapping(ScopeImpl currentScope) {
