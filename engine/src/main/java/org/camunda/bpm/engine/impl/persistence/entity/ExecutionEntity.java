@@ -399,12 +399,7 @@ public class ExecutionEntity extends PvmExecutionImpl implements
     }
 
     initializeAssociations(this);
-
-    // execute Input Mappings (if they exist).
-    ensureActivityInitialized();
-    if (activity != null && activity.getIoMapping() != null && !skipIoMapping) {
-      activity.getIoMapping().executeInputParameters(this);
-    }
+    executeIoMapping();
 
     List<TimerDeclarationImpl> timerDeclarations = (List<TimerDeclarationImpl>) scope.getProperty(BpmnParse.PROPERTYNAME_TIMER_DECLARATION);
     if (timerDeclarations!=null) {

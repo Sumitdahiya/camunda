@@ -69,15 +69,12 @@ public class PvmAtomicOperationTransitionDestroyScope implements PvmAtomicOperat
       propagatingExecution = execution;
     }
 
-
+    // take the specified transitions
     if (transitionsToTake.isEmpty()) {
       throw new ProcessEngineException(execution.toString() + ": No outgoing transitions from "
           + "activity " + activity);
     }
     else if (transitionsToTake.size() == 1) {
-      // while executing the transition, the activityInstance is 'null'
-      // (we are not executing an activity)
-      propagatingExecution.setActivityInstanceId(null);
       propagatingExecution.take(transitionsToTake.get(0));
     }
     else {
@@ -96,6 +93,7 @@ public class PvmAtomicOperationTransitionDestroyScope implements PvmAtomicOperat
         }
         else {
           concurrentExecution = scopeExecution.createConcurrentExecution();
+
           if (i == 1 && !propagatingExecution.isConcurrent()) {
             outgoingExecutions.remove(0);
             // FIXME: huge hack to get ahold of the concurrent execution that replaced the

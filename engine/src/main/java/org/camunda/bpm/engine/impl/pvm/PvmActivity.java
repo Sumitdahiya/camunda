@@ -16,6 +16,7 @@ package org.camunda.bpm.engine.impl.pvm;
 import java.util.List;
 
 import org.camunda.bpm.engine.delegate.ExecutionListener;
+import org.camunda.bpm.engine.impl.core.variable.mapping.IoMapping;
 import org.camunda.bpm.engine.impl.pvm.delegate.ActivityBehavior;
 import org.camunda.bpm.engine.impl.pvm.process.ActivityStartBehavior;
 

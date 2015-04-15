@@ -497,7 +497,7 @@ public class MessageNonInterruptingBoundaryEventTest extends PluggableProcessEng
   }
 
   @Deployment
-  public void FAILING_testNestedEvents() {
+  public void testNestedEvents() {
     // given
     String processInstanceId = runtimeService.startProcessInstanceByKey("process").getId();
 
@@ -591,7 +591,7 @@ public class MessageNonInterruptingBoundaryEventTest extends PluggableProcessEng
   }
 
   @Deployment(resources = {"org/camunda/bpm/engine/test/bpmn/event/message/MessageNonInterruptingBoundaryEventTest.testNestedEvents.bpmn20.xml"})
-  public void FAILING_testNestedEventsAnotherExecutionOrder() {
+  public void testNestedEventsAnotherExecutionOrder() {
     // given
     String processInstanceId = runtimeService.startProcessInstanceByKey("process").getId();
 

@@ -152,6 +152,14 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
 
   public abstract void initialize();
 
+  public void executeIoMapping() {
+    // execute Input Mappings (if they exist).
+    ActivityImpl currentActivity = getActivity();
+    if (currentActivity != null && currentActivity.getIoMapping() != null && !skipIoMapping) {
+      currentActivity.getIoMapping().executeInputParameters(this);
+    }
+  }
+
   public void start() {
     start(null);
   }
@@ -503,6 +511,10 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
     TransitionImpl transitionImpl = (TransitionImpl) transition;
     setActivity(transitionImpl.getSource());
     setTransition(transitionImpl);
+    // while executing the transition, the activityInstance is 'null'
+    // (we are not executing an activity)
+    setActivityInstanceId(null);
+    setActive(true);
     performOperation(PvmAtomicOperation.TRANSITION_NOTIFY_LISTENER_TAKE);
   }
 
@@ -642,6 +654,7 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
       child.setParent(concurrentReplacingExecution);
       ((List<PvmExecutionImpl>) concurrentReplacingExecution.getExecutions()).add(child);
       getExecutions().remove(child);
+      leaveActivityInstance();
     }
 
     // (1), (2), and (3)
@@ -786,113 +799,12 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
     }
 
     if (_transitions.isEmpty()) {
-      propagatingExecution.end(!isConcurrent());
+      propagatingExecution.end(!propagatingExecution.isConcurrent());
     }
     else {
       propagatingExecution.setTransitionsToTake(_transitions);
       propagatingExecution.performOperation(PvmAtomicOperation.TRANSITION_NOTIFY_LISTENER_END);
     }
-
-
-    /*ArrayList<TransitionImpl> transitions = new ArrayList<TransitionImpl>((List)_transitions);
-    ArrayList<PvmExecutionImpl> recyclableExecutions = (_recyclableExecutions!=null ? new ArrayList<PvmExecutionImpl>((List)_recyclableExecutions) : new ArrayList<PvmExecutionImpl>());
-
-    if (recyclableExecutions.size()>1) {
-      for (PvmExecutionImpl recyclableExecution: recyclableExecutions) {
-        if (recyclableExecution.isScope()) {
-          throw new PvmException("joining scope executions is not allowed");
-        }
-      }
-    }
-
-    PvmExecutionImpl concurrentRoot = ((isConcurrent && !isScope) ? getParent() : this);
-    List<PvmExecutionImpl> concurrentActiveExecutions = new ArrayList<PvmExecutionImpl>();
-    List<PvmExecutionImpl> concurrentInActiveExecutions = new ArrayList<PvmExecutionImpl>();
-    for (PvmExecutionImpl execution: concurrentRoot.getExecutions()) {
-      if (execution.isActive()) {
-        concurrentActiveExecutions.add(execution);
-      } else {
-        concurrentInActiveExecutions.add(execution);
-      }
-    }
-
-    if (log.isLoggable(Level.FINE)) {
-      log.fine("transitions to take concurrent: " + transitions);
-      log.fine("active concurrent executions: " + concurrentActiveExecutions);
-    }
-
-    if ( (transitions.size()==1)
-         && (concurrentActiveExecutions.isEmpty())
-         && allExecutionsInSameActivity(concurrentInActiveExecutions)
-       ) {
-
-      List<PvmExecutionImpl> recyclableExecutionImpls = recyclableExecutions;
-      recyclableExecutions.remove(concurrentRoot);
-      for (PvmExecutionImpl prunedExecution: recyclableExecutionImpls) {
-        // End the pruned executions if necessary.
-        // Some recyclable executions are inactivated (joined executions)
-        // Others are already ended (end activities)
-        if (!prunedExecution.isEnded()) {
-          log.fine("pruning execution " + prunedExecution);
-          prunedExecution.end(false);
-        }
-      }
-
-      log.fine("activating the concurrent root "+concurrentRoot+" as the single path of execution going forward");
-      concurrentRoot.setActive(true);
-      concurrentRoot.setActivity(activity);
-      concurrentRoot.setConcurrent(hasConcurrentSiblings(concurrentRoot));
-      concurrentRoot.take(transitions.get(0));
-
-    } else {
-
-      List<OutgoingExecution> outgoingExecutions = new ArrayList<OutgoingExecution>();
-
-      recyclableExecutions.remove(concurrentRoot);
-
-      log.fine("recyclable executions for reuse: " + recyclableExecutions);
-
-      // first create the concurrent executions
-      while (!transitions.isEmpty()) {
-        TransitionImpl outgoingTransition = transitions.remove(0);
-
-        PvmExecutionImpl outgoingExecution = null;
-        if (recyclableExecutions.isEmpty()) {
-          outgoingExecution = concurrentRoot.createExecution();
-          log.fine("new "+outgoingExecution+" with parent "
-                  + outgoingExecution.getParent()+" created to take transition "+outgoingTransition);
-        } else {
-          outgoingExecution = recyclableExecutions.remove(0);
-          log.fine("recycled "+outgoingExecution+" to take transition "+outgoingTransition);
-        }
-
-        outgoingExecution.setActive(true);
-        outgoingExecution.setScope(false);
-        outgoingExecution.setConcurrent(true);
-        outgoingExecution.setTransitionBeingTaken(outgoingTransition);
-        outgoingExecutions.add(new OutgoingExecution(outgoingExecution, outgoingTransition, true));
-      }
-
-      concurrentRoot.setActivityInstanceId(concurrentRoot.getParentActivityInstanceId());
-
-      boolean isConcurrentEnd = outgoingExecutions.isEmpty();
-
-      // prune the executions that are not recycled
-      for (PvmExecutionImpl prunedExecution: recyclableExecutions) {
-        log.fine("pruning execution "+prunedExecution);
-        prunedExecution.end(isConcurrentEnd);
-      }
-
-      // then launch all the concurrent executions
-      for (OutgoingExecution outgoingExecution: outgoingExecutions) {
-        outgoingExecution.take();
-      }
-
-      // if no outgoing executions, the concurrent root execution ends
-      if (isConcurrentEnd) {
-        concurrentRoot.end(true);
-      }
-    }*/
   }
 
   protected boolean hasConcurrentSiblings(PvmExecutionImpl concurrentRoot) {

@@ -1004,7 +1004,7 @@ public class BpmnParse extends Parse {
     } else if (activityElement.getTagName().equals("subProcess")) {
       activity = parseSubProcess(activityElement, scopeElement);
     } else if (activityElement.getTagName().equals("callActivity")) {
-      activity = parseCallActivity(activityElement, scopeElement);
+      activity = parseCallActivity(activityElement, scopeElement, isMultiInstance);
     } else if (activityElement.getTagName().equals("intermediateCatchEvent")) {
       // postpone all intermediate catch events (required for supporting event-based gw)
       postponedElements.put(activityElement.attribute("id"), activityElement);
@@ -1174,6 +1174,7 @@ public class BpmnParse extends Parse {
     nestedActivity.setProperty("type", "intermediateMessageCatch");
 
     EventSubscriptionDeclaration messageDefinition = parseMessageEventDefinition(messageEventDefinition);
+    messageDefinition.setActivityId(nestedActivity.getId());
     addEventSubscriptionDeclaration(messageDefinition, nestedActivity.getEventScope(), messageEventDefinition);
 
     for (BpmnParseListener parseListener : parseListeners) {
@@ -1994,6 +1995,8 @@ public class BpmnParse extends Parse {
       addEventSubscriptionDeclaration(declaration, activity, receiveTaskElement);
     }
 
+
+
     for (BpmnParseListener parseListener : parseListeners) {
       parseListener.parseReceiveTask(receiveTaskElement, scope, activity);
     }
@@ -2597,6 +2600,7 @@ public class BpmnParse extends Parse {
     signalActivity.setProperty("type", "intermediateSignalCatch");
 
     EventSubscriptionDeclaration signalDefinition = parseSignalEventDefinition(element);
+    signalDefinition.setActivityId(signalActivity.getId());
     addEventSubscriptionDeclaration(signalDefinition, signalActivity.getEventScope(), element);
 
     for (BpmnParseListener parseListener : parseListeners) {
@@ -2792,7 +2796,7 @@ public class BpmnParse extends Parse {
    * @param scope
    *          The current scope on which the call activity is defined.
    */
-  public ActivityImpl parseCallActivity(Element callActivityElement, ScopeImpl scope) {
+  public ActivityImpl parseCallActivity(Element callActivityElement, ScopeImpl scope, boolean isMultiInstance) {
     ActivityImpl activity = createActivityOnScope(callActivityElement, scope);
 
     // parse async
@@ -2845,7 +2849,12 @@ public class BpmnParse extends Parse {
     // parse output parameter
     parseOutputParameter(callActivityElement, activity, callableElement, isProcess);
 
-    activity.setScope(true);
+    if(!isMultiInstance) {
+      // turn activity into a scope unless it is a multi instance activity, in that case this
+      // is not necessary because there is already the multi instance body scope and concurrent
+      // child executions are sufficient
+      activity.setScope(true);
+    }
     activity.setActivityBehavior(behavior);
 
     parseExecutionListenersOnScope(callActivityElement, activity);

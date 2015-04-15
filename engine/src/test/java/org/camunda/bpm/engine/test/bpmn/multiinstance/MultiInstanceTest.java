@@ -255,6 +255,22 @@ public class MultiInstanceTest extends PluggableProcessEngineTestCase {
     assertProcessEnded(procId);
   }
 
+  @Deployment
+  public void testParallelReceiveTasks() {
+    ProcessInstance procInst = runtimeService.startProcessInstanceByKey("miParallelReceiveTasks");
+    String procId = procInst.getId();
+
+    assertEquals(3, runtimeService.createEventSubscriptionQuery().count());
+
+    List<Execution> receiveTaskExecutions = runtimeService
+        .createExecutionQuery().activityId("miTasks").list();
+
+    for (Execution execution : receiveTaskExecutions) {
+      runtimeService.messageEventReceived("message", execution.getId());
+    }
+    assertProcessEnded(procId);
+  }
+
   @Deployment(resources = {"org/camunda/bpm/engine/test/bpmn/multiinstance/MultiInstanceTest.testParallelUserTasks.bpmn20.xml"})
   public void testParallelUserTasksHistory() {
     ProcessInstance pi = runtimeService.startProcessInstanceByKey("miParallelUserTasks");
@@ -272,6 +288,11 @@ public class MultiInstanceTest extends PluggableProcessEngineTestCase {
         assertEquals("kermit_"+i, hi.getAssignee());
       }
 
+      HistoricActivityInstance multiInstanceBodyInstance = historyService.createHistoricActivityInstanceQuery()
+          .activityId("miTasks$multiInstanceBody").singleResult();
+      assertNotNull(multiInstanceBodyInstance);
+      assertEquals(pi.getId(), multiInstanceBodyInstance.getParentActivityInstanceId());
+
       List<HistoricActivityInstance> historicActivityInstances = historyService.createHistoricActivityInstanceQuery().activityType("userTask").list();
       assertEquals(3, historicActivityInstances.size());
       for (HistoricActivityInstance hai : historicActivityInstances) {
@@ -279,7 +300,7 @@ public class MultiInstanceTest extends PluggableProcessEngineTestCase {
         assertNotNull(hai.getEndTime());
         assertNotNull(hai.getAssignee());
         assertEquals("userTask", hai.getActivityType());
-        assertEquals(pi.getId(), hai.getParentActivityInstanceId());
+        assertEquals(multiInstanceBodyInstance.getId(), hai.getParentActivityInstanceId());
         assertNotNull(hai.getTaskId());
       }
     }
@@ -347,10 +368,15 @@ public class MultiInstanceTest extends PluggableProcessEngineTestCase {
     assertEquals(0, taskService.createTaskQuery().count());
     assertProcessEnded(procId);
     if (processEngineConfiguration.getHistoryLevel().getId() > ProcessEngineConfigurationImpl.HISTORYLEVEL_NONE) {
-      List<HistoricActivityInstance> activities = historyService.createHistoricActivityInstanceQuery().processInstanceId(procId).orderByActivityId().asc().list();
-      assertEquals(2, activities.size());
-      assertEquals("theEnd", activities.get(0).getActivityId());
-      assertEquals("theStart", activities.get(1).getActivityId());
+      List<HistoricActivityInstance> activities = historyService
+          .createHistoricActivityInstanceQuery()
+          .processInstanceId(procId)
+          .orderByActivityId()
+          .asc().list();
+      assertEquals(3, activities.size());
+      assertEquals("miTasks$multiInstanceBody", activities.get(0).getActivityId());
+      assertEquals("theEnd", activities.get(1).getActivityId());
+      assertEquals("theStart", activities.get(2).getActivityId());
     }
   }
 

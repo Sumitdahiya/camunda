@@ -159,6 +159,7 @@ public class ExecutionImpl extends PvmExecutionImpl implements
   }
 
   public void initialize() {
+    executeIoMapping();
   }
 
   public void interrupt(String reason) {

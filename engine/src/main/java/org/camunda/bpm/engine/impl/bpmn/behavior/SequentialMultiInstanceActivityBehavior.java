@@ -12,6 +12,7 @@
  */
 package org.camunda.bpm.engine.impl.bpmn.behavior;
 
+import org.camunda.bpm.engine.impl.pvm.PvmActivity;
 import org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution;
 
 /**
