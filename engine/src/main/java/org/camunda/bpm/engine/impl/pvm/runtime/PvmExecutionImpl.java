@@ -472,6 +472,7 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
   public void replace(PvmExecutionImpl execution) {
     // activity instance id handling
     this.activityInstanceId = execution.getActivityInstanceId();
+
     execution.leaveActivityInstance();
   }
 
@@ -1104,17 +1105,15 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
       return getId();
 
     } else {
-      PvmExecutionImpl parent = getParent();
-      PvmActivity activity = getActivity();
-      PvmActivity parentActivity = parent.getActivity();
-      if (parent.isScope() && !isConcurrent() || parent.isConcurrent
-           && activity != parentActivity
-          ) {
+      ActivityImpl currentActivity = getActivity();
+      if (activityInstanceId == null || (currentActivity != null && !currentActivity.isScope())) {
+        PvmExecutionImpl parent = getParent();
         return parent.getActivityInstanceId();
-      } else {
-        return parent.getParentActivityInstanceId();
       }
-
+      else {
+        PvmExecutionImpl parentScopeExecution = getParentScopeExecution(false);
+        return parentScopeExecution.getActivityInstanceId();
+      }
     }
   }
 
