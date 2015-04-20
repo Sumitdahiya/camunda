@@ -16,6 +16,7 @@ package org.camunda.bpm.engine.impl.pvm.runtime;
 import java.util.logging.Logger;
 
 import org.camunda.bpm.engine.impl.pvm.PvmTransition;
+import org.camunda.bpm.engine.impl.pvm.process.TransitionImpl;
 
 /**
  *
@@ -32,14 +33,15 @@ public class OutgoingExecution {
   public OutgoingExecution(PvmExecutionImpl outgoingExecution, PvmTransition outgoingTransition) {
     this.outgoingExecution = outgoingExecution;
     this.outgoingTransition = outgoingTransition;
+    outgoingExecution.setTransition(outgoingTransition);
   }
 
   public void take() {
-    if (outgoingExecution.getReplacedBy()!=null) {
+    if (outgoingExecution.getReplacedBy() != null) {
       outgoingExecution = outgoingExecution.getReplacedBy();
     }
     if(!outgoingExecution.isEnded()) {
-      outgoingExecution.take(outgoingTransition);
+      outgoingExecution.take();
     } else {
       log.fine("Not taking transition '"+outgoingTransition+"', outgoing execution has ended.");
     }

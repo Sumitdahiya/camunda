@@ -602,19 +602,17 @@ public class MessageEventSubprocessTest extends PluggableProcessEngineTestCase {
 
     ExecutionQuery executionQuery = runtimeService.createExecutionQuery();
 
-    String forkId = executionQuery
-        .processInstanceId(processInstance.getId())
-        .activityId("fork")
-        .singleResult()
-        .getId();
+    ExecutionTree executionTree = ExecutionTree.forExecution(processInstance.getId(), processEngine);
 
-    Execution eventSubProcessTaskExecution = executionQuery
-        .processInstanceId(processInstance.getId())
-        .activityId("eventSubProcessTask")
-        .singleResult();
-
-    ExecutionEntity executionEntity = (ExecutionEntity) eventSubProcessTaskExecution;
-    assertEquals(forkId, executionEntity.getParentId());
+    assertThat(executionTree)
+      .matches(
+        describeExecutionTree(null).scope()
+          .child(null).scope()
+          .child("firstUserTask").concurrent().noScope().up()
+          .child("secondUserTask").concurrent().noScope().up()
+          .child(null).concurrent().noScope()
+            .child("eventSubProcessTask")
+          .done());
 
     List<Task> tasks = taskService.createTaskQuery().list();
 

@@ -56,12 +56,6 @@ public interface ActivityExecution extends DelegateExecution {
   /** return the Id of the parent activity instance currently executed by this execution */
   String getParentActivityInstanceId();
 
-  /**
-   * leaves the current activity by taking the given transition.
-   */
-  void take(PvmTransition transition);
-
-
   /* Execution management */
 
   /**

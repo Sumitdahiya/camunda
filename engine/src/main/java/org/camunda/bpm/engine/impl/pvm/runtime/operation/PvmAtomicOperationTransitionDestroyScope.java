@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.impl.pvm.PvmActivity;
 import org.camunda.bpm.engine.impl.pvm.PvmTransition;
+import org.camunda.bpm.engine.impl.pvm.process.TransitionImpl;
 import org.camunda.bpm.engine.impl.pvm.runtime.LegacyBehavior;
 import org.camunda.bpm.engine.impl.pvm.runtime.OutgoingExecution;
 import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
@@ -75,7 +76,8 @@ public class PvmAtomicOperationTransitionDestroyScope implements PvmAtomicOperat
           + "activity " + activity);
     }
     else if (transitionsToTake.size() == 1) {
-      propagatingExecution.take(transitionsToTake.get(0));
+      propagatingExecution.setTransition(transitionsToTake.get(0));
+      propagatingExecution.take();
     }
     else {
       List<OutgoingExecution> outgoingExecutions = new ArrayList<OutgoingExecution>();

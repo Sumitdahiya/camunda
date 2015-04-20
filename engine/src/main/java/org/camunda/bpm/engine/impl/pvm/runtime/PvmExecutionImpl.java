@@ -81,10 +81,6 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
    * that are going to be taken */
   protected transient List<PvmTransition> transitionsToTake = null;
 
-  // TODO: what is this for? seems only to be used with inclusive gw
-  /** transition that will be taken.  is null when there is no transition being taken. */
-  protected transient TransitionImpl transitionBeingTaken = null;
-
   /** the unique id of the current activity instance */
   protected String activityInstanceId;
 
@@ -111,6 +107,9 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
   protected boolean isConcurrent = false;
   protected boolean isEnded = false;
   protected boolean isEventScope = false;
+
+  /** transient; used for process instance modification to preserve a scope from getting deleted */
+  protected boolean preserveScope = false;
 
   /** marks the current activity instance */
   protected int activityInstanceState = ActivityInstanceState.DEFAULT.getStateCode();
@@ -392,6 +391,7 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
       if (lastConcurrent.isConcurrent()) {
         if (!lastConcurrent.isScope()) {
           setActivity(lastConcurrent.getActivity());
+          setTransition(lastConcurrent.getTransition());
           lastConcurrent.setReplacedBy(this);
 
           // Move children of lastConcurrent one level up
@@ -501,16 +501,15 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
     }
   }
 
-  public void take(PvmTransition transition) {
-    if (this.transition!=null) {
-      throw new PvmException("already taking a transition");
+  public void take() {
+    if (this.transition == null) {
+      throw new PvmException(toString() + ": no transition to take specified");
     }
     if (transition==null) {
       throw new PvmException("transition is null");
     }
     TransitionImpl transitionImpl = (TransitionImpl) transition;
     setActivity(transitionImpl.getSource());
-    setTransition(transitionImpl);
     // while executing the transition, the activityInstance is 'null'
     // (we are not executing an activity)
     setActivityInstanceId(null);
@@ -786,7 +785,11 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
   }
 
   public void leaveActivityViaTransitions(List<PvmTransition> _transitions, List<? extends ActivityExecution> _recyclableExecutions) {
-    List<? extends ActivityExecution> recyclableExecutions = new ArrayList<ActivityExecution>(_recyclableExecutions);
+    List<? extends ActivityExecution> recyclableExecutions = Collections.emptyList();
+    if (_recyclableExecutions != null) {
+      recyclableExecutions = new ArrayList<ActivityExecution>(_recyclableExecutions);
+    }
+
     recyclableExecutions.remove(this);
     for (ActivityExecution execution : recyclableExecutions) {
       execution.end(_transitions.isEmpty());
@@ -1261,16 +1264,8 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
     }
   }
 
-  public TransitionImpl getTransitionBeingTaken() {
-    return transitionBeingTaken;
-  }
-
-  public void setTransition(TransitionImpl transition) {
-    this.transition = transition;
-  }
-
-  public void setTransitionBeingTaken(TransitionImpl transitionBeingTaken) {
-    this.transitionBeingTaken = transitionBeingTaken;
+  public void setTransition(PvmTransition transition) {
+    this.transition = (TransitionImpl) transition;
   }
 
   public boolean isConcurrent() {
@@ -1311,6 +1306,14 @@ public abstract class PvmExecutionImpl extends CoreExecution implements Activity
     if (completeScope) {
       activityInstanceState = ActivityInstanceState.SCOPE_COMPLETE.getStateCode();
     }
+  }
+
+  public void setPreserveScope(boolean preserveScope) {
+    this.preserveScope = preserveScope;
+  }
+
+  public boolean isPreserveScope() {
+    return preserveScope;
   }
 
   public int getActivityInstanceState() {

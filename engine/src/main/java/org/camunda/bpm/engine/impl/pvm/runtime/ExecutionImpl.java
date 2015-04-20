@@ -162,9 +162,6 @@ public class ExecutionImpl extends PvmExecutionImpl implements
     executeIoMapping();
   }
 
-  public void interrupt(String reason) {
-  }
-
   // parent ///////////////////////////////////////////////////////////////////
 
   /** ensures initialization and returns the parent */

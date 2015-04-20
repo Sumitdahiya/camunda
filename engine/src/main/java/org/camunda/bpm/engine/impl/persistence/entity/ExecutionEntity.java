@@ -474,11 +474,14 @@ public class ExecutionEntity extends PvmExecutionImpl implements
   public void interrupt(String reason, boolean skipCustomListeners, boolean skipIoMappings) {
 
     // remove Jobs
-    removeJobs();
+    if (preserveScope) {
+      removeActivityJobs(reason);
+    } else {
+      removeJobs();
+      removeEventSubscriptionsExceptCompensation();
+    }
 
     removeTasks(reason);
-
-    removeEventSubscriptionsExceptCompensation();
 
     super.interrupt(reason, skipCustomListeners, skipIoMappings);
   }

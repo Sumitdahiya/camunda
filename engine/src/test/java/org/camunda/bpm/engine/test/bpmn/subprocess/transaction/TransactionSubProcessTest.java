@@ -137,7 +137,13 @@ public class TransactionSubProcessTest extends PluggableProcessEngineTestCase {
 
     ActivityInstance txActivityInstance = rootActivityInstance.getChildActivityInstances()[0];
     assertEquals("tx", txActivityInstance.getActivityId());
-    assertEquals(7, txActivityInstance.getChildActivityInstances().length);
+
+    // failure end event instance
+    assertEquals(1, txActivityInstance.getChildActivityInstances().length);
+    ActivityInstance failureEndEventInstance = txActivityInstance.getChildActivityInstances()[0];
+
+    // compensation task instances
+    assertEquals(6, failureEndEventInstance.getChildActivityInstances().length);
 
     for (Task t : undoBookHotel) {
       taskService.complete(t.getId());
@@ -385,10 +391,8 @@ public class TransactionSubProcessTest extends PluggableProcessEngineTestCase {
 
     assertEquals(0, runtimeService.createEventSubscriptionQuery().count());
 
-    // TODO: should all instances of the transaction subprocess be compensated or only the
-    // instance which threw the cancel event. => Only one
-    assertEquals(5, runtimeService.getVariable(processInstance.getId(), "undoBookHotel"));
-    assertEquals(5, runtimeService.getVariable(processInstance.getId(), "undoBookFlight"));
+    assertEquals(1, runtimeService.getVariable(processInstance.getId(), "undoBookHotel"));
+    assertEquals(1, runtimeService.getVariable(processInstance.getId(), "undoBookFlight"));
 
     runtimeService.signal(runtimeService.createExecutionQuery().activityId("afterCancellation").singleResult().getId());
 

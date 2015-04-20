@@ -3145,8 +3145,8 @@ public class BpmnParse extends Parse {
       } else if(sourceActivity.getActivityBehavior() instanceof EventBasedGatewayActivityBehavior) {
         // ignore
       } else if(destinationActivity.getActivityBehavior() instanceof IntermediateCatchEventActivityBehavior
-              && (destinationActivity.getParentFlowScopeActivity() != null)
-              && (destinationActivity.getParentFlowScopeActivity().getActivityBehavior() instanceof EventBasedGatewayActivityBehavior)) {
+              && (destinationActivity.getEventScope() != null)
+              && (destinationActivity.getEventScope().getActivityBehavior() instanceof EventBasedGatewayActivityBehavior)) {
         addError("Invalid incoming sequenceflow for intermediateCatchEvent with id '"+destinationActivity.getId()+"' connected to an event-based gateway.", sequenceFlowElement);
       } else if (sourceActivity.getActivityBehavior() instanceof SubProcessActivityBehavior && (Boolean) sourceActivity.getProperty(PROPERTYNAME_TRIGGERED_BY_EVENT)) {
         addError("Invalid outgoing sequence flow of event subprocess", sequenceFlowElement);
