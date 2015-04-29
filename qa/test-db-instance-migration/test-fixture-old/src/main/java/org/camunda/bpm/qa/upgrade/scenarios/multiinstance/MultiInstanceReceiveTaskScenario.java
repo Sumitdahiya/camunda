@@ -10,13 +10,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess;
+package org.camunda.bpm.qa.upgrade.scenarios.multiinstance;
 
 import org.camunda.bpm.engine.ProcessEngine;
-import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.engine.test.Deployment;
 import org.camunda.bpm.qa.upgrade.DescribesScenario;
-import org.camunda.bpm.qa.upgrade.ExtendsScenario;
 import org.camunda.bpm.qa.upgrade.ScenarioSetup;
 import org.camunda.bpm.qa.upgrade.Times;
 
@@ -24,46 +22,39 @@ import org.camunda.bpm.qa.upgrade.Times;
  * @author Thorben Lindhauer
  *
  */
-public class ParallelNestedNonInterruptingEventSubprocessScenario {
+public class MultiInstanceReceiveTaskScenario {
 
   @Deployment
-  public static String deployProcess() {
-    return "org/camunda/bpm/qa/upgrade/eventsubprocess/parallelNestedNonInterruptingMessageEventSubprocess.bpmn20.xml";
+  public static String deployProcessParallel() {
+    return "org/camunda/bpm/qa/upgrade/multiinstance/parallelMultiInstanceReceiveTask.bpmn20.xml";
   }
 
-  @DescribesScenario("init")
-  @Times(5)
-  public static ScenarioSetup instantiateAndTriggerSubprocess() {
+  @Deployment
+  public static String deployProcessSequential() {
+    return "org/camunda/bpm/qa/upgrade/multiinstance/sequentialMultiInstanceReceiveTask.bpmn20.xml";
+  }
+
+  @DescribesScenario("initParallel")
+  @Times(4)
+  public static ScenarioSetup instantiateParallel() {
     return new ScenarioSetup() {
       public void execute(ProcessEngine engine, String scenarioName) {
         engine
           .getRuntimeService()
-          .startProcessInstanceByKey("ParallelNestedNonInterruptingEventSubprocessScenario", scenarioName);
-
-        engine.getRuntimeService()
-          .createMessageCorrelation("Message")
-          .processInstanceBusinessKey(scenarioName)
-          .correlate();
+          .startProcessInstanceByKey("ParallelMultiInstanceReceiveTask", scenarioName);
       }
     };
   }
 
-  @DescribesScenario("init.innerTask")
-  @ExtendsScenario("init")
+  @DescribesScenario("initSequential")
   @Times(4)
-  public static ScenarioSetup completeSubprocessTask() {
+  public static ScenarioSetup instantiateSequential() {
     return new ScenarioSetup() {
       public void execute(ProcessEngine engine, String scenarioName) {
-        Task task = engine
-          .getTaskService()
-          .createTaskQuery()
-          .processInstanceBusinessKey(scenarioName)
-          .taskDefinitionKey("innerTask")
-          .singleResult();
-
-        engine.getTaskService().complete(task.getId());
+        engine
+          .getRuntimeService()
+          .startProcessInstanceByKey("SequentialMultiInstanceReceiveTask", scenarioName);
       }
     };
   }
-
 }

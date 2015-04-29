@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.ibatis.logging.LogFactory;
 import org.camunda.bpm.engine.ManagementService;
 import org.camunda.bpm.engine.ProcessEngine;
 import org.camunda.bpm.engine.ProcessEngineConfiguration;
@@ -28,13 +27,15 @@ import org.camunda.bpm.engine.impl.ProcessEngineImpl;
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl;
 import org.camunda.bpm.engine.impl.interceptor.Command;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
-import org.camunda.bpm.engine.impl.util.LogUtil;
 import org.camunda.bpm.engine.repository.Deployment;
 import org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess.InterruptingEventSubprocessScenario;
 import org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess.NestedNonInterruptingEventSubprocessScenario;
 import org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess.NestedParallelNonInterruptingEventSubprocessScenario;
 import org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess.NonInterruptingEventSubprocessScenario;
 import org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess.ParallelNestedNonInterruptingEventSubprocessScenario;
+import org.camunda.bpm.qa.upgrade.scenarios.multiinstance.MultiInstanceReceiveTaskScenario;
+import org.camunda.bpm.qa.upgrade.scenarios.multiinstance.NestedSequentialMultiInstanceSubprocessScenario;
+import org.camunda.bpm.qa.upgrade.scenarios.multiinstance.SequentialMultiInstanceSubprocessScenario;
 
 /**
  * @author Daniel Meyer
@@ -78,8 +79,12 @@ public class TestFixtureOld {
     runner.setupScenarios(ParallelNestedNonInterruptingEventSubprocessScenario.class);
     runner.setupScenarios(NestedParallelNonInterruptingEventSubprocessScenario.class);
 
-    processEngine.close();
+    // multi instance
+    runner.setupScenarios(SequentialMultiInstanceSubprocessScenario.class);
+    runner.setupScenarios(NestedSequentialMultiInstanceSubprocessScenario.class);
+    runner.setupScenarios(MultiInstanceReceiveTaskScenario.class);
 
+    processEngine.close();
   }
 
   protected static void dropCreateDatabase(ProcessEngine processEngine) {

@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess;
+package org.camunda.bpm.qa.upgrade.scenarios.multiinstance;
 
 import org.camunda.bpm.engine.ProcessEngine;
 import org.camunda.bpm.engine.test.Deployment;
@@ -22,28 +22,22 @@ import org.camunda.bpm.qa.upgrade.Times;
  * @author Thorben Lindhauer
  *
  */
-public class InterruptingEventSubprocessScenario {
+public class SequentialMultiInstanceSubprocessScenario {
 
   @Deployment
   public static String deployProcess() {
-    return "org/camunda/bpm/qa/upgrade/eventsubprocess/interruptingMessageEventSubprocess.bpmn20.xml";
+    return "org/camunda/bpm/qa/upgrade/multiinstance/sequentialMultiInstanceSubprocess.bpmn20.xml";
   }
 
   @DescribesScenario("init")
-  @Times(3)
-  public static ScenarioSetup instantiateAndTriggerSubprocess() {
+  @Times(4)
+  public static ScenarioSetup instantiate() {
     return new ScenarioSetup() {
       public void execute(ProcessEngine engine, String scenarioName) {
         engine
           .getRuntimeService()
-          .startProcessInstanceByKey("InterruptingEventSubprocessScenario", scenarioName);
-
-        engine.getRuntimeService()
-          .createMessageCorrelation("Message")
-          .processInstanceBusinessKey(scenarioName)
-          .correlate();
+          .startProcessInstanceByKey("SequentialMultiInstanceSubprocess", scenarioName);
       }
     };
   }
-
 }

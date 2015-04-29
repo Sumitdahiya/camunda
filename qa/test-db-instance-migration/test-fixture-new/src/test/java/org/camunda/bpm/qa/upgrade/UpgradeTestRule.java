@@ -13,6 +13,7 @@
 package org.camunda.bpm.qa.upgrade;
 
 import org.camunda.bpm.engine.runtime.ExecutionQuery;
+import org.camunda.bpm.engine.runtime.MessageCorrelationBuilder;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.engine.runtime.ProcessInstanceQuery;
 import org.camunda.bpm.engine.task.TaskQuery;
@@ -81,6 +82,10 @@ public class UpgradeTestRule extends ProcessEngineRule {
     }
 
     return instance;
+  }
+
+  public MessageCorrelationBuilder messageCorrelation(String messageName) {
+    return runtimeService.createMessageCorrelation(messageName).processInstanceBusinessKey(scenarioName);
   }
 
   public void assertScenarioEnded() {

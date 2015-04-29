@@ -27,7 +27,7 @@ import org.camunda.bpm.qa.upgrade.Times;
 public class NestedParallelNonInterruptingEventSubprocessScenario {
 
   @Deployment
-  public static String deployInterruptingMessageEventSubprocess() {
+  public static String deployProcess() {
     return "org/camunda/bpm/qa/upgrade/eventsubprocess/nestedParallelNonInterruptingMessageEventSubprocess.bpmn20.xml";
   }
 

@@ -14,24 +14,33 @@ package org.camunda.bpm.qa.upgrade.util;
 
 import org.camunda.bpm.engine.delegate.BpmnError;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
+import org.camunda.bpm.engine.delegate.ExecutionListener;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 
 /**
  * @author Thorben Lindhauer
  *
  */
-public class ThrowBpmnErrorDelegate implements JavaDelegate {
+public class ThrowBpmnErrorDelegate implements JavaDelegate, ExecutionListener {
 
   public static final String ERROR_INDICATOR = "throwError";
 
   @Override
   public void execute(DelegateExecution execution) throws Exception {
+    throwErrorIfRequested(execution);
+  }
+
+  @Override
+  public void notify(DelegateExecution execution) throws Exception {
+    throwErrorIfRequested(execution);
+  }
+
+  protected void throwErrorIfRequested(DelegateExecution execution) {
     Boolean shouldThrowError = (Boolean) execution.getVariable(ERROR_INDICATOR);
 
     if (Boolean.TRUE.equals(shouldThrowError)) {
       throw new BpmnError(ThrowBpmnErrorDelegate.class.getSimpleName());
     }
-
   }
 
 }

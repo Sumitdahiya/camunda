@@ -144,9 +144,11 @@ public class ParallelNestedNonInterruptingEventSubprocessScenarioTest {
   public void testInitInnerTaskThrowError() {
     // given
     ProcessInstance instance = rule.processInstance();
-    Task eventSubprocessTask = rule.taskQuery().singleResult();
+    Task eventSubprocessTask = rule.taskQuery().taskDefinitionKey("eventSubProcessTask").singleResult();
+    Task outerTask = rule.taskQuery().taskDefinitionKey("outerTask").singleResult();
 
     // when
+    rule.getTaskService().complete(outerTask.getId());
     rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.ERROR_INDICATOR, true);
     rule.getTaskService().complete(eventSubprocessTask.getId());
 
