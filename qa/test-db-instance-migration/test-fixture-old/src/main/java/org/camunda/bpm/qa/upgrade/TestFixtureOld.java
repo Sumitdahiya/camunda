@@ -28,6 +28,9 @@ import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl;
 import org.camunda.bpm.engine.impl.interceptor.Command;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.repository.Deployment;
+import org.camunda.bpm.qa.upgrade.scenarios.boundary.NestedNonInterruptingBoundaryEventOnInnerSubprocessScenario;
+import org.camunda.bpm.qa.upgrade.scenarios.boundary.NestedNonInterruptingBoundaryEventOnOuterSubprocessScenario;
+import org.camunda.bpm.qa.upgrade.scenarios.boundary.NonInterruptingBoundaryEventScenario;
 import org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess.InterruptingEventSubprocessScenario;
 import org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess.NestedNonInterruptingEventSubprocessScenario;
 import org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess.NestedParallelNonInterruptingEventSubprocessScenario;
@@ -83,6 +86,11 @@ public class TestFixtureOld {
     runner.setupScenarios(SequentialMultiInstanceSubprocessScenario.class);
     runner.setupScenarios(NestedSequentialMultiInstanceSubprocessScenario.class);
     runner.setupScenarios(MultiInstanceReceiveTaskScenario.class);
+
+    // boundary event
+    runner.setupScenarios(NonInterruptingBoundaryEventScenario.class);
+    runner.setupScenarios(NestedNonInterruptingBoundaryEventOnInnerSubprocessScenario.class);
+    runner.setupScenarios(NestedNonInterruptingBoundaryEventOnOuterSubprocessScenario.class);
 
     processEngine.close();
   }
