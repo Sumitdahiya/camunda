@@ -17,6 +17,7 @@ import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.engine.runtime.ProcessInstanceQuery;
 import org.camunda.bpm.engine.task.TaskQuery;
 import org.camunda.bpm.engine.test.ProcessEngineRule;
+import org.junit.Assert;
 import org.junit.runner.Description;
 
 /**
@@ -25,6 +26,7 @@ import org.junit.runner.Description;
  */
 public class UpgradeTestRule extends ProcessEngineRule {
 
+  protected String scenarioTestedByClass = null;
   protected String scenarioName;
 
   public UpgradeTestRule() {
@@ -32,9 +34,22 @@ public class UpgradeTestRule extends ProcessEngineRule {
   }
 
   public void starting(Description description) {
+    if (scenarioTestedByClass == null) {
+      Class<?> testClass = description.getTestClass();
+      ScenarioUnderTest testScenarioClassAnnotation = testClass.getAnnotation(ScenarioUnderTest.class);
+      if (testScenarioClassAnnotation != null) {
+        scenarioTestedByClass = testScenarioClassAnnotation.value();
+      }
+    }
+
     ScenarioUnderTest testScenarioAnnotation = description.getAnnotation(ScenarioUnderTest.class);
     if (testScenarioAnnotation != null) {
-      scenarioName = testScenarioAnnotation.value();
+      if (scenarioTestedByClass != null) {
+        scenarioName = scenarioTestedByClass + "." + testScenarioAnnotation.value();
+      }
+      else {
+        scenarioName = testScenarioAnnotation.value();
+      }
     }
 
     if (scenarioName == null) {
@@ -68,7 +83,8 @@ public class UpgradeTestRule extends ProcessEngineRule {
     return instance;
   }
 
-  public boolean scenarioEnded() {
-    return processInstanceQuery().singleResult() == null;
+  public void assertScenarioEnded() {
+    Assert.assertTrue("Process instance for scenario " + scenarioName + " should have ended",
+        processInstanceQuery().singleResult() == null);
   }
 }

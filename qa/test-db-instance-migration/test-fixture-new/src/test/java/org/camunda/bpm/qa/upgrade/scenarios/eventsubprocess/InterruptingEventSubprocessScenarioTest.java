@@ -9,13 +9,14 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
+@ScenarioUnderTest("InterruptingEventSubprocessScenario")
 public class InterruptingEventSubprocessScenarioTest {
 
   @Rule
   public UpgradeTestRule rule = new UpgradeTestRule();
 
   @Test
-  @ScenarioUnderTest("InterruptingEventSubprocessScenario.complete")
+  @ScenarioUnderTest("init.1")
   public void testCompletion() {
     // given
     Task task = rule.taskQuery().singleResult();
@@ -24,11 +25,11 @@ public class InterruptingEventSubprocessScenarioTest {
     rule.getTaskService().complete(task.getId());
 
     // then
-    Assert.assertTrue(rule.scenarioEnded());
+    rule.assertScenarioEnded();
   }
 
   @Test
-  @ScenarioUnderTest("InterruptingEventSubprocessScenario.activityInstanceTree")
+  @ScenarioUnderTest("init.2")
   public void testActivityInstanceTree() {
     // given
     ProcessInstance instance = rule.processInstance();
@@ -42,7 +43,7 @@ public class InterruptingEventSubprocessScenarioTest {
   }
 
   @Test
-  @ScenarioUnderTest("InterruptingEventSubprocessScenario.delete")
+  @ScenarioUnderTest("init.3")
   public void testDeletion() {
     // given
     ProcessInstance instance = rule.processInstance();
@@ -51,7 +52,7 @@ public class InterruptingEventSubprocessScenarioTest {
     rule.getRuntimeService().deleteProcessInstance(instance.getId(), null);
 
     // then
-    Assert.assertTrue(rule.scenarioEnded());
+    rule.assertScenarioEnded();
   }
 
 }

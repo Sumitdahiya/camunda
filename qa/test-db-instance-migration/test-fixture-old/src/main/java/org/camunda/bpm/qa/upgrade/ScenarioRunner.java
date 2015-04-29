@@ -13,7 +13,6 @@
 package org.camunda.bpm.qa.upgrade;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -70,29 +69,28 @@ public class ScenarioRunner {
     for (Method method : clazz.getDeclaredMethods()) {
       DescribesScenario scenarioAnnotation = method.getAnnotation(DescribesScenario.class);
       if (scenarioAnnotation != null) {
-        String[] scenarioNames = scenarioAnnotation.value();
+        Scenario scenario = new Scenario();
+
+        scenario.setName(createScenarioName(clazz, scenarioAnnotation.value()));
         ExtendsScenario extendedScenarioAnnotation = method.getAnnotation(ExtendsScenario.class);
-        String extendedScenarioName = null;
         if (extendedScenarioAnnotation != null) {
-          extendedScenarioName = extendedScenarioAnnotation.value();
+          scenario.setExtendedScenario(createScenarioName(clazz, extendedScenarioAnnotation.value()));
         }
 
-        ScenarioSetup setup = null;
         try {
-          setup = (ScenarioSetup) method.invoke(null, new Object[0]);
+          ScenarioSetup setup = (ScenarioSetup) method.invoke(null, new Object[0]);
+          scenario.setSetup(setup);
         } catch (Exception e) {
           throw new RuntimeException("Could not invoke method " + clazz.getName() + "#" + method.getName()
-              + " specifying scenarios " + Arrays.toString(scenarioNames), e);
+              + " specifying scenarios " + scenario.getName(), e);
         }
 
-        for (String scenarioName : scenarioNames) {
-          Scenario scenario = new Scenario();
-
-          scenario.setName(clazz.getSimpleName() + "." + scenarioName);
-          scenario.setExtendedScenario(extendedScenarioName);
-          scenario.setSetup(setup);
-          scenarios.put(scenario.getName(), scenario);
+        Times timesAnnotation = method.getAnnotation(Times.class);
+        if (timesAnnotation != null) {
+          scenario.setTimes(timesAnnotation.value());
         }
+
+        scenarios.put(scenario.getName(), scenario);
       }
     }
 
@@ -101,7 +99,11 @@ public class ScenarioRunner {
     }
   }
 
+  protected String createScenarioName(Class<?> declaringClass, String name) {
+    return declaringClass.getSimpleName() + "." + name;
+  }
+
   protected void setupScenario(Map<String, Scenario> scenarios, Scenario scenario) {
-    scenario.create(engine, scenarios);
+    scenario.createInstances(engine, scenarios);
   }
 }

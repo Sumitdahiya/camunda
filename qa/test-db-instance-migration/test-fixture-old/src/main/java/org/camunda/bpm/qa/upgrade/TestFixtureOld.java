@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.ibatis.logging.LogFactory;
 import org.camunda.bpm.engine.ManagementService;
 import org.camunda.bpm.engine.ProcessEngine;
 import org.camunda.bpm.engine.ProcessEngineConfiguration;
@@ -27,8 +28,13 @@ import org.camunda.bpm.engine.impl.ProcessEngineImpl;
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl;
 import org.camunda.bpm.engine.impl.interceptor.Command;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
+import org.camunda.bpm.engine.impl.util.LogUtil;
 import org.camunda.bpm.engine.repository.Deployment;
 import org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess.InterruptingEventSubprocessScenario;
+import org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess.NestedNonInterruptingEventSubprocessScenario;
+import org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess.NestedParallelNonInterruptingEventSubprocessScenario;
+import org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess.NonInterruptingEventSubprocessScenario;
+import org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess.ParallelNestedNonInterruptingEventSubprocessScenario;
 
 /**
  * @author Daniel Meyer
@@ -62,8 +68,15 @@ public class TestFixtureOld {
 
     dropCreateDatabase(processEngine);
 
+    // register test scenarios
     ScenarioRunner runner = new ScenarioRunner(processEngine);
+
+    // event subprocesses
     runner.setupScenarios(InterruptingEventSubprocessScenario.class);
+    runner.setupScenarios(NonInterruptingEventSubprocessScenario.class);
+    runner.setupScenarios(NestedNonInterruptingEventSubprocessScenario.class);
+    runner.setupScenarios(ParallelNestedNonInterruptingEventSubprocessScenario.class);
+    runner.setupScenarios(NestedParallelNonInterruptingEventSubprocessScenario.class);
 
     processEngine.close();
 

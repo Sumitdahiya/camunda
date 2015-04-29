@@ -3,15 +3,15 @@
   xmlns:tns="Examples">
   <message id="messageId" name="Message" />
   
-  <process id="InterruptingEventSubprocessScenario">
+  <process id="NonInterruptingEventSubprocessScenario">
     <startEvent id="theStart" />
-    <sequenceFlow sourceRef="theStart" targetRef="innerTask" />
-    <userTask id="innerTask" />
-    <sequenceFlow sourceRef="innerTask" targetRef="theEnd" />
+    <sequenceFlow sourceRef="theStart" targetRef="outerTask" />
+    <userTask id="outerTask" />
+    <sequenceFlow sourceRef="outerTask" targetRef="theEnd" />
     <endEvent id="theEnd" />
 
     <subProcess id="eventSubProcess" triggeredByEvent="true">
-      <startEvent id="eventProcessStart" isInterrupting="true">
+      <startEvent id="eventProcessStart" isInterrupting="false">
         <messageEventDefinition messageRef="messageId" />
       </startEvent>
       <sequenceFlow sourceRef="eventProcessStart" targetRef="eventSubProcessTask" />

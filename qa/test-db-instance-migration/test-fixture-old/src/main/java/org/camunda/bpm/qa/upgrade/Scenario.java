@@ -23,6 +23,7 @@ import org.camunda.bpm.engine.ProcessEngineException;
  */
 public class Scenario {
 
+  protected int times = 1;
   protected String name;
   protected String extendedScenario;
 
@@ -34,6 +35,14 @@ public class Scenario {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public int getTimes() {
+    return times;
+  }
+
+  public void setTimes(int times) {
+    this.times = times;
   }
 
   public String getExtendedScenario() {
@@ -53,24 +62,31 @@ public class Scenario {
     return this;
   }
 
-  public void create(ProcessEngine engine, Map<String, Scenario> scenarios) {
-    create(engine, scenarios, name);
+  public void createInstances(ProcessEngine engine, Map<String, Scenario> scenarios) {
+    for (int i = 1; i <= times; i++) {
+      String scenarioInstanceName = name;
+      if (times > 1) {
+        scenarioInstanceName = name + "." + i;
+      }
+
+      create(engine, scenarios, scenarioInstanceName);
+    }
   }
 
-  public void create(ProcessEngine engine, Map<String, Scenario> scenarios, String actualScenarioName) {
+  public void create(ProcessEngine engine, Map<String, Scenario> scenarios, String scenarioInstanceName) {
     // recursively set up all extended scenarios first
     if (extendedScenario != null) {
       if (scenarios.containsKey(extendedScenario)) {
         Scenario parentScenario = scenarios.get(extendedScenario);
-        parentScenario.create(engine, scenarios, actualScenarioName);
+        parentScenario.create(engine, scenarios, scenarioInstanceName);
       }
       else {
-        throw new ProcessEngineException("Extended scenarion " + extendedScenario + " not registerd");
+        throw new ProcessEngineException("Extended scenario " + extendedScenario + " not registered");
       }
     }
 
     if (setup != null) {
-      setup.execute(engine, actualScenarioName);
+      setup.execute(engine, scenarioInstanceName);
     }
   }
 }

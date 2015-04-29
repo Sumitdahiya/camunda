@@ -21,7 +21,7 @@ import java.lang.annotation.Target;
  * @author Thorben Lindhauer
  *
  */
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ScenarioUnderTest {
 

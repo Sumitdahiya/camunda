@@ -13,8 +13,10 @@
 package org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess;
 
 import org.camunda.bpm.engine.ProcessEngine;
+import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.engine.test.Deployment;
 import org.camunda.bpm.qa.upgrade.DescribesScenario;
+import org.camunda.bpm.qa.upgrade.ExtendsScenario;
 import org.camunda.bpm.qa.upgrade.ScenarioSetup;
 import org.camunda.bpm.qa.upgrade.Times;
 
@@ -22,26 +24,44 @@ import org.camunda.bpm.qa.upgrade.Times;
  * @author Thorben Lindhauer
  *
  */
-public class InterruptingEventSubprocessScenario {
+public class NestedNonInterruptingEventSubprocessScenario {
 
   @Deployment
   public static String deployInterruptingMessageEventSubprocess() {
-    return "org/camunda/bpm/qa/upgrade/eventsubprocess/interruptingMessageEventSubprocess.bpmn20.xml";
+    return "org/camunda/bpm/qa/upgrade/eventsubprocess/nestedNonInterruptingMessageEventSubprocess.bpmn20.xml";
   }
 
   @DescribesScenario("init")
-  @Times(3)
+  @Times(5)
   public static ScenarioSetup instantiateAndTriggerSubprocess() {
     return new ScenarioSetup() {
       public void execute(ProcessEngine engine, String scenarioName) {
         engine
           .getRuntimeService()
-          .startProcessInstanceByKey("InterruptingEventSubprocessScenario", scenarioName);
+          .startProcessInstanceByKey("NestedNonInterruptingEventSubprocessScenario", scenarioName);
 
         engine.getRuntimeService()
           .createMessageCorrelation("Message")
           .processInstanceBusinessKey(scenarioName)
           .correlate();
+      }
+    };
+  }
+
+  @DescribesScenario("init.innerTask")
+  @ExtendsScenario("init")
+  @Times(3)
+  public static ScenarioSetup completeSubprocessTask() {
+    return new ScenarioSetup() {
+      public void execute(ProcessEngine engine, String scenarioName) {
+        Task task = engine
+          .getTaskService()
+          .createTaskQuery()
+          .processInstanceBusinessKey(scenarioName)
+          .taskDefinitionKey("innerTask")
+          .singleResult();
+
+        engine.getTaskService().complete(task.getId());
       }
     };
   }
