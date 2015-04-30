@@ -138,6 +138,22 @@ public class LegacyBehavior {
   }
 
   /**
+   * Destroy an execution for an activity that was previously not a scope and now is
+   * (e.g. event subprocess)
+   */
+  public static boolean destroySecondNonScope(PvmExecutionImpl execution) {
+    ensureScope(execution);
+    boolean performLegacyBehavior = isLegacyBehaviorRequired(execution);
+
+    if(performLegacyBehavior) {
+      log.fine("[LEGACY BEHAVIOR]: end scope execution in previously non-scope activity");
+      // legacy behavior is to do nothing
+    }
+
+    return performLegacyBehavior;
+  }
+
+  /**
    * This method
    * @param scopeExecution
    * @param isLegacyBehaviorTurnedOff
