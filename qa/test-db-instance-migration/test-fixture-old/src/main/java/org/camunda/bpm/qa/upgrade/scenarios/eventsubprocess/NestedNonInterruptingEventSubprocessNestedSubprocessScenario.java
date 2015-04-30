@@ -24,21 +24,23 @@ import org.camunda.bpm.qa.upgrade.Times;
  * @author Thorben Lindhauer
  *
  */
-public class NonInterruptingEventSubprocessScenario {
+public class NestedNonInterruptingEventSubprocessNestedSubprocessScenario {
+
 
   @Deployment
   public static String deployProcess() {
-    return "org/camunda/bpm/qa/upgrade/eventsubprocess/nonInterruptingMessageEventSubprocess.bpmn20.xml";
+    return "org/camunda/bpm/qa/upgrade/eventsubprocess/nestedNonInterruptingMessageEventSubprocessNestedSubprocess.bpmn20.xml";
   }
 
   @DescribesScenario("init")
-  @Times(4)
-  public static ScenarioSetup instantiateAndTriggerSubprocess() {
+  @Times(5)
+  public static ScenarioSetup initNestedSubProcess() {
     return new ScenarioSetup() {
       public void execute(ProcessEngine engine, String scenarioName) {
         engine
           .getRuntimeService()
-          .startProcessInstanceByKey("NonInterruptingEventSubprocessScenario", scenarioName);
+          .startProcessInstanceByKey("NestedNonInterruptingMessageEventSubprocessScenarioNestedSubprocess",
+              scenarioName);
 
         engine.getRuntimeService()
           .createMessageCorrelation("Message")
@@ -48,20 +50,19 @@ public class NonInterruptingEventSubprocessScenario {
     };
   }
 
-  @DescribesScenario("init.outerTask")
+  @DescribesScenario("init.innerSubProcess")
   @ExtendsScenario("init")
-  @Times(3)
-  public static ScenarioSetup completeSubprocessTask() {
+  @Times(5)
+  public static ScenarioSetup initNestedSubProcessEnterSubprocess() {
     return new ScenarioSetup() {
       public void execute(ProcessEngine engine, String scenarioName) {
-        Task task = engine
-          .getTaskService()
+        Task eventSubProcessTask = engine.getTaskService()
           .createTaskQuery()
           .processInstanceBusinessKey(scenarioName)
-          .taskDefinitionKey("outerTask")
+          .taskDefinitionKey("eventSubProcessTask")
           .singleResult();
 
-        engine.getTaskService().complete(task.getId());
+        engine.getTaskService().complete(eventSubProcessTask.getId());
       }
     };
   }

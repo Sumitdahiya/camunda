@@ -134,7 +134,7 @@ public class NestedNonInterruptingEventSubprocessScenarioTest {
   }
 
   @Test
-  @ScenarioUnderTest("init.innerTask.3")
+  @ScenarioUnderTest("init.innerTask.4")
   public void testInitTask1ThrowError() {
     // given
     ProcessInstance instance = rule.processInstance();

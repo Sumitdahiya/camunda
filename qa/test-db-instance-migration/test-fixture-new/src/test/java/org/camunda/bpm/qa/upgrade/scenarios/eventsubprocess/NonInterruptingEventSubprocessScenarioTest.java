@@ -111,5 +111,4 @@ public class NonInterruptingEventSubprocessScenarioTest {
     // then
     rule.assertScenarioEnded();
   }
-
 }
