@@ -102,7 +102,7 @@ public class NestedNonInterruptingEventSubprocessNestedSubprocessTest {
     // then
     Task afterErrorTask = rule.taskQuery().singleResult();
     Assert.assertNotNull(afterErrorTask);
-    Assert.assertEquals("afterErrorTask", afterErrorTask.getTaskDefinitionKey());
+    Assert.assertEquals("escalatedTask", afterErrorTask.getTaskDefinitionKey());
 
     // and
     rule.getTaskService().complete(afterErrorTask.getId());
@@ -180,7 +180,7 @@ public class NestedNonInterruptingEventSubprocessNestedSubprocessTest {
     // then
     Task afterErrorTask = rule.taskQuery().singleResult();
     Assert.assertNotNull(afterErrorTask);
-    Assert.assertEquals("afterErrorTask", afterErrorTask.getTaskDefinitionKey());
+    Assert.assertEquals("escalatedTask", afterErrorTask.getTaskDefinitionKey());
 
     // and
     rule.getTaskService().complete(afterErrorTask.getId());

@@ -235,7 +235,6 @@ public class LegacyBehavior {
     int executionCounter = 0;
     for(int i = 1; i < scopes.size(); i++) {
       ActivityImpl scope = (ActivityImpl) scopes.get(i);
-      PvmExecutionImpl execution = scopeExecutions.get(executionCounter);
       if(numOfMissingExecutions > 0) {
         ActivityBehavior activityBehavior = scope.getActivityBehavior();
         ActivityBehavior parentActivityBehavior = (ActivityBehavior) (scope.getFlowScope() != null ? scope.getFlowScope().getActivityBehavior() : null);
@@ -249,6 +248,8 @@ public class LegacyBehavior {
           executionCounter++;
         }
       }
+
+      PvmExecutionImpl execution = scopeExecutions.get(executionCounter);
       mapping.put(scope, execution);
     }
 
