@@ -62,6 +62,7 @@ public class PvmAtomicOperationActivityEnd implements PvmAtomicOperation {
       }
     }
 
+    propagatingExecution = LegacyBehavior.determinePropagatingExecutionOnEnd(propagatingExecution);
     PvmScope flowScope = activity.getFlowScope();
 
     // 1. flow scope = Process Definition

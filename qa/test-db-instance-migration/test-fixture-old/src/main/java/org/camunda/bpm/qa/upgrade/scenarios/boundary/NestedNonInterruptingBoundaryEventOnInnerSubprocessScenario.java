@@ -26,7 +26,6 @@ import org.camunda.bpm.qa.upgrade.Times;
  */
 public class NestedNonInterruptingBoundaryEventOnInnerSubprocessScenario {
 
-  // TODO: sequential multi-instance subprocess with non-interrupting boundary event
   @Deployment
   public static String deployTimerBoundary() {
     return "org/camunda/bpm/qa/upgrade/boundary/nestedNonInterruptingTimerBoundaryEventOnInnerSubprocess.bpmn20.xml";

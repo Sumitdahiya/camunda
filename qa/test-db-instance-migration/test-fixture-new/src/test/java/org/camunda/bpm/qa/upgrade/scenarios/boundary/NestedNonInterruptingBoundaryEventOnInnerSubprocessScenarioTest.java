@@ -131,6 +131,8 @@ public class NestedNonInterruptingBoundaryEventOnInnerSubprocessScenarioTest {
     rule.messageCorrelation("ReceiveTaskMessage").correlate();
     rule.getTaskService().complete(afterBoundaryTask.getId());
 
+    // TODO: assert all historic activity instances have end times?
+
     // then
     rule.assertScenarioEnded();
   }

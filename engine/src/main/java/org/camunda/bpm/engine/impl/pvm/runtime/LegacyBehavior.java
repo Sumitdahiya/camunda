@@ -12,6 +12,7 @@
  */
 package org.camunda.bpm.engine.impl.pvm.runtime;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +28,10 @@ import org.camunda.bpm.engine.impl.pvm.delegate.ActivityBehavior;
 import org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution;
 import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
 import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
+import org.camunda.bpm.engine.impl.tree.ExecutionWalker;
+import org.camunda.bpm.engine.impl.tree.FlowScopeWalker;
+import org.camunda.bpm.engine.impl.tree.ScopeCollector;
+import org.camunda.bpm.engine.impl.tree.ScopeExecutionCollector;
 
 /**
  * This class encapsulates legacy runtime behavior for the process engine.
@@ -248,6 +253,9 @@ public class LegacyBehavior {
           executionCounter++;
         }
       }
+      else {
+        executionCounter++;
+      }
 
       PvmExecutionImpl execution = scopeExecutions.get(executionCounter);
       mapping.put(scope, execution);
@@ -255,5 +263,51 @@ public class LegacyBehavior {
 
     return mapping;
   }
+
+  /**
+   * Tolerates the broken execution trees fixed with CAM-3727 where there may be more
+   * ancestor scope executions than ancestor flow scopes;
+   *
+   * In that case, the argument execution is removed, the parent execution of the argument
+   * is returned such that one level of mismatch is corrected.
+   *
+   * Note that this does not necessarily skip the correct scope execution, since
+   * the broken parent-child relationships may be anywhere in the tree (e.g. consider a non-interrupting
+   * boundary event followed by a subprocess (i.e. scope), when the subprocess ends, we would
+   * skip the subprocess's execution).
+   *
+   */
+  public static PvmExecutionImpl determinePropagatingExecutionOnEnd(PvmExecutionImpl propagatingExecution) {
+    // TODO: use activity execution mapping
+    if (!propagatingExecution.isScope()) {
+      // non-scope executions may end in the "wrong" flow scope
+      return propagatingExecution;
+    }
+
+    ScopeExecutionCollector scopeExecutionCollector = new ScopeExecutionCollector();
+    new ExecutionWalker(propagatingExecution)
+      .addPreCollector(scopeExecutionCollector)
+      .walkUntil();
+    List<PvmExecutionImpl> scopeExecutions = scopeExecutionCollector.getExecutions();
+
+    ScopeCollector scopeCollector = new ScopeCollector();
+    new FlowScopeWalker(propagatingExecution.getActivity().getFlowScope())
+      .addPreCollector(scopeCollector)
+      .walkUntil();
+
+    List<ScopeImpl> flowScopes = scopeCollector.getScopes();
+
+    if (scopeExecutions.size() > flowScopes.size()) {
+      // skip one scope
+      propagatingExecution.remove();
+      PvmExecutionImpl parent = propagatingExecution.getParent();
+      parent.setActivity(propagatingExecution.getActivity());
+      return propagatingExecution.getParent();
+    }
+    else {
+      return propagatingExecution;
+    }
+  }
+
 
 }
