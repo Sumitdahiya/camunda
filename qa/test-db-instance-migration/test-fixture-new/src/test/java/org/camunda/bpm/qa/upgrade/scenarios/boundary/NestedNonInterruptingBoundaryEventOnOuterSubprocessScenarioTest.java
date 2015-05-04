@@ -1,5 +1,8 @@
 package org.camunda.bpm.qa.upgrade.scenarios.boundary;
 
+import static org.camunda.bpm.qa.upgrade.util.ActivityInstanceAssert.assertThat;
+import static org.camunda.bpm.qa.upgrade.util.ActivityInstanceAssert.describeActivityInstanceTree;
+
 import java.util.List;
 
 import org.camunda.bpm.engine.runtime.ActivityInstance;
@@ -57,8 +60,15 @@ public class NestedNonInterruptingBoundaryEventOnOuterSubprocessScenarioTest {
     ActivityInstance activityInstance = rule.getRuntimeService().getActivityInstance(instance.getId());
 
     // then
-    // TODO: assert the tree
     Assert.assertNotNull(activityInstance);
+    assertThat(activityInstance).hasStructure(
+        describeActivityInstanceTree(instance.getProcessDefinitionId())
+        .beginScope("outerSubProcess")
+          .beginScope("innerSubProcess")
+            // two scopes too deep due to CAM-3727 and activity instance id assignment
+            .activity("afterBoundaryTask")
+            .activity("innerSubProcessTask")
+        .done());
   }
 
   @Test
@@ -161,8 +171,15 @@ public class NestedNonInterruptingBoundaryEventOnOuterSubprocessScenarioTest {
     ActivityInstance activityInstance = rule.getRuntimeService().getActivityInstance(instance.getId());
 
     // then
-    // TODO: assert the tree
     Assert.assertNotNull(activityInstance);
+    assertThat(activityInstance).hasStructure(
+        describeActivityInstanceTree(instance.getProcessDefinitionId())
+        .beginScope("outerSubProcess")
+          .beginScope("innerSubProcess")
+            // two scopes too deep due to CAM-3727 and activity instance id assignment
+            .activity("afterBoundaryTask")
+            .activity("innerSubProcessTask")
+        .done());
   }
 
   @Test

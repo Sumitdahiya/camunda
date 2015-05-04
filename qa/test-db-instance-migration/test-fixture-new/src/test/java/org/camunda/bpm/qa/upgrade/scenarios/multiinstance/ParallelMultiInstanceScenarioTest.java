@@ -1,5 +1,8 @@
 package org.camunda.bpm.qa.upgrade.scenarios.multiinstance;
 
+import static org.camunda.bpm.qa.upgrade.util.ActivityInstanceAssert.assertThat;
+import static org.camunda.bpm.qa.upgrade.util.ActivityInstanceAssert.describeActivityInstanceTree;
+
 import java.util.List;
 
 import org.camunda.bpm.engine.runtime.ActivityInstance;
@@ -83,8 +86,20 @@ public class ParallelMultiInstanceScenarioTest {
     ActivityInstance activityInstance = rule.getRuntimeService().getActivityInstance(instance.getId());
 
     // then
-    // TODO: assert the tree
     Assert.assertNotNull(activityInstance);
+    assertThat(activityInstance).hasStructure(
+        describeActivityInstanceTree(instance.getProcessDefinitionId())
+          .activity("afterBoundaryTask")
+          .beginScope("miSubProcess")
+            .activity("subProcessTask")
+          .endScope()
+          .beginScope("miSubProcess")
+            .activity("subProcessTask")
+          .endScope()
+          .beginScope("miSubProcess")
+            .activity("subProcessTask")
+          .endScope()
+        .done());
   }
 
   @Test

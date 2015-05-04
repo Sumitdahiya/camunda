@@ -1,5 +1,8 @@
 package org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess;
 
+import static org.camunda.bpm.qa.upgrade.util.ActivityInstanceAssert.assertThat;
+import static org.camunda.bpm.qa.upgrade.util.ActivityInstanceAssert.describeActivityInstanceTree;
+
 import org.camunda.bpm.engine.runtime.ActivityInstance;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.engine.task.Task;
@@ -56,8 +59,14 @@ public class NestedNonInterruptingEventSubprocessScenarioTest {
     ActivityInstance activityInstance = rule.getRuntimeService().getActivityInstance(instance.getId());
 
     // then
-    // TODO: assert the tree
     Assert.assertNotNull(activityInstance);
+    assertThat(activityInstance).hasStructure(
+        describeActivityInstanceTree(instance.getProcessDefinitionId())
+          .beginScope("subProcess")
+            .activity("innerTask")
+            // eventSubProcess was previously no scope so it misses here
+            .activity("eventSubProcessTask")
+        .done());
   }
 
   @Test
@@ -116,8 +125,13 @@ public class NestedNonInterruptingEventSubprocessScenarioTest {
     ActivityInstance activityInstance = rule.getRuntimeService().getActivityInstance(instance.getId());
 
     // then
-    // TODO: assert the tree
     Assert.assertNotNull(activityInstance);
+    assertThat(activityInstance).hasStructure(
+        describeActivityInstanceTree(instance.getProcessDefinitionId())
+          .beginScope("subProcess")
+            // eventSubProcess was previously no scope so it misses here
+            .activity("eventSubProcessTask")
+        .done());
   }
 
   @Test
