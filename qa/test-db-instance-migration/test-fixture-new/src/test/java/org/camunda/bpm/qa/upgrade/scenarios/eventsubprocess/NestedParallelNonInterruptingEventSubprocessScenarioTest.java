@@ -82,7 +82,7 @@ public class NestedParallelNonInterruptingEventSubprocessScenarioTest {
   public void testInitThrowError() {
     // given
     ProcessInstance instance = rule.processInstance();
-    Task eventSubprocessTask = rule.taskQuery().taskDefinitionKey("eventSubProcessTask").singleResult();
+    Task eventSubprocessTask = rule.taskQuery().taskDefinitionKey("eventSubProcessTask1").singleResult();
 
     // when
     rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.ERROR_INDICATOR, true);
@@ -101,8 +101,8 @@ public class NestedParallelNonInterruptingEventSubprocessScenarioTest {
   @ScenarioUnderTest("init.innerTask.1")
   public void testInitInnerTaskCompletion() {
     // given
-    Task eventSubprocessTask1 = rule.taskQuery().taskDefinitionKey("eventSubProcessTask").singleResult();
-    Task eventSubprocessTask2 = rule.taskQuery().taskDefinitionKey("eventSubProcessTask").singleResult();
+    Task eventSubprocessTask1 = rule.taskQuery().taskDefinitionKey("eventSubProcessTask1").singleResult();
+    Task eventSubprocessTask2 = rule.taskQuery().taskDefinitionKey("eventSubProcessTask2").singleResult();
 
     // when
     rule.getTaskService().complete(eventSubprocessTask1.getId());
@@ -144,7 +144,7 @@ public class NestedParallelNonInterruptingEventSubprocessScenarioTest {
   public void testInitInnerTaskThrowError() {
     // given
     ProcessInstance instance = rule.processInstance();
-    Task eventSubprocessTask = rule.taskQuery().singleResult();
+    Task eventSubprocessTask = rule.taskQuery().taskDefinitionKey("eventSubProcessTask1").singleResult();
 
     // when
     rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.ERROR_INDICATOR, true);
