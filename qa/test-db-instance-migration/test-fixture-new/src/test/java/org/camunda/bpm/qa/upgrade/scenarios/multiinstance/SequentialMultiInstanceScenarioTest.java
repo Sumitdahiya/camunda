@@ -189,8 +189,9 @@ public class SequentialMultiInstanceScenarioTest {
     rule.getTaskService().complete(miSubprocessTask.getId());
 
     // then
-    Task escalatedTask = rule.taskQuery().singleResult();
-    Assert.assertEquals("escalatedTask", escalatedTask.getTaskDefinitionKey());
+    Assert.assertEquals(2, rule.taskQuery().count());
+
+    Task escalatedTask = rule.taskQuery().taskDefinitionKey("escalatedTask").singleResult();
     Assert.assertNotNull(escalatedTask);
 
     // and

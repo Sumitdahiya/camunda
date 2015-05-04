@@ -67,7 +67,6 @@ public class LegacyBehavior {
   /**
    * Prunes a concurrent scope. This can only happen if
    * (a) the process instance has been migrated from a previous version to a new version of the process engine
-   * (b) {@link #isConcurrentScopeExecutionEnabled()}
    *
    * This is an inverse operation to {@link #createConcurrentScope(PvmExecutionImpl)}.
    *
@@ -84,28 +83,28 @@ public class LegacyBehavior {
   /**
    * Cancels an execution which is both concurrent and scope. This can only happen if
    * (a) the process instance has been migrated from a previous version to a new version of the process engine
-   * (b) {@link #isConcurrentScopeExecutionEnabled()}
    *
    * See: javadoc of this class for note about concurrent scopes.
    *
    * @param execution the concurrent scope execution to destroy
+   * @param cancellingActivity the activity that cancels the execution; it must hold that
+   *   cancellingActivity's event scope is the scope the execution is responsible for
    */
-  public static void cancelConcurrentScope(PvmExecutionImpl execution, PvmActivity cancellingActivity) {
+  public static void cancelConcurrentScope(PvmExecutionImpl execution, PvmActivity cancelledScopeActivity) {
     ensureConcurrentScope(execution);
     log.fine("[LEGACY BEHAVIOR]: cancel concurrent scope execution "+execution);
 
-    execution.interrupt("Cancel scope activity "+cancellingActivity+" executed.");
-    // <!> HACK set to parent activity and leave activity instance
-    execution.setActivity((PvmActivity) cancellingActivity.getFlowScope());
+    execution.interrupt("Scope "+cancelledScopeActivity+" cancelled.");
+    // <!> HACK set to event scope activity and leave activity instance
+    execution.setActivity(cancelledScopeActivity);
     execution.leaveActivityInstance();
-    execution.interrupt("Cancel scope activity "+cancellingActivity+" executed.");
+    execution.interrupt("Scope "+cancelledScopeActivity+" cancelled.");
     execution.destroy();
   }
 
   /**
    * Destroys a concurrent scope Execution. This can only happen if
    * (a) the process instance has been migrated from a previous version to a 7.3+ version of the process engine
-   * (b) {@link #isConcurrentScopeExecutionEnabled()}
    *
    * See: javadoc of this class for note about concurrent scopes.
    *
