@@ -112,17 +112,14 @@ public class NestedNonInterruptingBoundaryEventOnOuterSubprocessScenarioTest {
     rule.messageCorrelation("ReceiveTaskMessage").correlate();
 
     // then
-    Assert.assertEquals(2, rule.taskQuery().count());
+    // there is only one task since the task after the message boundary event has been cancelled due to bug CAM-3727 in 7.2.0
+    Assert.assertEquals(1, rule.taskQuery().count());
 
     Task afterErrorTask = rule.taskQuery().taskDefinitionKey("escalatedTask").singleResult();
     Assert.assertNotNull(afterErrorTask);
 
-    Task afterBoundaryTask = rule.taskQuery().taskDefinitionKey("afterBoundaryTask").singleResult();
-    Assert.assertNotNull(afterBoundaryTask);
-
     // and
     rule.getTaskService().complete(afterErrorTask.getId());
-    rule.getTaskService().complete(afterBoundaryTask.getId());
     rule.assertScenarioEnded();
   }
 
@@ -214,17 +211,14 @@ public class NestedNonInterruptingBoundaryEventOnOuterSubprocessScenarioTest {
     rule.messageCorrelation("ReceiveTaskMessage").correlate();
 
     // then
-    Assert.assertEquals(2, rule.taskQuery().count());
+    // there is only one task since the task after the message boundary event has been cancelled due to bug CAM-3727 in 7.2.0
+    Assert.assertEquals(1, rule.taskQuery().count());
 
     Task afterErrorTask = rule.taskQuery().taskDefinitionKey("escalatedTask").singleResult();
     Assert.assertNotNull(afterErrorTask);
 
-    Task afterBoundaryTask = rule.taskQuery().taskDefinitionKey("afterBoundaryTask").singleResult();
-    Assert.assertNotNull(afterBoundaryTask);
-
     // and
     rule.getTaskService().complete(afterErrorTask.getId());
-    rule.getTaskService().complete(afterBoundaryTask.getId());
     rule.assertScenarioEnded();
   }
 

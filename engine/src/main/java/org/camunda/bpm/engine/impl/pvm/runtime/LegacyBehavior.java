@@ -309,5 +309,13 @@ public class LegacyBehavior {
     }
   }
 
+  /**
+   * Concurrent + scope executions are legacy and could occur in processes with non-interrupting
+   * boundary events or event subprocesses
+   */
+  public static boolean isConcurrentScope(PvmExecutionImpl propagatingExecution) {
+    return propagatingExecution.isConcurrent() && propagatingExecution.isScope();
+  }
+
 
 }

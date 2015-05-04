@@ -101,12 +101,14 @@ public class ParallelNestedNonInterruptingEventSubprocessScenarioTest {
 
   @Test
   @ScenarioUnderTest("init.innerTask.1")
-  public void testInitInnerTaskCompletion() {
+  public void testInitInnerTaskCompletion1() {
     // given
     Task eventSubprocessTask = rule.taskQuery().taskDefinitionKey("eventSubProcessTask").singleResult();
+    Task outerTask = rule.taskQuery().taskDefinitionKey("outerTask").singleResult();
 
     // when
     rule.getTaskService().complete(eventSubprocessTask.getId());
+    rule.getTaskService().complete(outerTask.getId());
 
     // then
     rule.assertScenarioEnded();
@@ -114,6 +116,21 @@ public class ParallelNestedNonInterruptingEventSubprocessScenarioTest {
 
   @Test
   @ScenarioUnderTest("init.innerTask.2")
+  public void testInitInnerTaskCompletion2() {
+    // given
+    Task eventSubprocessTask = rule.taskQuery().taskDefinitionKey("eventSubProcessTask").singleResult();
+    Task outerTask = rule.taskQuery().taskDefinitionKey("outerTask").singleResult();
+
+    // when
+    rule.getTaskService().complete(outerTask.getId());
+    rule.getTaskService().complete(eventSubprocessTask.getId());
+
+    // then
+    rule.assertScenarioEnded();
+  }
+
+  @Test
+  @ScenarioUnderTest("init.innerTask.3")
   public void testInitInnerTaskActivityInstanceTree() {
     // given
     ProcessInstance instance = rule.processInstance();
@@ -127,7 +144,7 @@ public class ParallelNestedNonInterruptingEventSubprocessScenarioTest {
   }
 
   @Test
-  @ScenarioUnderTest("init.innerTask.3")
+  @ScenarioUnderTest("init.innerTask.4")
   public void testInitInnerTaskDeletion() {
     // given
     ProcessInstance instance = rule.processInstance();
@@ -140,7 +157,7 @@ public class ParallelNestedNonInterruptingEventSubprocessScenarioTest {
   }
 
   @Test
-  @ScenarioUnderTest("init.innerTask.4")
+  @ScenarioUnderTest("init.innerTask.5")
   public void testInitInnerTaskThrowError() {
     // given
     ProcessInstance instance = rule.processInstance();
@@ -158,7 +175,10 @@ public class ParallelNestedNonInterruptingEventSubprocessScenarioTest {
     Assert.assertNotNull(escalatedTask);
 
     rule.getTaskService().complete(escalatedTask.getId());
-    rule.assertScenarioEnded();
+
+    // the instance is deadlocked since no token has arrived on the sequence flow leaving the outer subprocess
+    Assert.assertEquals(1, rule.executionQuery().count());
+    Assert.assertEquals(1, rule.executionQuery().activityId("join").count());
   }
 
 }
