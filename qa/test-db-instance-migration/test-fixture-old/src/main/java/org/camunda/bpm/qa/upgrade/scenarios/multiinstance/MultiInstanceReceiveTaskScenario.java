@@ -35,7 +35,7 @@ public class MultiInstanceReceiveTaskScenario {
   }
 
   @DescribesScenario("initParallel")
-  @Times(4)
+  @Times(3)
   public static ScenarioSetup instantiateParallel() {
     return new ScenarioSetup() {
       public void execute(ProcessEngine engine, String scenarioName) {
@@ -47,7 +47,7 @@ public class MultiInstanceReceiveTaskScenario {
   }
 
   @DescribesScenario("initSequential")
-  @Times(4)
+  @Times(3)
   public static ScenarioSetup instantiateSequential() {
     return new ScenarioSetup() {
       public void execute(ProcessEngine engine, String scenarioName) {

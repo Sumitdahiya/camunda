@@ -9,11 +9,6 @@
     <sequenceFlow sourceRef="theStart" targetRef="miReceiveTask" />
 
     <receiveTask id="miReceiveTask" messageRef="messageId">
-      <extensionElements>
-        <camunda:executionListener
-            event="end"
-            class="org.camunda.bpm.qa.upgrade.util.ThrowBpmnErrorDelegate" />
-      </extensionElements>
       <multiInstanceLoopCharacteristics isSequential="false">
         <loopCardinality>3</loopCardinality>
       </multiInstanceLoopCharacteristics>
@@ -21,14 +16,5 @@
     
     <sequenceFlow sourceRef="miReceiveTask" targetRef="theEnd" />
     <endEvent id="theEnd" />
-    
-    <!-- Boundary event catching the error -->
-    <boundaryEvent id="catchError" attachedToRef="miReceiveTask">
-      <errorEventDefinition errorRef="errorId"/>
-    </boundaryEvent>
-    <sequenceFlow id="flow3" sourceRef="catchError" targetRef="escalatedTask" />
-    <userTask id="escalatedTask" />
-    <sequenceFlow id="flow5" sourceRef="escalatedTask" targetRef="escalatedEnd" />
-    <endEvent id="escalatedEnd" />
   </process>
 </definitions>

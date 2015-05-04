@@ -12,7 +12,6 @@
  */
 package org.camunda.bpm.engine.impl.pvm.runtime;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -21,8 +20,12 @@ import java.util.logging.Logger;
 
 import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.impl.bpmn.behavior.EventSubProcessActivityBehavior;
+import org.camunda.bpm.engine.impl.bpmn.behavior.MultiInstanceActivityBehavior;
+import org.camunda.bpm.engine.impl.bpmn.behavior.ReceiveTaskActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.SequentialMultiInstanceActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.SubProcessActivityBehavior;
+import org.camunda.bpm.engine.impl.persistence.entity.EventSubscriptionEntity;
+import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
 import org.camunda.bpm.engine.impl.pvm.PvmActivity;
 import org.camunda.bpm.engine.impl.pvm.delegate.ActivityBehavior;
 import org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution;
@@ -239,18 +242,9 @@ public class LegacyBehavior {
     int executionCounter = 0;
     for(int i = 1; i < scopes.size(); i++) {
       ActivityImpl scope = (ActivityImpl) scopes.get(i);
-      if(numOfMissingExecutions > 0) {
-        ActivityBehavior activityBehavior = scope.getActivityBehavior();
-        ActivityBehavior parentActivityBehavior = (ActivityBehavior) (scope.getFlowScope() != null ? scope.getFlowScope().getActivityBehavior() : null);
-        if((activityBehavior instanceof EventSubProcessActivityBehavior)
-            || (activityBehavior instanceof SubProcessActivityBehavior
-                  && parentActivityBehavior instanceof SequentialMultiInstanceActivityBehavior)) {
-          // found a missing scope
-          numOfMissingExecutions--;
-        }
-        else {
-          executionCounter++;
-        }
+      if(numOfMissingExecutions > 0 && wasNoScope(scope)) {
+        // found a missing scope
+        numOfMissingExecutions--;
       }
       else {
         executionCounter++;
@@ -261,6 +255,20 @@ public class LegacyBehavior {
     }
 
     return mapping;
+  }
+
+  /**
+   * Determines whether the given scope was a scope (boolean flag isScope)
+   * when used as a multi-instance activity
+   */
+  protected static boolean wasNoScope(ActivityImpl activity) {
+    ActivityBehavior activityBehavior = activity.getActivityBehavior();
+    ActivityBehavior parentActivityBehavior = (ActivityBehavior) (activity.getFlowScope() != null ? activity.getFlowScope().getActivityBehavior() : null);
+    return (activityBehavior instanceof EventSubProcessActivityBehavior)
+        || (activityBehavior instanceof SubProcessActivityBehavior
+              && parentActivityBehavior instanceof SequentialMultiInstanceActivityBehavior)
+        || (activityBehavior instanceof ReceiveTaskActivityBehavior
+              && parentActivityBehavior instanceof MultiInstanceActivityBehavior);
   }
 
   /**
@@ -314,6 +322,62 @@ public class LegacyBehavior {
    */
   public static boolean isConcurrentScope(PvmExecutionImpl propagatingExecution) {
     return propagatingExecution.isConcurrent() && propagatingExecution.isScope();
+  }
+
+  /**
+   * <p>Required for migrating active sequential MI receive tasks. These activities were formerly not scope,
+   * but are now. This has the following implications:
+   *
+   * <p>Before migration:
+   * <ul><li> the event subscription is attached to the miBody scope execution</ul>
+   *
+   * <p>After migration:
+   * <ul><li> a new subscription is created for every instance
+   * <li> the new subscription is attached to a dedicated scope execution as a child of the miBody scope
+   *   execution</ul>
+   *
+   * <p>Thus, this method removes the subscription on the miBody scope
+   */
+  public static void removeLegacySubscriptionOnParent(ExecutionEntity execution, EventSubscriptionEntity eventSubscription) {
+    ActivityImpl activity = execution.getActivity();
+    if (activity == null) {
+      return;
+    }
+
+    ActivityBehavior behavior = activity.getActivityBehavior();
+    ActivityBehavior parentBehavior = (ActivityBehavior) (activity.getFlowScope() != null ? activity.getFlowScope().getActivityBehavior() : null);
+
+    if (behavior instanceof ReceiveTaskActivityBehavior &&
+        parentBehavior instanceof MultiInstanceActivityBehavior) {
+      List<EventSubscriptionEntity> parentSubscriptions = execution.getParent().getEventSubscriptions();
+
+      for (EventSubscriptionEntity subscription : parentSubscriptions) {
+        // distinguish a boundary event on the mi body with the same message name from the receive task subscription
+        if (areEqualEventSubscriptions(subscription, eventSubscription)) {
+          subscription.delete();
+        }
+      }
+    }
+
+  }
+
+  /**
+   * Checks if the parameters are the same apart from the execution id
+   */
+  protected static boolean areEqualEventSubscriptions(EventSubscriptionEntity subscription1, EventSubscriptionEntity subscription2) {
+    return !valuesDiffer(subscription1.getEventType(), subscription2.getEventType())
+        && !valuesDiffer(subscription1.getEventName(), subscription2.getEventName())
+        && !valuesDiffer(subscription1.getActivityId(), subscription2.getActivityId());
+
+  }
+
+  protected static <T> boolean valuesDiffer(T value1, T value2) {
+    if ((value1 != null && !value1.equals(value2))
+        || (value1 == null && value2 != null)) {
+      return true;
+    }
+
+    return false;
   }
 
 
