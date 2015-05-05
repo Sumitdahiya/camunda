@@ -38,6 +38,7 @@ import org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess.NestedNonInterruptin
 import org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess.NestedParallelNonInterruptingEventSubprocessScenario;
 import org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess.NonInterruptingEventSubprocessScenario;
 import org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess.ParallelNestedNonInterruptingEventSubprocessScenario;
+import org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess.TwoLevelNestedNonInterruptingEventSubprocessScenario;
 import org.camunda.bpm.qa.upgrade.scenarios.multiinstance.MultiInstanceReceiveTaskScenario;
 import org.camunda.bpm.qa.upgrade.scenarios.multiinstance.NestedSequentialMultiInstanceSubprocessScenario;
 import org.camunda.bpm.qa.upgrade.scenarios.multiinstance.ParallelMultiInstanceSubprocessScenario;
@@ -86,6 +87,7 @@ public class TestFixtureOld {
     runner.setupScenarios(NestedParallelNonInterruptingEventSubprocessScenario.class);
     runner.setupScenarios(NestedNonInterruptingEventSubprocessNestedSubprocessScenario.class);
     runner.setupScenarios(NestedInterruptingErrorEventSubprocessScenario.class);
+    runner.setupScenarios(TwoLevelNestedNonInterruptingEventSubprocessScenario.class);
 
     // multi instance
     runner.setupScenarios(SequentialMultiInstanceSubprocessScenario.class);

@@ -3,7 +3,6 @@ package org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess;
 import static org.camunda.bpm.qa.upgrade.util.ActivityInstanceAssert.assertThat;
 import static org.camunda.bpm.qa.upgrade.util.ActivityInstanceAssert.describeActivityInstanceTree;
 
-import org.camunda.bpm.engine.delegate.BpmnError;
 import org.camunda.bpm.engine.runtime.ActivityInstance;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.engine.task.Task;
