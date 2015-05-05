@@ -37,7 +37,7 @@ public class NestedNonInterruptingBoundaryEventOnInnerSubprocessScenario {
   }
 
   @DescribesScenario("initMessage")
-  @Times(6)
+  @Times(7)
   public static ScenarioSetup initMessage() {
     return new ScenarioSetup() {
       public void execute(ProcessEngine engine, String scenarioName) {
@@ -51,7 +51,7 @@ public class NestedNonInterruptingBoundaryEventOnInnerSubprocessScenario {
   }
 
   @DescribesScenario("initTimer")
-  @Times(6)
+  @Times(7)
   public static ScenarioSetup initTimer() {
     return new ScenarioSetup() {
       public void execute(ProcessEngine engine, String scenarioName) {

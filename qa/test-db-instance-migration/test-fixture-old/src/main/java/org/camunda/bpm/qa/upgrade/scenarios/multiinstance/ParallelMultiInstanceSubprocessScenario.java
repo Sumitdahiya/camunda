@@ -30,7 +30,7 @@ public class ParallelMultiInstanceSubprocessScenario {
   }
 
   @DescribesScenario("initNonInterruptingBoundaryEvent")
-  @Times(6)
+  @Times(7)
   public static ScenarioSetup instantiateNonInterruptingBoundaryEvent() {
     return new ScenarioSetup() {
       public void execute(ProcessEngine engine, String scenarioName) {

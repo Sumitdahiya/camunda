@@ -30,7 +30,7 @@ public class NestedSequentialMultiInstanceSubprocessScenario {
   }
 
   @DescribesScenario("init")
-  @Times(4)
+  @Times(5)
   public static ScenarioSetup instantiate() {
     return new ScenarioSetup() {
       public void execute(ProcessEngine engine, String scenarioName) {

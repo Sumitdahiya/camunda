@@ -9,6 +9,7 @@ import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.qa.upgrade.ScenarioUnderTest;
 import org.camunda.bpm.qa.upgrade.UpgradeTestRule;
 import org.camunda.bpm.qa.upgrade.util.ThrowBpmnErrorDelegate;
+import org.camunda.bpm.qa.upgrade.util.ThrowBpmnErrorDelegate.ThrowBpmnErrorDelegateException;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -78,7 +79,7 @@ public class NestedSequentialMultiInstanceScenarioTest {
     Task innerMiSubProcessTask = rule.taskQuery().taskDefinitionKey("innerSubProcessTask").singleResult();
 
     // when
-    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.ERROR_INDICATOR, true);
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.ERROR_INDICATOR_VARIABLE, true);
     rule.getTaskService().complete(innerMiSubProcessTask.getId());
 
     // then
@@ -88,6 +89,27 @@ public class NestedSequentialMultiInstanceScenarioTest {
 
     rule.getTaskService().complete(escalatedTask.getId());
     rule.assertScenarioEnded();
+  }
+
+  @Test
+  @ScenarioUnderTest("init.5")
+  public void testInitThrowUnhandledException() {
+    // given
+    ProcessInstance instance = rule.processInstance();
+    Task innerMiSubProcessTask = rule.taskQuery().taskDefinitionKey("innerSubProcessTask").singleResult();
+
+    // when
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.EXCEPTION_INDICATOR_VARIABLE, true);
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.EXCEPTION_MESSAGE_VARIABLE, "unhandledException");
+
+    // then
+    try {
+      rule.getTaskService().complete(innerMiSubProcessTask.getId());
+      Assert.fail("should throw a ThrowBpmnErrorDelegateException");
+
+    } catch (ThrowBpmnErrorDelegateException e) {
+      Assert.assertEquals("unhandledException", e.getMessage());
+    }
   }
 
 }

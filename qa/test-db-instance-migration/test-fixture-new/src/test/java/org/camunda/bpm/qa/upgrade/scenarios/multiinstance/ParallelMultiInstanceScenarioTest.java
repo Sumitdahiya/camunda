@@ -11,6 +11,7 @@ import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.qa.upgrade.ScenarioUnderTest;
 import org.camunda.bpm.qa.upgrade.UpgradeTestRule;
 import org.camunda.bpm.qa.upgrade.util.ThrowBpmnErrorDelegate;
+import org.camunda.bpm.qa.upgrade.util.ThrowBpmnErrorDelegate.ThrowBpmnErrorDelegateException;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -124,7 +125,7 @@ public class ParallelMultiInstanceScenarioTest {
     Task afterBoundaryTask = rule.taskQuery().taskDefinitionKey("afterBoundaryTask").singleResult();
 
     // when
-    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.ERROR_INDICATOR, true);
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.ERROR_INDICATOR_VARIABLE, true);
     rule.getTaskService().complete(miSubprocessTask.getId());
 
     // then
@@ -137,6 +138,27 @@ public class ParallelMultiInstanceScenarioTest {
     rule.getTaskService().complete(escalatedTask.getId());
     rule.getTaskService().complete(afterBoundaryTask.getId());
     rule.assertScenarioEnded();
+  }
+
+  @Test
+  @ScenarioUnderTest("initNonInterruptingBoundaryEvent.7")
+  public void testInitNonInterruptingBoundaryEventThrowUnhandledException() {
+    // given
+    ProcessInstance instance = rule.processInstance();
+    Task miSubprocessTask = rule.taskQuery().taskDefinitionKey("subProcessTask").list().get(0);
+
+    // when
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.EXCEPTION_INDICATOR_VARIABLE, true);
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.EXCEPTION_MESSAGE_VARIABLE, "unhandledException");
+
+    // then
+    try {
+      rule.getTaskService().complete(miSubprocessTask.getId());
+      Assert.fail("should throw a ThrowBpmnErrorDelegateException");
+
+    } catch (ThrowBpmnErrorDelegateException e) {
+      Assert.assertEquals("unhandledException", e.getMessage());
+    }
   }
 
 }

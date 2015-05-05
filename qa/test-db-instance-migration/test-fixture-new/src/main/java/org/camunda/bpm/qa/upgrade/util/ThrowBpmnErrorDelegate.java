@@ -23,24 +23,60 @@ import org.camunda.bpm.engine.delegate.JavaDelegate;
  */
 public class ThrowBpmnErrorDelegate implements JavaDelegate, ExecutionListener {
 
-  public static final String ERROR_INDICATOR = "throwError";
+  public static final String ERROR_INDICATOR_VARIABLE = "throwError";
+  public static final String ERROR_NAME_VARIABLE = "errorName";
+
+  public static final String EXCEPTION_INDICATOR_VARIABLE = "throwException";
+  public static final String EXCEPTION_MESSAGE_VARIABLE = "exceptionMessage";
+
+  public static final String DEFAULT_ERROR_NAME = ThrowBpmnErrorDelegate.class.getSimpleName();
+  public static final String DEFAULT_EXCEPTION_MESSAGE = DEFAULT_ERROR_NAME;
 
   @Override
   public void execute(DelegateExecution execution) throws Exception {
     throwErrorIfRequested(execution);
+    throwExceptionIfRequested(execution);
   }
 
   @Override
   public void notify(DelegateExecution execution) throws Exception {
-    throwErrorIfRequested(execution);
+    execute(execution);
   }
 
   protected void throwErrorIfRequested(DelegateExecution execution) {
-    Boolean shouldThrowError = (Boolean) execution.getVariable(ERROR_INDICATOR);
+    Boolean shouldThrowError = (Boolean) execution.getVariable(ERROR_INDICATOR_VARIABLE);
 
     if (Boolean.TRUE.equals(shouldThrowError)) {
-      throw new BpmnError(ThrowBpmnErrorDelegate.class.getSimpleName());
+      String errorName = (String) execution.getVariable(ERROR_NAME_VARIABLE);
+      if (errorName == null) {
+        errorName = DEFAULT_ERROR_NAME;
+      }
+
+      throw new BpmnError(errorName);
     }
+  }
+
+  protected void throwExceptionIfRequested(DelegateExecution execution) {
+    Boolean shouldThrowException = (Boolean) execution.getVariable(EXCEPTION_INDICATOR_VARIABLE);
+
+    if (Boolean.TRUE.equals(shouldThrowException)) {
+      String exceptionMessage = (String) execution.getVariable(EXCEPTION_MESSAGE_VARIABLE);
+      if (exceptionMessage == null) {
+        exceptionMessage = DEFAULT_EXCEPTION_MESSAGE;
+      }
+
+      throw new ThrowBpmnErrorDelegateException(exceptionMessage);
+    }
+  }
+
+  public static class ThrowBpmnErrorDelegateException extends RuntimeException {
+
+    private static final long serialVersionUID = 1L;
+
+    public ThrowBpmnErrorDelegateException(String message) {
+      super(message);
+    }
+
   }
 
 }

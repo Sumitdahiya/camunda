@@ -1,8 +1,9 @@
 package org.camunda.bpm.qa.upgrade.scenarios.boundary;
 
-import java.util.List;
+import static org.camunda.bpm.qa.upgrade.util.ActivityInstanceAssert.assertThat;
+import static org.camunda.bpm.qa.upgrade.util.ActivityInstanceAssert.describeActivityInstanceTree;
 
-import static org.camunda.bpm.qa.upgrade.util.ActivityInstanceAssert.*;
+import java.util.List;
 
 import org.camunda.bpm.engine.runtime.ActivityInstance;
 import org.camunda.bpm.engine.runtime.Job;
@@ -11,6 +12,7 @@ import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.qa.upgrade.ScenarioUnderTest;
 import org.camunda.bpm.qa.upgrade.UpgradeTestRule;
 import org.camunda.bpm.qa.upgrade.util.ThrowBpmnErrorDelegate;
+import org.camunda.bpm.qa.upgrade.util.ThrowBpmnErrorDelegate.ThrowBpmnErrorDelegateException;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -117,7 +119,7 @@ public class NestedNonInterruptingBoundaryEventOnInnerSubprocessScenarioTest {
     ProcessInstance instance = rule.processInstance();
 
     // when
-    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.ERROR_INDICATOR, true);
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.ERROR_INDICATOR_VARIABLE, true);
     rule.messageCorrelation("ReceiveTaskMessage").correlate();
 
     // then
@@ -128,6 +130,26 @@ public class NestedNonInterruptingBoundaryEventOnInnerSubprocessScenarioTest {
     // and
     rule.getTaskService().complete(afterErrorTask.getId());
     rule.assertScenarioEnded();
+  }
+
+  @Test
+  @ScenarioUnderTest("initTimer.7")
+  public void testInitTimerThrowUnhandledException() {
+    // given
+    ProcessInstance instance = rule.processInstance();
+
+    // when
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.EXCEPTION_INDICATOR_VARIABLE, true);
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.EXCEPTION_MESSAGE_VARIABLE, "unhandledException");
+
+    // then
+    try {
+      rule.messageCorrelation("ReceiveTaskMessage").correlate();
+      Assert.fail("should throw a ThrowBpmnErrorDelegateException");
+
+    } catch (ThrowBpmnErrorDelegateException e) {
+      Assert.assertEquals("unhandledException", e.getMessage());
+    }
   }
 
   @Test
@@ -223,7 +245,7 @@ public class NestedNonInterruptingBoundaryEventOnInnerSubprocessScenarioTest {
     ProcessInstance instance = rule.processInstance();
 
     // when
-    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.ERROR_INDICATOR, true);
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.ERROR_INDICATOR_VARIABLE, true);
     rule.messageCorrelation("ReceiveTaskMessage").correlate();
 
     // then
@@ -234,6 +256,26 @@ public class NestedNonInterruptingBoundaryEventOnInnerSubprocessScenarioTest {
     // and
     rule.getTaskService().complete(afterErrorTask.getId());
     rule.assertScenarioEnded();
+  }
+
+  @Test
+  @ScenarioUnderTest("initMessage.7")
+  public void testInitMessageThrowUnhandledException() {
+    // given
+    ProcessInstance instance = rule.processInstance();
+
+    // when
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.EXCEPTION_INDICATOR_VARIABLE, true);
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.EXCEPTION_MESSAGE_VARIABLE, "unhandledException");
+
+    // then
+    try {
+      rule.messageCorrelation("ReceiveTaskMessage").correlate();
+      Assert.fail("should throw a ThrowBpmnErrorDelegateException");
+
+    } catch (ThrowBpmnErrorDelegateException e) {
+      Assert.assertEquals("unhandledException", e.getMessage());
+    }
   }
 
 }

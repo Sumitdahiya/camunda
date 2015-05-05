@@ -35,7 +35,7 @@ public class SequentialMultiInstanceSubprocessScenario {
   }
 
   @DescribesScenario("init")
-  @Times(4)
+  @Times(5)
   public static ScenarioSetup instantiate() {
     return new ScenarioSetup() {
       public void execute(ProcessEngine engine, String scenarioName) {
@@ -47,7 +47,7 @@ public class SequentialMultiInstanceSubprocessScenario {
   }
 
   @DescribesScenario("initNonInterruptingBoundaryEvent")
-  @Times(6)
+  @Times(7)
   public static ScenarioSetup instantiateNonInterruptingBoundaryEvent() {
     return new ScenarioSetup() {
       public void execute(ProcessEngine engine, String scenarioName) {

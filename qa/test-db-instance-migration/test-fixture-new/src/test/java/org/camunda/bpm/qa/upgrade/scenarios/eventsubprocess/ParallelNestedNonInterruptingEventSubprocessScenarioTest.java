@@ -3,12 +3,14 @@ package org.camunda.bpm.qa.upgrade.scenarios.eventsubprocess;
 import static org.camunda.bpm.qa.upgrade.util.ActivityInstanceAssert.assertThat;
 import static org.camunda.bpm.qa.upgrade.util.ActivityInstanceAssert.describeActivityInstanceTree;
 
+import org.camunda.bpm.engine.delegate.BpmnError;
 import org.camunda.bpm.engine.runtime.ActivityInstance;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.qa.upgrade.ScenarioUnderTest;
 import org.camunda.bpm.qa.upgrade.UpgradeTestRule;
 import org.camunda.bpm.qa.upgrade.util.ThrowBpmnErrorDelegate;
+import org.camunda.bpm.qa.upgrade.util.ThrowBpmnErrorDelegate.ThrowBpmnErrorDelegateException;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -97,7 +99,7 @@ public class ParallelNestedNonInterruptingEventSubprocessScenarioTest {
     // when
     rule.getTaskService().complete(outerTask.getId());
 
-    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.ERROR_INDICATOR, true);
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.ERROR_INDICATOR_VARIABLE, true);
     rule.getTaskService().complete(eventSubprocessTask.getId());
 
     // then
@@ -107,6 +109,30 @@ public class ParallelNestedNonInterruptingEventSubprocessScenarioTest {
 
     rule.getTaskService().complete(escalatedTask.getId());
     rule.assertScenarioEnded();
+  }
+
+  @Test
+  @ScenarioUnderTest("init.6")
+  public void testInitThrowUnhandledException() {
+    // given
+    ProcessInstance instance = rule.processInstance();
+    Task eventSubprocessTask = rule.taskQuery().taskDefinitionKey("eventSubProcessTask").singleResult();
+    Task outerTask = rule.taskQuery().taskDefinitionKey("outerTask").singleResult();
+
+    // when
+    rule.getTaskService().complete(outerTask.getId());
+
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.EXCEPTION_INDICATOR_VARIABLE, true);
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.EXCEPTION_MESSAGE_VARIABLE, "unhandledException");
+
+    // then
+    try {
+      rule.getTaskService().complete(eventSubprocessTask.getId());
+      Assert.fail("should throw a ThrowBpmnErrorDelegateException");
+
+    } catch (ThrowBpmnErrorDelegateException e) {
+      Assert.assertEquals("unhandledException", e.getMessage());
+    }
   }
 
   @Test
@@ -182,7 +208,7 @@ public class ParallelNestedNonInterruptingEventSubprocessScenarioTest {
 
     // when
     rule.getTaskService().complete(outerTask.getId());
-    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.ERROR_INDICATOR, true);
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.ERROR_INDICATOR_VARIABLE, true);
     rule.getTaskService().complete(eventSubprocessTask.getId());
 
     // then
@@ -195,6 +221,30 @@ public class ParallelNestedNonInterruptingEventSubprocessScenarioTest {
     // the instance is deadlocked since no token has arrived on the sequence flow leaving the outer subprocess
     Assert.assertEquals(1, rule.executionQuery().count());
     Assert.assertEquals(1, rule.executionQuery().activityId("join").count());
+  }
+
+  @Test
+  @ScenarioUnderTest("init.innerTask.6")
+  public void testInitInnerTaskThrowUnhandledException() {
+    // given
+    ProcessInstance instance = rule.processInstance();
+    Task eventSubprocessTask = rule.taskQuery().taskDefinitionKey("eventSubProcessTask").singleResult();
+    Task outerTask = rule.taskQuery().taskDefinitionKey("outerTask").singleResult();
+
+    // when
+    rule.getTaskService().complete(outerTask.getId());
+
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.EXCEPTION_INDICATOR_VARIABLE, true);
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.EXCEPTION_MESSAGE_VARIABLE, "unhandledException");
+
+    // then
+    try {
+      rule.getTaskService().complete(eventSubprocessTask.getId());
+      Assert.fail("should throw a ThrowBpmnErrorDelegateException");
+
+    } catch (ThrowBpmnErrorDelegateException e) {
+      Assert.assertEquals("unhandledException", e.getMessage());
+    }
   }
 
 }

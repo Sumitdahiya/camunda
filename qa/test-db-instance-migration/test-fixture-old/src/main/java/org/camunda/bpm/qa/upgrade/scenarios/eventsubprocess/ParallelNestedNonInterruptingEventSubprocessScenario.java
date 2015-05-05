@@ -32,7 +32,7 @@ public class ParallelNestedNonInterruptingEventSubprocessScenario {
   }
 
   @DescribesScenario("init")
-  @Times(5)
+  @Times(6)
   public static ScenarioSetup instantiateAndTriggerSubprocess() {
     return new ScenarioSetup() {
       public void execute(ProcessEngine engine, String scenarioName) {
@@ -50,7 +50,7 @@ public class ParallelNestedNonInterruptingEventSubprocessScenario {
 
   @DescribesScenario("init.innerTask")
   @ExtendsScenario("init")
-  @Times(5)
+  @Times(6)
   public static ScenarioSetup completeSubprocessTask() {
     return new ScenarioSetup() {
       public void execute(ProcessEngine engine, String scenarioName) {

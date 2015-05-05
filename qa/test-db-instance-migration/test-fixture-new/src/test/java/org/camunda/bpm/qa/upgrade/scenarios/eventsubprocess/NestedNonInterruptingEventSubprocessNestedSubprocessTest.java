@@ -9,6 +9,7 @@ import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.qa.upgrade.ScenarioUnderTest;
 import org.camunda.bpm.qa.upgrade.UpgradeTestRule;
 import org.camunda.bpm.qa.upgrade.util.ThrowBpmnErrorDelegate;
+import org.camunda.bpm.qa.upgrade.util.ThrowBpmnErrorDelegate.ThrowBpmnErrorDelegateException;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -103,7 +104,7 @@ public class NestedNonInterruptingEventSubprocessNestedSubprocessTest {
     rule.getTaskService().complete(eventSubProcessTask.getId());
 
     // and
-    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.ERROR_INDICATOR, true);
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.ERROR_INDICATOR_VARIABLE, true);
     Task innerSubProcessTask = rule.taskQuery().taskDefinitionKey("innerSubProcessTask").singleResult();
     Assert.assertNotNull(innerSubProcessTask);
     rule.getTaskService().complete(innerSubProcessTask.getId());
@@ -116,6 +117,32 @@ public class NestedNonInterruptingEventSubprocessNestedSubprocessTest {
     // and
     rule.getTaskService().complete(afterErrorTask.getId());
     rule.assertScenarioEnded();
+  }
+
+  @Test
+  @ScenarioUnderTest("init.6")
+  public void testInitThrowUnhandledException() {
+    // given
+    ProcessInstance instance = rule.processInstance();
+    Task eventSubProcessTask = rule.taskQuery().taskDefinitionKey("eventSubProcessTask").singleResult();
+
+    // when
+    rule.getTaskService().complete(eventSubProcessTask.getId());
+
+    // and
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.EXCEPTION_INDICATOR_VARIABLE, true);
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.EXCEPTION_MESSAGE_VARIABLE, "unhandledException");
+    Task innerSubProcessTask = rule.taskQuery().taskDefinitionKey("innerSubProcessTask").singleResult();
+    Assert.assertNotNull(innerSubProcessTask);
+
+    // then
+    try {
+      rule.getTaskService().complete(innerSubProcessTask.getId());
+      Assert.fail("should throw a ThrowBpmnErrorDelegateException");
+
+    } catch (ThrowBpmnErrorDelegateException e) {
+      Assert.assertEquals("unhandledException", e.getMessage());
+    }
   }
 
   @Test
@@ -190,7 +217,7 @@ public class NestedNonInterruptingEventSubprocessNestedSubprocessTest {
     Task innerSubProcessTask = rule.taskQuery().taskDefinitionKey("innerSubProcessTask").singleResult();
 
     // when
-    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.ERROR_INDICATOR, true);
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.ERROR_INDICATOR_VARIABLE, true);
     rule.getTaskService().complete(innerSubProcessTask.getId());
 
     // then
@@ -201,6 +228,27 @@ public class NestedNonInterruptingEventSubprocessNestedSubprocessTest {
     // and
     rule.getTaskService().complete(afterErrorTask.getId());
     rule.assertScenarioEnded();
+  }
+
+  @Test
+  @ScenarioUnderTest("init.innerSubProcess.6")
+  public void testInitInnerSubProcessThrowUnhandledException() {
+    // given
+    ProcessInstance instance = rule.processInstance();
+    Task innerSubProcessTask = rule.taskQuery().taskDefinitionKey("innerSubProcessTask").singleResult();
+
+    // when
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.EXCEPTION_INDICATOR_VARIABLE, true);
+    rule.getRuntimeService().setVariable(instance.getId(), ThrowBpmnErrorDelegate.EXCEPTION_MESSAGE_VARIABLE, "unhandledException");
+
+    // then
+    try {
+      rule.getTaskService().complete(innerSubProcessTask.getId());
+      Assert.fail("should throw a ThrowBpmnErrorDelegateException");
+
+    } catch (ThrowBpmnErrorDelegateException e) {
+      Assert.assertEquals("unhandledException", e.getMessage());
+    }
   }
 
 }

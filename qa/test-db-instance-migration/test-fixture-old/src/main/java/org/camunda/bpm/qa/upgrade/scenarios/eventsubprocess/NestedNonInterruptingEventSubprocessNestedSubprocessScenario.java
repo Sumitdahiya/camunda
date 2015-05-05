@@ -33,7 +33,7 @@ public class NestedNonInterruptingEventSubprocessNestedSubprocessScenario {
   }
 
   @DescribesScenario("init")
-  @Times(5)
+  @Times(6)
   public static ScenarioSetup initNestedSubProcess() {
     return new ScenarioSetup() {
       public void execute(ProcessEngine engine, String scenarioName) {
@@ -52,7 +52,7 @@ public class NestedNonInterruptingEventSubprocessNestedSubprocessScenario {
 
   @DescribesScenario("init.innerSubProcess")
   @ExtendsScenario("init")
-  @Times(5)
+  @Times(6)
   public static ScenarioSetup initNestedSubProcessEnterSubprocess() {
     return new ScenarioSetup() {
       public void execute(ProcessEngine engine, String scenarioName) {
