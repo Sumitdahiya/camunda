@@ -167,7 +167,6 @@ public class SequentialMultiInstanceScenarioTest {
 
     // then
     Assert.assertNotNull(activityInstance);
-    Assert.assertNotNull(activityInstance);
     assertThat(activityInstance).hasStructure(
       describeActivityInstanceTree(instance.getProcessDefinitionId())
         .activity("afterBoundaryTask")
