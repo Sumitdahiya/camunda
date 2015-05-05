@@ -100,7 +100,8 @@ public class AbstractBpmnActivityBehavior extends FlowNodeActivityBehavior {
 
   protected void propagateError(String errorCode, Exception origException, ActivityExecution execution) throws Exception {
 
-    // walk the hierarchy of process instances (cf call activity); this walker walks from leaf execution to leaf execution
+    // walk the hierarchy of process instances (cf call activity);
+    // this walker walks from leaf execution to leaf execution (i.e. visits one execution per process instance)
     LeafExecutionHierarchyWalker scopeHierarchyWalker = new LeafExecutionHierarchyWalker((PvmExecutionImpl) execution);
 
     // collectors

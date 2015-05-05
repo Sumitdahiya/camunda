@@ -27,8 +27,10 @@ import org.camunda.bpm.engine.impl.bpmn.behavior.SubProcessActivityBehavior;
 import org.camunda.bpm.engine.impl.persistence.entity.EventSubscriptionEntity;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
 import org.camunda.bpm.engine.impl.pvm.PvmActivity;
+import org.camunda.bpm.engine.impl.pvm.PvmScope;
 import org.camunda.bpm.engine.impl.pvm.delegate.ActivityBehavior;
 import org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution;
+import org.camunda.bpm.engine.impl.pvm.delegate.CompositeActivityBehavior;
 import org.camunda.bpm.engine.impl.pvm.process.ActivityImpl;
 import org.camunda.bpm.engine.impl.pvm.process.ScopeImpl;
 import org.camunda.bpm.engine.impl.tree.ExecutionWalker;
@@ -138,7 +140,27 @@ public class LegacyBehavior {
 
     if(performLegacyBehavior) {
       log.fine("[LEGACY BEHAVIOR]: end concurrent execution in event subprocess.");
-      endedExecution.end(false);
+      // notify the grandparent flow scope in a similar way PvmAtomicOperationAcitivtyEnd does
+      ScopeImpl flowScope = endedExecution.getActivity().getFlowScope();
+      if (flowScope != null) {
+        flowScope = flowScope.getFlowScope();
+
+        if (flowScope != null) {
+          if (flowScope == endedExecution.getActivity().getProcessDefinition()) {
+            endedExecution.remove();
+            scopeExecution.tryPruneLastConcurrentChild();
+            scopeExecution.forceUpdate();
+          }
+          else {
+            PvmActivity flowScopeActivity = (PvmActivity) flowScope;
+
+            ActivityBehavior activityBehavior = flowScopeActivity.getActivityBehavior();
+            if (activityBehavior instanceof CompositeActivityBehavior) {
+              ((CompositeActivityBehavior) activityBehavior).concurrentChildExecutionEnded(scopeExecution, endedExecution);
+            }
+          }
+        }
+      }
     }
 
     return performLegacyBehavior;
@@ -175,7 +197,10 @@ public class LegacyBehavior {
     Map<ScopeImpl, PvmExecutionImpl> activityExecutionMapping = scopeExecution.createActivityExecutionMapping();
     // if the scope execution for the current activity is the same as for the parent scope
     // -> we need to perform legacy behavior
-    PvmActivity activity = scopeExecution.getActivity();
+    PvmScope activity = scopeExecution.getActivity();
+    if (!activity.isScope()) {
+      activity = activity.getFlowScope();
+    }
     return activityExecutionMapping.get(activity) == activityExecutionMapping.get(activity.getFlowScope());
   }
 
