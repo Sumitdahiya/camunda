@@ -250,6 +250,11 @@ public class LegacyBehavior {
         executionCounter++;
       }
 
+      if (executionCounter >= scopeExecutions.size()) {
+        throw new ProcessEngineException("Cannot construct activity-execution mapping: there are "
+            + "more scope executions missing than explained by the flow scope hierarchy.");
+      }
+
       PvmExecutionImpl execution = scopeExecutions.get(executionCounter);
       mapping.put(scope, execution);
     }
