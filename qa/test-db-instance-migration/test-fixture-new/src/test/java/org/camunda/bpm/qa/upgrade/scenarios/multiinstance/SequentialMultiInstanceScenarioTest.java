@@ -52,7 +52,8 @@ public class SequentialMultiInstanceScenarioTest {
     Assert.assertNotNull(activityInstance);
     assertThat(activityInstance).hasStructure(
       describeActivityInstanceTree(instance.getProcessDefinitionId())
-        .beginScope("miSubProcess")
+        .beginMiBody("miSubProcess")
+          // the subprocess itself misses because it was no scope in 7.2
           .activity("subProcessTask")
       .done());
   }
@@ -191,9 +192,12 @@ public class SequentialMultiInstanceScenarioTest {
     Assert.assertNotNull(activityInstance);
     assertThat(activityInstance).hasStructure(
       describeActivityInstanceTree(instance.getProcessDefinitionId())
-        .activity("afterBoundaryTask")
-        .beginScope("miSubProcess")
+        .beginMiBody("miSubProcess")
+          // the subprocess itself misses because it was no scope in 7.2
           .activity("subProcessTask")
+          // the boundary event is one scope too deep because the parent execution
+          // has the miSubProcess activity instance id in 7.2
+          .activity("afterBoundaryTask")
       .done());
   }
 

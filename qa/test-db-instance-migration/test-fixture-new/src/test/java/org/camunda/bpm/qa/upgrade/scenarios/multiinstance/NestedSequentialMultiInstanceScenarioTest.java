@@ -52,8 +52,10 @@ public class NestedSequentialMultiInstanceScenarioTest {
     Assert.assertNotNull(activityInstance);
     assertThat(activityInstance).hasStructure(
       describeActivityInstanceTree(instance.getProcessDefinitionId())
-        .beginScope("outerMiSubProcess")
-          .beginScope("innerMiSubProcess")
+        // the subprocess itself misses because it was no scope in 7.2
+        .beginMiBody("outerMiSubProcess")
+          // the subprocess itself misses because it was no scope in 7.2
+          .beginMiBody("innerMiSubProcess")
             .activity("innerSubProcessTask")
       .done());
   }

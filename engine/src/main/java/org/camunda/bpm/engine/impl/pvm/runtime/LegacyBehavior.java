@@ -12,6 +12,8 @@
  */
 package org.camunda.bpm.engine.impl.pvm.runtime;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +26,8 @@ import org.camunda.bpm.engine.impl.bpmn.behavior.MultiInstanceActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.ReceiveTaskActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.SequentialMultiInstanceActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.SubProcessActivityBehavior;
+import org.camunda.bpm.engine.impl.cmd.GetActivityInstanceCmd;
+import org.camunda.bpm.engine.impl.persistence.entity.ActivityInstanceImpl;
 import org.camunda.bpm.engine.impl.persistence.entity.EventSubscriptionEntity;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
 import org.camunda.bpm.engine.impl.pvm.PvmActivity;
@@ -408,6 +412,52 @@ public class LegacyBehavior {
     }
 
     return false;
+  }
+
+  /**
+   * Remove all entries for legacy non-scopes given that the assigned scope execution is also responsible for another scope
+   */
+  public static void removeLegacyNonScopesFromMapping(Map<ScopeImpl, PvmExecutionImpl> mapping) {
+    Map<PvmExecutionImpl, List<ScopeImpl>> scopesForExecutions = new HashMap<PvmExecutionImpl, List<ScopeImpl>>();
+
+    for (Map.Entry<ScopeImpl, PvmExecutionImpl> mappingEntry : mapping.entrySet()) {
+      List<ScopeImpl> scopesForExecution = scopesForExecutions.get(mappingEntry.getValue());
+      if (scopesForExecution == null) {
+        scopesForExecution = new ArrayList<ScopeImpl>();
+        scopesForExecutions.put(mappingEntry.getValue(), scopesForExecution);
+      }
+
+      scopesForExecution.add(mappingEntry.getKey());
+    }
+
+    for (Map.Entry<PvmExecutionImpl, List<ScopeImpl>> scopesForExecution : scopesForExecutions.entrySet()) {
+      List<ScopeImpl> scopes = scopesForExecution.getValue();
+
+      if (scopes.size() > 1) {
+        for (ScopeImpl scope : scopes) {
+          if (scope != scope.getProcessDefinition()) {
+            ActivityImpl scopeActivity = (ActivityImpl) scope;
+            if (wasNoScope(scopeActivity)) {
+              mapping.remove(scope);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * This is relevant for {@link GetActivityInstanceCmd} where in case of legacy multi-instance execution trees, the default
+   * algorithm omits multi-instance activity instances.
+   */
+  public static void repairParentRelationships(Collection<ActivityInstanceImpl> values, String processInstanceId) {
+    for (ActivityInstanceImpl activityInstance : values) {
+      // if the determined activity instance id and the parent activity instance are equal,
+      // just put the activity instance under the process instance
+      if (!valuesDiffer(activityInstance.getId(), activityInstance.getParentActivityInstanceId())) {
+        activityInstance.setParentActivityInstanceId(processInstanceId);
+      }
+    }
   }
 
 

@@ -91,15 +91,15 @@ public class ParallelMultiInstanceScenarioTest {
     assertThat(activityInstance).hasStructure(
         describeActivityInstanceTree(instance.getProcessDefinitionId())
           .activity("afterBoundaryTask")
+          // the mi scope execution has the same activity instance id as the first child
           .beginScope("miSubProcess")
             .activity("subProcessTask")
-          .endScope()
-          .beginScope("miSubProcess")
-            .activity("subProcessTask")
-          .endScope()
-          .beginScope("miSubProcess")
-            .activity("subProcessTask")
-          .endScope()
+            .beginScope("miSubProcess")
+              .activity("subProcessTask")
+            .endScope()
+            .beginScope("miSubProcess")
+              .activity("subProcessTask")
+            .endScope()
         .done());
   }
 

@@ -40,9 +40,10 @@ public class MultiInstanceReceiveTaskScenarioTest {
     Assert.assertNotNull(activityInstance);
     assertThat(activityInstance).hasStructure(
       describeActivityInstanceTree(instance.getProcessDefinitionId())
-        .activity("miReceiveTask")
-        .activity("miReceiveTask")
-        .activity("miReceiveTask")
+        // the mi scope execution has the same activity instance id as the first child
+        .beginScope("miReceiveTask")
+          .activity("miReceiveTask")
+          .activity("miReceiveTask")
       .done());
   }
 
