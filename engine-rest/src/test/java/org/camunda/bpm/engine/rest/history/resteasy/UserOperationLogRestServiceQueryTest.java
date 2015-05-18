@@ -13,7 +13,8 @@
 package org.camunda.bpm.engine.rest.history.resteasy;
 
 import org.camunda.bpm.engine.rest.history.AbstractUserOperationLogRestServiceQueryTest;
-import org.camunda.bpm.engine.rest.util.ResteasyServerBootstrap;
+import org.camunda.bpm.engine.rest.util.EmbeddedServerBootstrap;
+import org.camunda.bpm.engine.rest.resteasy.util.ResteasyServerBootstrap;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
@@ -22,17 +23,17 @@ import org.junit.BeforeClass;
  */
 public class UserOperationLogRestServiceQueryTest extends AbstractUserOperationLogRestServiceQueryTest {
 
-  protected static ResteasyServerBootstrap server;
+  protected static EmbeddedServerBootstrap serverBootstrap;
 
   @BeforeClass
   public static void setUpEmbeddedRuntime() {
-    server = new ResteasyServerBootstrap();
-    server.start();
+    serverBootstrap = new ResteasyServerBootstrap();
+    serverBootstrap.start();
   }
 
   @AfterClass
   public static void tearDownEmbeddedRuntime() {
-    server.stop();
+    serverBootstrap.stop();
   }
 
 }

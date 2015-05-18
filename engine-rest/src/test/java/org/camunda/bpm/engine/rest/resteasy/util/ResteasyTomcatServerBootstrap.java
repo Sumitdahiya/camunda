@@ -1,5 +1,6 @@
-package org.camunda.bpm.engine.rest.util;
+package org.camunda.bpm.engine.rest.resteasy.util;
 
+import org.camunda.bpm.engine.rest.util.TomcatServerBootstrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.PomEquippedResolveStage;
 

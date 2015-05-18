@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Context antiJARLocking="true" antiResourceLocking="true">
+  <!--
+  enable legacy classloading mode (not exactly the same) for Tomcat => 7.0.52.
+  Change was introduced with 7.0.51 but that version was not released
+-->
+  <Loader delegate="true" />
+</Context>

@@ -1,20 +1,19 @@
-package org.camunda.bpm.engine.rest.util;
+package org.camunda.bpm.engine.rest.jersey.util;
 
+import com.sun.jersey.api.container.grizzly2.GrizzlyServerFactory;
+import com.sun.jersey.api.core.ApplicationAdapter;
+import com.sun.jersey.api.core.ResourceConfig;
+import org.camunda.bpm.engine.rest.impl.application.DefaultApplication;
+import org.camunda.bpm.engine.rest.util.EmbeddedServerBootstrap;
+import org.glassfish.grizzly.http.server.HttpServer;
+
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.UriBuilder;
-
-import org.camunda.bpm.engine.rest.impl.application.DefaultApplication;
-import org.glassfish.grizzly.http.server.HttpServer;
-
-import com.sun.jersey.api.container.grizzly2.GrizzlyServerFactory;
-import com.sun.jersey.api.core.ApplicationAdapter;
-import com.sun.jersey.api.core.ResourceConfig;
 
 public class JerseyServerBootstrap extends EmbeddedServerBootstrap {
 

@@ -13,7 +13,7 @@
 package org.camunda.bpm.engine.rest.wink;
 
 import org.camunda.bpm.engine.rest.AbstractProcessDefinitionRestServiceInteractionTest;
-import org.camunda.bpm.engine.rest.util.WinkTomcatServerBootstrap;
+import org.camunda.bpm.engine.rest.wink.util.WinkTomcatServerBootstrap;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;

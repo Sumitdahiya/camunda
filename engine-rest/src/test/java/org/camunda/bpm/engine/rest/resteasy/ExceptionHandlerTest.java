@@ -3,7 +3,7 @@ package org.camunda.bpm.engine.rest.resteasy;
 import org.camunda.bpm.engine.rest.AbstractExceptionHandlerTest;
 import org.camunda.bpm.engine.rest.application.TestCustomResourceApplication;
 import org.camunda.bpm.engine.rest.util.EmbeddedServerBootstrap;
-import org.camunda.bpm.engine.rest.util.ResteasyServerBootstrap;
+import org.camunda.bpm.engine.rest.resteasy.util.ResteasyServerBootstrap;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 

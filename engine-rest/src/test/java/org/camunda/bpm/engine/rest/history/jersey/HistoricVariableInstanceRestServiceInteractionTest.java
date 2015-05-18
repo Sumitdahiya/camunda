@@ -14,7 +14,7 @@ package org.camunda.bpm.engine.rest.history.jersey;
 
 import org.camunda.bpm.engine.rest.history.AbstractHistoricVariableInstanceRestServiceInteractionTest;
 import org.camunda.bpm.engine.rest.util.EmbeddedServerBootstrap;
-import org.camunda.bpm.engine.rest.util.JerseyServerBootstrap;
+import org.camunda.bpm.engine.rest.jersey.util.JerseyServerBootstrap;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 

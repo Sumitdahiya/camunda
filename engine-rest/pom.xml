@@ -37,48 +37,29 @@
       <artifactId>commons-fileupload</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.jboss.spec.javax.ws.rs</groupId>
+      <artifactId>jboss-jaxrs-api_1.1_spec</artifactId>
+      <version>1.0.1.Final</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.spec.javax.xml.registry</groupId>
+      <artifactId>jboss-jaxr-api_1.0_spec</artifactId>
+      <version>1.0.2.Final</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>3.0.1</version>
+      <scope>provided</scope>
+    </dependency>
+
     <!-- test -->
-    <!-- resteasy -->
-    <dependency>
-      <groupId>org.jboss.resteasy</groupId>
-      <artifactId>resteasy-jaxrs</artifactId>
-      <version>${resteasy.version}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>httpclient</artifactId>
-          <groupId>org.apache.httpcomponents</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jboss.resteasy</groupId>
-      <artifactId>resteasy-netty</artifactId>
-      <version>${resteasy.netty.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <!-- jersey -->
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-grizzly2</artifactId>
-      <version>1.17.1</version>
-      <scope>test</scope>
-    </dependency>
-
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <!-- Wink test dependencies -->
-
-    <dependency>
-      <groupId>org.apache.wink</groupId>
-      <artifactId>wink-server</artifactId>
-      <version>1.1.1-incubating</version>
       <scope>test</scope>
     </dependency>
 
@@ -95,28 +76,12 @@
       <version>${version.tomcat}</version>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>org.apache.tomcat.embed</groupId>
       <artifactId>tomcat-embed-logging-juli</artifactId>
       <version>${version.tomcat}</version>
       <scope>test</scope>
     </dependency>
-
-    <!-- has to be below resteasy otherwise a wrong class is loaded for reasteasy 3.0.8.Final -->
-    <dependency>
-      <groupId>org.jboss.spec</groupId>
-      <artifactId>jboss-javaee-6.0</artifactId>
-      <type>pom</type>
-      <scope>provided</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>xalan</artifactId>
-          <groupId>org.apache.xalan</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
     <!-- only included to prevent java.lang.ClassNotFoundException: org.apache.jasper.servlet.JspServlet -->
     <!-- removing this dep. will not break the tests, but makes them "ugly"-->
     <dependency>
@@ -332,123 +297,8 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
               <skipTests>true</skipTests>
+              <skipExec>true</skipExec>
             </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
-    <profile>
-      <id>embedded-rest</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <properties>
-        <rest.http.port>38080</rest.http.port>
-      </properties>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <systemPropertyVariables>
-                <org.apache.maven.user-settings>../settings/maven/nexus-settings.xml</org.apache.maven.user-settings>
-              </systemPropertyVariables>
-              <excludes>
-                <exclude>**/Abstract*</exclude>
-              </excludes>
-              <redirectTestOutputToFile>true</redirectTestOutputToFile>
-            </configuration>
-            <executions>
-              <execution>
-                <id>default-test</id>
-                <configuration>
-                  <includes>
-                    <include>**/rest/standalone/**</include>
-                  </includes>
-                  <excludes>
-                    <exclude>**/rest/standalone/ServletAuthenticationFilterTest*</exclude>
-                    <exclude>**/rest/resteasy/**</exclude>
-                    <exclude>**/rest/jersey/**</exclude>
-                    <exclude>**/rest/wink/**</exclude>
-                    <exclude>**/rest/history/**</exclude>
-                  </excludes>
-                </configuration>
-              </execution>
-              <execution>
-                <id>serlvet-authentication-test</id>
-                <goals>
-                  <goal>test</goal>
-                </goals>
-                <phase>test</phase>
-                <configuration>
-                  <includes>
-                    <include>**/rest/standalone/ServletAuthenticationFilterTest*</include>
-                  </includes>
-                </configuration>
-              </execution>
-              <execution>
-                <id>resteasy-tests</id>
-                <goals>
-                  <goal>test</goal>
-                </goals>
-                <phase>test</phase>
-                <configuration>
-                  <includes>
-                    <include>**/rest/resteasy/**</include>
-                    <include>**/rest/history/resteasy/**</include>
-                  </includes>
-                  <excludes>
-                    <exclude>**/rest/jersey/**</exclude>
-                    <exclude>**/rest/history/jersey/**</exclude>
-                    <exclude>**/rest/wink/**</exclude>
-                    <exclude>**/rest/history/wink/**</exclude>
-                    <exclude>**/rest/standalone/**</exclude>
-                  </excludes>
-                </configuration>
-              </execution>
-              <execution>
-                <id>jersey-tests</id>
-                <goals>
-                  <goal>test</goal>
-                </goals>
-                <phase>test</phase>
-                <configuration>
-                  <includes>
-                    <include>**/rest/jersey/**</include>
-                    <include>**/rest/history/jersey/**</include>
-                  </includes>
-                  <excludes>
-                    <exclude>**/rest/resteasy/**</exclude>
-                    <exclude>**/rest/history/resteasy/**</exclude>
-                    <exclude>**/rest/wink/**</exclude>
-                    <exclude>**/rest/history/wink/**</exclude>
-                    <exclude>**/rest/standalone/**</exclude>
-                  </excludes>
-                </configuration>
-              </execution>
-              <execution>
-                <id>wink-tests</id>
-                <goals>
-                  <goal>test</goal>
-                </goals>
-                <phase>test</phase>
-                <configuration>
-                  <includes>
-                    <include>**/rest/wink/**</include>
-                    <include>**/rest/history/wink/**</include>
-                  </includes>
-                  <excludes>
-                    <exclude>**/rest/resteasy/**</exclude>
-                    <exclude>**/rest/history/resteasy/**</exclude>
-                    <exclude>**/rest/jersey/**</exclude>
-                    <exclude>**/rest/history/jersey/**</exclude>
-                    <exclude>**/rest/standalone/**</exclude>
-                  </excludes>
-                </configuration>
-              </execution>
-            </executions>
           </plugin>
         </plugins>
       </build>
@@ -456,25 +306,147 @@
     
     <!-- Execute tests with Jersey only; sufficient in 99% of cases to find errors -->
     <profile>
-      <id>develop</id>
+      <id>jersey</id>
+      <properties>
+        <rest.http.port>38080</rest.http.port>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>com.sun.jersey</groupId>
+          <artifactId>jersey-grizzly2</artifactId>
+          <version>1.17.1</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
       <build>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <testExcludes>
+                <testExclude>**/resteasy/**</testExclude>
+                <testExclude>**/wink/**</testExclude>
+              </testExcludes>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
+              <systemPropertyVariables>
+                <org.apache.maven.user-settings>../settings/maven/nexus-settings.xml</org.apache.maven.user-settings>
+              </systemPropertyVariables>
               <includes>
                 <include>**/rest/jersey/**</include>
                 <include>**/rest/history/jersey/**</include>
+              </includes>
+              <redirectTestOutputToFile>true</redirectTestOutputToFile>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>resteasy</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <rest.http.port>38080</rest.http.port>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>org.jboss.resteasy</groupId>
+          <artifactId>resteasy-jaxrs</artifactId>
+          <version>${resteasy.version}</version>
+          <scope>test</scope>
+          <exclusions>
+            <exclusion>
+              <groupId>org.apache.httpcomponents</groupId>
+              <artifactId>httpclient</artifactId>
+            </exclusion>
+          </exclusions>
+        </dependency>
+
+        <dependency>
+          <groupId>org.jboss.resteasy</groupId>
+          <artifactId>resteasy-netty</artifactId>
+          <version>${resteasy.netty.version}</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <!-- exclude test classes from compilation -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <testExcludes>
+                <testExclude>**/jersey/**</testExclude>
+                <testExclude>**/wink/**</testExclude>
+              </testExcludes>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <systemPropertyVariables>
+                <org.apache.maven.user-settings>../settings/maven/nexus-settings.xml</org.apache.maven.user-settings>
+              </systemPropertyVariables>
+              <includes>
+                <include>**/rest/resteasy/**</include>
+                <include>**/rest/history/resteasy/**</include>
                 <include>**/rest/standalone/**</include>
               </includes>
-              <excludes>
-                <exclude>**/Abstract*</exclude>
-                <exclude>**/rest/resteasy/**</exclude>
-                <exclude>**/rest/history/resteasy/**</exclude>
-                <exclude>**/rest/wink/**</exclude>
-                <exclude>**/rest/history/wink/**</exclude>
-              </excludes>
+              <redirectTestOutputToFile>true</redirectTestOutputToFile>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>wink</id>
+      <properties>
+        <!--<version.tomcat>7.0.50</version.tomcat>-->
+        <rest.http.port>38080</rest.http.port>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>org.apache.wink</groupId>
+          <artifactId>wink-server</artifactId>
+          <version>1.1.1-incubating</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <!-- exclude test classes from compilation -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <testExcludes>
+                <testExclude>**/jersey/**</testExclude>
+                <testExclude>**/resteasy/**</testExclude>
+              </testExcludes>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <systemPropertyVariables>
+                <org.apache.maven.user-settings>../settings/maven/nexus-settings.xml</org.apache.maven.user-settings>
+              </systemPropertyVariables>
+              <includes>
+                <include>**/rest/wink/**</include>
+                <include>**/rest/history/wink/**</include>
+              </includes>
               <redirectTestOutputToFile>true</redirectTestOutputToFile>
             </configuration>
           </plugin>
@@ -499,8 +471,40 @@
         <resteasy.version>3.0.8.Final</resteasy.version>
         <resteasy.netty.version>${resteasy.version}</resteasy.netty.version>
       </properties>
+      <dependencies>
+        <dependency>
+          <groupId>org.jboss.resteasy</groupId>
+          <artifactId>resteasy-jaxrs</artifactId>
+          <version>${resteasy.version}</version>
+          <scope>test</scope>
+          <exclusions>
+            <exclusion>
+              <groupId>org.apache.httpcomponents</groupId>
+              <artifactId>httpclient</artifactId>
+            </exclusion>
+          </exclusions>
+        </dependency>
+
+        <dependency>
+          <groupId>org.jboss.resteasy</groupId>
+          <artifactId>resteasy-netty</artifactId>
+          <version>${resteasy.netty.version}</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
       <build>
         <plugins>
+          <!-- exclude test classes from compilation -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <testExcludes>
+                <testExclude>**/jersey/**</testExclude>
+                <testExclude>**/wink/**</testExclude>
+              </testExcludes>
+            </configuration>
+          </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
@@ -508,33 +512,13 @@
               <systemPropertyVariables>
                 <org.apache.maven.user-settings>../settings/maven/nexus-settings.xml</org.apache.maven.user-settings>
               </systemPropertyVariables>
-              <excludes>
-                <exclude>**/Abstract*</exclude>
-              </excludes>
+              <includes>
+                <include>**/rest/standalone/**</include>
+                <include>**/rest/resteasy/**</include>
+                <include>**/rest/history/resteasy/**</include>
+              </includes>
               <redirectTestOutputToFile>true</redirectTestOutputToFile>
             </configuration>
-            <executions>
-              <execution>
-                <id>default-test</id>
-                <goals>
-                  <goal>test</goal>
-                </goals>
-                <phase>test</phase>
-                <configuration>
-                  <includes>
-                    <include>**/rest/standalone/**</include>
-                    <include>**/rest/resteasy/**</include>
-                    <include>**/rest/history/resteasy/**</include>
-                  </includes>
-                  <excludes>
-                    <exclude>**/rest/wink/**</exclude>
-                    <exclude>**/rest/history/wink/**</exclude>
-                    <exclude>**/rest/jersey/**</exclude>
-                    <exclude>**/rest/history/jersey/**</exclude>
-                  </excludes>
-                </configuration>
-              </execution>
-            </executions>
           </plugin>
         </plugins>
       </build>

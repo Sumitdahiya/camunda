@@ -1,10 +1,11 @@
-package org.camunda.bpm.engine.rest.util;
+package org.camunda.bpm.engine.rest.resteasy.util;
 
 import java.util.Properties;
 
 import javax.ws.rs.core.Application;
 
 import org.camunda.bpm.engine.rest.impl.application.DefaultApplication;
+import org.camunda.bpm.engine.rest.util.EmbeddedServerBootstrap;
 import org.jboss.resteasy.plugins.server.netty.NettyJaxrsServer;
 
 public class ResteasyServerBootstrap extends EmbeddedServerBootstrap {

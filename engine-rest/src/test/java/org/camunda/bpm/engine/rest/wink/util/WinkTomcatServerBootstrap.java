@@ -10,8 +10,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.camunda.bpm.engine.rest.util;
+package org.camunda.bpm.engine.rest.wink.util;
 
+import org.camunda.bpm.engine.rest.util.TomcatServerBootstrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.PomEquippedResolveStage;
 
@@ -25,6 +26,7 @@ public class WinkTomcatServerBootstrap extends TomcatServerBootstrap {
 
   public WinkTomcatServerBootstrap(String webXmlPath) {
     super(webXmlPath);
+    setLegacyMode(true);
   }
 
   @Override

@@ -22,6 +22,9 @@ public abstract class TomcatServerBootstrap extends EmbeddedServerBootstrap {
   private Tomcat tomcat;
   private String workingDir;
   private String webXmlPath;
+  private String contextXml = "src/test/resources/runtime/tomcat/context.xml";
+  private String legacyContextXml = "src/test/resources/runtime/tomcat/legacy-context.xml";
+  private boolean legacyMode = false;
 
   public TomcatServerBootstrap(String webXmlPath) {
     this.webXmlPath = webXmlPath;
@@ -60,10 +63,12 @@ public abstract class TomcatServerBootstrap extends EmbeddedServerBootstrap {
 
     Context ctx = tomcat.addWebapp(tomcat.getHost(), contextPath, webApp.getAbsolutePath());
 
-    // add anti-locking config to avoid locked files
-    // on windows systems
+    // add config to avoid locked files on windows and control classloading behaviour
     try {
-      ctx.setConfigFile(new File("src/test/resources/runtime/tomcat/context.xml").toURI().toURL());
+      if (isLegacyMode()) {
+        contextXml = legacyContextXml;
+      }
+      ctx.setConfigFile(new File(contextXml).toURI().toURL());
     } catch (MalformedURLException e) {
       throw new RuntimeException(e);
     }
@@ -112,4 +117,19 @@ public abstract class TomcatServerBootstrap extends EmbeddedServerBootstrap {
     this.workingDir = workingDir;
   }
 
+  public String getContextXml() {
+    return contextXml;
+  }
+
+  public void setContextXml(String contextXml) {
+    this.contextXml = contextXml;
+  }
+
+  public void setLegacyMode(boolean legacyMode) {
+    this.legacyMode = legacyMode;
+  }
+
+  public boolean isLegacyMode() {
+    return legacyMode;
+  }
 }
