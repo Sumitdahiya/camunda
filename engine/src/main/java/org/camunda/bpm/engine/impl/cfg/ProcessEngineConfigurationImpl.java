@@ -463,6 +463,7 @@ public abstract class ProcessEngineConfigurationImpl extends ProcessEngineConfig
 
   protected boolean isMetricsEnabled = true;
   protected boolean isDbMetricsReporterActivate = true;
+  protected int dbMetricsReportIntervalSeconds = 60 * 15;
 
   protected MetricsReporterIdProvider metricsReporterIdProvider;
 
@@ -1226,6 +1227,7 @@ public abstract class ProcessEngineConfigurationImpl extends ProcessEngineConfig
 
       if(dbMetricsReporter == null) {
         dbMetricsReporter = new DbMetricsReporter(metricsRegistry, commandExecutorTxRequired);
+        dbMetricsReporter.setReportingIntervalInSeconds(dbMetricsReportIntervalSeconds);
       }
     }
   }
@@ -2615,5 +2617,13 @@ public abstract class ProcessEngineConfigurationImpl extends ProcessEngineConfig
 
   public void setMetricsReporterIdProvider(MetricsReporterIdProvider metricsReporterIdProvider) {
     this.metricsReporterIdProvider = metricsReporterIdProvider;
+  }
+
+  public int getDbMetricsReportIntervalSeconds() {
+    return dbMetricsReportIntervalSeconds;
+  }
+
+  public void setDbMetricsReportIntervalSeconds(int dbMetricsReportIntervalSeconds) {
+    this.dbMetricsReportIntervalSeconds = dbMetricsReportIntervalSeconds;
   }
 }
