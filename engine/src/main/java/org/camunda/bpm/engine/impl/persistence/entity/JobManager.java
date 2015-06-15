@@ -32,6 +32,10 @@ import org.camunda.bpm.engine.impl.QueryOrderingProperty;
 import org.camunda.bpm.engine.impl.cfg.TransactionListener;
 import org.camunda.bpm.engine.impl.cfg.TransactionState;
 import org.camunda.bpm.engine.impl.context.Context;
+import org.camunda.bpm.engine.impl.db.ListQueryParameterObject;
+import org.camunda.bpm.engine.impl.db.entitymanager.operation.DbBulkOperation;
+import org.camunda.bpm.engine.impl.db.entitymanager.operation.DbOperationType;
+import org.camunda.bpm.engine.impl.db.sql.NonTransactionalDbSqlSession;
 import org.camunda.bpm.engine.impl.jobexecutor.ExclusiveJobAddedNotification;
 import org.camunda.bpm.engine.impl.jobexecutor.JobExecutor;
 import org.camunda.bpm.engine.impl.jobexecutor.JobExecutorContext;
@@ -136,6 +140,60 @@ public class JobManager extends AbstractManager {
 
   public JobEntity findJobById(String jobId) {
     return (JobEntity) getDbEntityManager().selectOne("selectJob", jobId);
+  }
+
+  public int lockNextJobsToExecute(String lockOwner, Date lockDate, int acquisitionAttempt, Page page) {
+    Map<String,Object> params = new HashMap<String, Object>();
+    Date now = ClockUtil.getCurrentTime();
+    params.put("lockOwner", lockOwner);
+    params.put("lockExpirationTime", lockDate);
+    params.put("acquisitionAttempt", acquisitionAttempt);
+    params.put("now", now);
+    params.put("deploymentAware", Context.getProcessEngineConfiguration().isJobExecutorDeploymentAware());
+    if (Context.getProcessEngineConfiguration().isJobExecutorDeploymentAware()) {
+      Set<String> registeredDeployments = Context.getProcessEngineConfiguration().getRegisteredDeployments();
+      if (!registeredDeployments.isEmpty()) {
+        params.put("deploymentIds", registeredDeployments);
+      }
+    }
+
+    List<QueryOrderingProperty> orderingProperties = new ArrayList<QueryOrderingProperty>();
+    if (Context.getProcessEngineConfiguration().isJobExecutorPreferTimerJobs()) {
+      orderingProperties.add(JOB_TYPE_ORDERING_PROPERTY);
+    }
+    if (Context.getProcessEngineConfiguration().isJobExecutorAcquireByDueDate()) {
+      orderingProperties.add(JOB_DUEDATE_ORDERING_PROPERTY);
+    }
+    params.put("orderingProperties", orderingProperties);
+    // don't apply default sorting
+    params.put("applyOrdering", !orderingProperties.isEmpty());
+
+    // TODO: this should be handled on a deeper layer
+    DbBulkOperation dbOperation = new DbBulkOperation();
+    dbOperation.setEntityType(JobEntity.class);
+    dbOperation.setStatement("lockNextJobsToExecute");
+    dbOperation.setParameter(new ListQueryParameterObject(params,
+        page.getFirstResult(), page.getMaxResults()));
+    dbOperation.setOperationType(DbOperationType.UPDATE_BULK);
+    return getSession(NonTransactionalDbSqlSession.class).execute(dbOperation);
+  }
+
+  public void unlockJob(String jobId) {
+    // TODO: this should be handled on a deeper layer
+    DbBulkOperation dbOperation = new DbBulkOperation();
+    dbOperation.setEntityType(JobEntity.class);
+    dbOperation.setStatement("unlockJob");
+    dbOperation.setParameter(jobId);
+    dbOperation.setOperationType(DbOperationType.UPDATE_BULK);
+    getSession(NonTransactionalDbSqlSession.class).execute(dbOperation);
+  }
+
+  @SuppressWarnings("unchecked")
+  public List<JobEntity> selectLockedJobs(String lockOwner, int acquisitionAttempt) {
+    Map<String, Object> params = new HashMap<String, Object>();
+    params.put("lockOwner", lockOwner);
+    params.put("acquisitionAttempt", acquisitionAttempt);
+    return getDbEntityManager().selectList("selectLockedJobs", params);
   }
 
   @SuppressWarnings("unchecked")

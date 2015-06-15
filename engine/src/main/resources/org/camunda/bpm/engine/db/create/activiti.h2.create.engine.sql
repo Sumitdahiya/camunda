@@ -53,6 +53,7 @@ create table ACT_RU_EXECUTION (
     SUSPENSION_STATE_ integer,
     CACHED_ENT_STATE_ integer,
     SEQUENCE_COUNTER_ integer,
+    LOCK_EXP_TIME_ timestamp,
     primary key (ID_)
 );
 
@@ -78,6 +79,7 @@ create table ACT_RU_JOB (
     SUSPENSION_STATE_ integer,
     JOB_DEF_ID_ varchar(64),
     SEQUENCE_COUNTER_ integer,
+    ACQUISITION_ATTEMPT_ integer,
     primary key (ID_)
 );
 

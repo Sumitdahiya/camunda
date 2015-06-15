@@ -13,6 +13,7 @@
 
 package org.camunda.bpm.engine.impl.persistence.entity;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,9 @@ import org.camunda.bpm.engine.impl.ExecutionQueryImpl;
 import org.camunda.bpm.engine.impl.Page;
 import org.camunda.bpm.engine.impl.ProcessInstanceQueryImpl;
 import org.camunda.bpm.engine.impl.cfg.auth.ResourceAuthorizationProvider;
+import org.camunda.bpm.engine.impl.db.entitymanager.operation.DbBulkOperation;
+import org.camunda.bpm.engine.impl.db.entitymanager.operation.DbOperationType;
+import org.camunda.bpm.engine.impl.db.sql.NonTransactionalDbSqlSession;
 import org.camunda.bpm.engine.impl.persistence.AbstractManager;
 import org.camunda.bpm.engine.runtime.Execution;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
@@ -166,6 +170,20 @@ public class ExecutionManager extends AbstractManager {
     parameters.put("processDefinitionKey", processDefinitionKey);
     parameters.put("suspensionState", suspensionState.getStateCode());
     getDbEntityManager().update(ExecutionEntity.class, "updateExecutionSuspensionStateByParameters", parameters);
+  }
+
+  public int tryAcquireProcessInstanceLock(String processInstanceId, Date lockExpirationTime) {
+    Map<String, Object> parameters = new HashMap<String, Object>();
+    parameters.put("id", processInstanceId);
+    parameters.put("lockExpirationTime", lockExpirationTime);
+
+    DbBulkOperation dbOperation = new DbBulkOperation();
+    dbOperation.setEntityType(JobEntity.class);
+    dbOperation.setStatement("tryAcquireLock");
+    dbOperation.setParameter(parameters);
+    dbOperation.setOperationType(DbOperationType.UPDATE_BULK);
+    return getSession(NonTransactionalDbSqlSession.class).execute(dbOperation);
+
   }
 
   // helper ///////////////////////////////////////////////////////////

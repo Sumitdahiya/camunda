@@ -6,6 +6,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.camunda.bpm.engine.impl.ProcessEngineImpl;
+import org.camunda.bpm.engine.impl.cmd.AcquireJobsCmd;
 import org.camunda.bpm.engine.impl.interceptor.CommandExecutor;
 
 
@@ -62,10 +63,14 @@ public class SequentialJobAcquisitionRunnable extends AcquireJobsRunnable {
               .getCommandExecutorTxRequired();
 
           jobExecutor.logAcquisitionAttempt(currentProcessEngine);
-          AcquiredJobs acquiredJobs = commandExecutor.execute(jobExecutor.getAcquireJobsCmd());
+          int acquisitionAttempt = jobExecutor.getNextAcquisitionId();
 
-          jobExecutor.logAcquiredJobs(currentProcessEngine, acquiredJobs.size());
-          jobExecutor.logAcquisitionFailureJobs(currentProcessEngine, acquiredJobs.getNumberOfJobsFailedToLock());
+          int numAcquiredJobs = commandExecutor.execute(new LockJobsCmd(jobExecutor, acquisitionAttempt));
+
+          AcquiredJobs acquiredJobs = new AcquiredJobs();
+          if (numAcquiredJobs > 0) {
+            acquiredJobs = commandExecutor.execute(new AcquireJobsCmd(jobExecutor, acquisitionAttempt));
+          }
 
           for (List<String> jobIds : acquiredJobs.getJobIdBatches()) {
             jobExecutor.executeJobs(jobIds, currentProcessEngine);

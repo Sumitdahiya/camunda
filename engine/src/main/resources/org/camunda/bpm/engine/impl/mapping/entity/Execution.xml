@@ -26,6 +26,7 @@
       SUSPENSION_STATE_,
       CACHED_ENT_STATE_,
       SEQUENCE_COUNTER_,
+      LOCK_EXP_TIME_,
       REV_
     )
     values
@@ -47,6 +48,7 @@
       #{suspensionState, jdbcType=INTEGER},
       #{cachedEntityState, jdbcType=INTEGER},
       #{sequenceCounter, jdbcType=BIGINT},
+      #{lockExpirationTime, jdbcType=TIMESTAMP},
       1
     )
   </insert>
@@ -67,7 +69,8 @@
       SUPER_EXEC_ = #{superExecutionId, jdbcType=VARCHAR},
       SUSPENSION_STATE_ = #{suspensionState, jdbcType=INTEGER},
       CACHED_ENT_STATE_ = #{cachedEntityState, jdbcType=INTEGER},
-      SEQUENCE_COUNTER_ = #{sequenceCounter, jdbcType=BIGINT}
+      SEQUENCE_COUNTER_ = #{sequenceCounter, jdbcType=BIGINT},
+      LOCK_EXP_TIME_ = #{lockExpirationTime, jdbcType=TIMESTAMP}
     where ID_ = #{id, jdbcType=VARCHAR}
       and REV_ = #{revision, jdbcType=INTEGER}
   </update>
@@ -87,6 +90,13 @@
         and PROC_DEF_ID_ IN (SELECT ID_ FROM ${prefix}ACT_RE_PROCDEF WHERE KEY_ = #{processDefinitionKey, jdbcType=VARCHAR})
       </if>
     </where>
+  </update>
+  
+  <update id="tryAcquireLock" parameterType="java.util.Map">
+    update ${prefix}ACT_RU_EXECUTION set
+      REV_ = REV_ + 1,
+      LOCK_EXP_TIME_ = #{lockExpirationTime, jdbcType=TIMESTAMP}
+    where ID_ = #{id, jdbcType=VARCHAR} and LOCK_EXP_TIME_ is null
   </update>
 
   <!-- EXECUTION DELETE -->
@@ -116,6 +126,7 @@
     <result property="suspensionState" column="SUSPENSION_STATE_" jdbcType="INTEGER"/>
     <result property="cachedEntityState" column="CACHED_ENT_STATE_" jdbcType="INTEGER"/>
     <result property="sequenceCounter" column="SEQUENCE_COUNTER_" jdbcType="BIGINT"/>
+    <result property="lockExpirationTime" column="LOCK_EXP_TIME_" jdbcType="TIMESTAMP" />
   </resultMap>
   
   <!-- EXECUTION SELECT -->
