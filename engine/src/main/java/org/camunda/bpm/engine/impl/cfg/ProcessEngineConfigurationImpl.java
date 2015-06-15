@@ -97,6 +97,7 @@ import org.camunda.bpm.engine.impl.cmmn.transformer.DefaultCmmnTransformFactory;
 import org.camunda.bpm.engine.impl.db.DbIdGenerator;
 import org.camunda.bpm.engine.impl.db.entitymanager.DbEntityManagerFactory;
 import org.camunda.bpm.engine.impl.db.entitymanager.cache.DbEntityCacheKeyMapping;
+import org.camunda.bpm.engine.impl.db.sql.NonTransactionalDbSqlSessionFactory;
 import org.camunda.bpm.engine.impl.db.sql.DbSqlPersistenceProviderFactory;
 import org.camunda.bpm.engine.impl.db.sql.DbSqlSessionFactory;
 import org.camunda.bpm.engine.impl.delegate.DefaultDelegateInterceptor;
@@ -928,6 +929,9 @@ public abstract class ProcessEngineConfigurationImpl extends ProcessEngineConfig
     dbSqlSessionFactory.setDatabaseSchema(databaseSchema);
     addSessionFactory(dbSqlSessionFactory);
     addSessionFactory(new DbSqlPersistenceProviderFactory());
+
+    addSessionFactory(new NonTransactionalDbSqlSessionFactory(dbSqlSessionFactory));
+
   }
 
   /**

@@ -53,6 +53,7 @@ create table ACT_RU_EXECUTION (
     SUSPENSION_STATE_ integer,
     CACHED_ENT_STATE_ integer,
     SEQUENCE_COUNTER_ bigint,
+    LOCK_EXP_TIME_ timestamp NULL,
     primary key (ID_)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE utf8_bin;
 
@@ -78,6 +79,7 @@ create table ACT_RU_JOB (
     SUSPENSION_STATE_ integer,
     JOB_DEF_ID_ varchar(64),
     SEQUENCE_COUNTER_ bigint,
+    ACQUISITION_ATTEMPT_ integer,
     primary key (ID_)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE utf8_bin;
 

@@ -14,6 +14,7 @@
 package org.camunda.bpm.engine.impl.persistence.entity;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -205,6 +206,8 @@ public class ExecutionEntity extends PvmExecutionImpl implements
    * @see #setSuperCaseExecution(ExecutionEntity)
    */
   protected String superCaseExecutionId;
+
+  protected Date lockExpirationTime;
 
   public ExecutionEntity() {
 
@@ -1146,6 +1149,7 @@ public class ExecutionEntity extends PvmExecutionImpl implements
     persistentState.put("suspensionState", this.suspensionState);
     persistentState.put("cachedEntityState", getCachedEntityState());
     persistentState.put("sequenceCounter", getSequenceCounter());
+    persistentState.put("lockExpirationTime", lockExpirationTime);
     return persistentState;
   }
 
@@ -1519,6 +1523,26 @@ public class ExecutionEntity extends PvmExecutionImpl implements
   public ProcessEngineServices getProcessEngineServices() {
     return Context.getProcessEngineConfiguration()
           .getProcessEngine();
+  }
+
+  public void lock(Date lockExpirationTime) {
+    setLockExpirationTime(lockExpirationTime);
+  }
+
+  public void unlock() {
+    lockExpirationTime = null;
+  }
+
+  public boolean isLocked() {
+    return lockExpirationTime != null;
+  }
+
+  public Date getLockExpirationTime() {
+    return lockExpirationTime;
+  }
+
+  public void setLockExpirationTime(Date lockExpirationTime) {
+    this.lockExpirationTime = lockExpirationTime;
   }
 
 

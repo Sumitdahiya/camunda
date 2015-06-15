@@ -14,111 +14,82 @@ package org.camunda.bpm.engine.impl.cmd;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.camunda.bpm.engine.impl.Page;
-import org.camunda.bpm.engine.impl.cfg.TransactionState;
-import org.camunda.bpm.engine.impl.context.Context;
-import org.camunda.bpm.engine.impl.db.DbEntity;
-import org.camunda.bpm.engine.impl.db.entitymanager.OptimisticLockingListener;
-import org.camunda.bpm.engine.impl.db.entitymanager.operation.DbEntityOperation;
-import org.camunda.bpm.engine.impl.db.entitymanager.operation.DbOperation;
 import org.camunda.bpm.engine.impl.interceptor.Command;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.jobexecutor.AcquiredJobs;
 import org.camunda.bpm.engine.impl.jobexecutor.JobExecutor;
 import org.camunda.bpm.engine.impl.persistence.entity.JobEntity;
 import org.camunda.bpm.engine.impl.util.ClockUtil;
-import org.camunda.bpm.engine.management.Metrics;
 
 
 /**
  * @author Nick Burch
  * @author Daniel Meyer
  */
-public class AcquireJobsCmd implements Command<AcquiredJobs>, OptimisticLockingListener {
+public class AcquireJobsCmd implements Command<AcquiredJobs> {
+
+  private static Logger log = Logger.getLogger(AcquireJobsCmd.class.getName());
 
   private final JobExecutor jobExecutor;
 
   protected AcquiredJobs acquiredJobs;
-  protected int numJobsToAcquire;
+  protected int acquisitionAttempt;
 
   public AcquireJobsCmd(JobExecutor jobExecutor) {
-    this(jobExecutor, jobExecutor.getMaxJobsPerAcquisition());
+    this(jobExecutor, 0);
   }
 
-  public AcquireJobsCmd(JobExecutor jobExecutor, int numJobsToAcquire) {
+  public AcquireJobsCmd(JobExecutor jobExecutor, int acquisitionAttempt) {
     this.jobExecutor = jobExecutor;
-    this.numJobsToAcquire = numJobsToAcquire;
+    this.acquisitionAttempt = acquisitionAttempt;
   }
 
   public AcquiredJobs execute(CommandContext commandContext) {
 
     String lockOwner = jobExecutor.getLockOwner();
-    int lockTimeInMillis = jobExecutor.getLockTimeInMillis();
 
     acquiredJobs = new AcquiredJobs();
-    List<JobEntity> jobs = commandContext
-      .getJobManager()
-      .findNextJobsToExecute(new Page(0, numJobsToAcquire));
 
+    List<JobEntity> jobs = commandContext.getJobManager().selectLockedJobs(lockOwner, acquisitionAttempt);
+
+    acquiredJobs = new AcquiredJobs();
     for (JobEntity job: jobs) {
       List<String> jobIds = new ArrayList<String>();
-
-      if (job != null && !acquiredJobs.contains(job.getId())) {
-        if (job.isExclusive() && job.getProcessInstanceId() != null) {
-          // acquire all exclusive jobs in the same process instance
-          // (includes the current job)
-          List<JobEntity> exclusiveJobs = commandContext.getJobManager()
-            .findExclusiveJobsToExecute(job.getProcessInstanceId());
-          for (JobEntity exclusiveJob : exclusiveJobs) {
-            if(exclusiveJob != null) {
-              lockJob(exclusiveJob, lockOwner, lockTimeInMillis);
-              jobIds.add(exclusiveJob.getId());
-            }
-          }
-        } else {
-          lockJob(job, lockOwner, lockTimeInMillis);
-          jobIds.add(job.getId());
-        }
-
-      }
+      jobIds.add(job.getId());
 
       acquiredJobs.addJobIdBatch(jobIds);
     }
 
-    // register an OptimisticLockingListener which is notified about jobs which cannot be acquired.
-    // the listener removes them from the list of acquired jobs.
-    commandContext
-      .getDbEntityManager()
-      .registerOptimisticLockingListener(this);
+    if (log.isLoggable(Level.FINE)) {
+      StringBuilder sb = new StringBuilder();
+      sb.append("Acquired Jobs: ");
+      for (JobEntity job : jobs) {
+        sb.append(job.getId());
+        sb.append(", ");
+      }
+
+      log.log(Level.FINE, sb.toString());
+
+    }
 
     return acquiredJobs;
   }
 
-  protected void lockJob(JobEntity job, String lockOwner, int lockTimeInMillis) {
-    job.setLockOwner(lockOwner);
+  protected Date getLockDate(int lockTimeInMillis) {
     GregorianCalendar gregorianCalendar = new GregorianCalendar();
     gregorianCalendar.setTime(ClockUtil.getCurrentTime());
     gregorianCalendar.add(Calendar.MILLISECOND, lockTimeInMillis);
-    job.setLockExpirationTime(gregorianCalendar.getTime());
+    return gregorianCalendar.getTime();
   }
 
-  public Class<? extends DbEntity> getEntityType() {
-    return JobEntity.class;
-  }
-
-  public void failedOperation(DbOperation operation) {
-    if (operation instanceof DbEntityOperation) {
-
-      DbEntityOperation entityOperation = (DbEntityOperation) operation;
-      if(JobEntity.class.isAssignableFrom(entityOperation.getEntityType())) {
-        // could not lock the job -> remove it from list of acquired jobs
-        acquiredJobs.removeJobId(entityOperation.getEntity().getId());
-      }
-
-    }
+  public void setAcquisitionAttempt(int acquisitionAttempt) {
+    this.acquisitionAttempt = acquisitionAttempt;
   }
 
 }

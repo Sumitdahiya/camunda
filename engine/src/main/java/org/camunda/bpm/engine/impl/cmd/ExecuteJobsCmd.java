@@ -19,6 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.camunda.bpm.engine.ProcessEngineException;
+import org.camunda.bpm.engine.impl.cfg.TransactionListener;
 import org.camunda.bpm.engine.impl.cfg.TransactionState;
 import org.camunda.bpm.engine.impl.context.Context;
 import org.camunda.bpm.engine.impl.interceptor.Command;
@@ -28,6 +29,7 @@ import org.camunda.bpm.engine.impl.jobexecutor.FailedJobListener;
 import org.camunda.bpm.engine.impl.jobexecutor.JobExecutorContext;
 import org.camunda.bpm.engine.impl.jobexecutor.SuccessfulJobListener;
 import org.camunda.bpm.engine.impl.persistence.entity.AuthorizationManager;
+import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
 import org.camunda.bpm.engine.impl.persistence.entity.JobEntity;
 
 /**
@@ -52,7 +54,7 @@ public class ExecuteJobsCmd implements Command<Object>, Serializable {
     if (log.isLoggable(Level.FINE)) {
       log.fine("Executing job " + jobId);
     }
-    JobEntity job = commandContext.getDbEntityManager().selectById(JobEntity.class, jobId);
+    final JobEntity job = commandContext.getDbEntityManager().selectById(JobEntity.class, jobId);
 
     final CommandExecutor commandExecutor = Context.getProcessEngineConfiguration().getCommandExecutorTxRequiresNew();
     final JobExecutorContext jobExecutorContext = Context.getJobExecutorContext();
@@ -72,6 +74,28 @@ public class ExecuteJobsCmd implements Command<Object>, Serializable {
 
       }
 
+    }
+
+    // unlock process instance
+    if (job.getProcessInstanceId() != null) {
+      // try to unlock process instance in this transaction
+      ExecutionEntity processInstance = commandContext.getExecutionManager().findExecutionById(job.getProcessInstanceId());
+      processInstance.unlock();
+
+      // on failure of current transaction, try again
+      commandContext.getTransactionContext().addTransactionListener(TransactionState.ROLLED_BACK, new TransactionListener() {
+        public void execute(CommandContext commandContext) {
+
+          commandExecutor.execute(new Command<Void>() {
+            public Void execute(CommandContext commandContext) {
+              log.log(Level.FINE, "unlocking");
+              ExecutionEntity processInstance = commandContext.getExecutionManager().findExecutionById(job.getProcessInstanceId());
+              processInstance.unlock();
+              return null;
+            }
+          });
+        }
+      });
     }
 
     if (jobExecutorContext == null) { // if null, then we are not called by the job executor

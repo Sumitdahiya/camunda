@@ -99,6 +99,73 @@
   <select id="selectJob" parameterType="string" resultMap="jobResultMap">
     select * from ${prefix}ACT_RU_JOB where ID_ = #{id}
   </select>
+  
+  <update id="unlockJob" parameterType="string">
+    update ${prefix}ACT_RU_JOB set
+      REV_ = REV_ + 1,
+      LOCK_OWNER_ = NULL,
+      LOCK_EXP_TIME_ = NULL
+    where ID_ = #{id}
+  </update>
+  
+  <update id="lockNextJobsToExecute"  parameterType="org.camunda.bpm.engine.impl.db.ListQueryParameterObject">
+    <bind name="orderingProperties" value="parameter.orderingProperties" />
+    <include refid="org.camunda.bpm.engine.impl.persistence.entity.Commons.bindOrderBy"/>
+  
+    update ${prefix}ACT_RU_JOB set
+      REV_ = REV_ + 1,
+      LOCK_OWNER_ = #{parameter.lockOwner, jdbcType=VARCHAR},
+      LOCK_EXP_TIME_ = #{parameter.lockExpirationTime, jdbcType=TIMESTAMP},
+      ACQUISITION_ATTEMPT_ = #{parameter.acquisitionAttempt, jdbcType=INTEGER}
+      
+    <where>
+      <!-- repeat the job acquisition conditions in the update clause
+      since subquery and update are not executed atomically -->
+      (LOCK_OWNER_ is null or LOCK_EXP_TIME_ &lt; #{parameter.now, jdbcType=TIMESTAMP})
+      and (DUEDATE_ is null or DUEDATE_ &lt;= #{parameter.now, jdbcType=TIMESTAMP})
+      and (SUSPENSION_STATE_ = 1 or SUSPENSION_STATE_ is null)
+      and
+      ID_ in
+        (
+          ${limitBefore}
+          select
+            RES.ID_ ${limitBetween}
+          from ${prefix}ACT_RU_JOB RES
+          where <include refid="executableJobsCondition"/>
+          <if test="parameter.applyOrdering">
+            ${orderBy}
+          </if>
+          ${limitAfter}
+        )
+        
+    </where>    
+  </update>
+  
+  <select id="selectLockedJobs" parameterType="java.util.Map" resultMap="jobResultMap">
+    select * from ${prefix}ACT_RU_JOB 
+      where LOCK_OWNER_ = #{parameter.lockOwner, jdbcType=VARCHAR}
+      and ACQUISITION_ATTEMPT_ = #{parameter.acquisitionAttempt, jdbcType=INTEGER}
+  </select>
+  
+  <sql id="executableJobsCondition">
+    (RES.RETRIES_ &gt; 0)
+      and (RES.DUEDATE_ is null or RES.DUEDATE_ &lt;= #{parameter.now, jdbcType=TIMESTAMP})
+      and (RES.LOCK_OWNER_ is null or RES.LOCK_EXP_TIME_ &lt; #{parameter.now, jdbcType=TIMESTAMP})
+      and (RES.SUSPENSION_STATE_ = 1 or RES.SUSPENSION_STATE_ is null)
+
+      <if test="parameter.deploymentAware">
+        and (RES.DEPLOYMENT_ID_ is null
+        <if test="parameter.deploymentIds != null">
+          or
+          RES.DEPLOYMENT_ID_ in
+          <foreach item="deploymentId" index="index" collection="parameter.deploymentIds"
+          open="(" separator="," close=")">
+            #{deploymentId}
+          </foreach>
+        </if>
+        )
+      </if>
+  </sql>
 
   <select id="selectNextJobsToExecute" parameterType="org.camunda.bpm.engine.impl.db.ListQueryParameterObject" resultMap="jobResultMap">
     <bind name="orderingProperties" value="parameter.orderingProperties" />

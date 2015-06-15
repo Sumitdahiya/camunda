@@ -28,7 +28,7 @@ public class ExponentialBackoffStrategy implements AcquisitionStrategy {
   protected int initialBackoffTimeMillis = 10;
   protected float backoffFactor = 2;
   protected int maxBackoffTime = 50;
-  protected int backoffJitter = (int) (Math.random() * 20);
+  protected int maxBackoffJitter = 3;
   protected int backoffDecreaseDelay = 5;
 
   public AcquisitionConfiguration reconfigure(AcquisitionConfiguration currentConfiguration, AcquiredJobs acquiredJobs) {
@@ -41,12 +41,13 @@ public class ExponentialBackoffStrategy implements AcquisitionStrategy {
     if (acquiredJobs.getNumberOfJobsFailedToLock() > 0 || acquiredJobs.size() == 0) {
       // increase timeout
       if (backoffConfiguration.getWaitTimeBetweenAcquistions() == 0) {
-        newWaitTime = initialBackoffTimeMillis + backoffJitter;
+        newWaitTime = initialBackoffTimeMillis + ((int) (Math.random() * maxBackoffJitter));
 
+      } else if (newWaitTime * backoffFactor <= maxBackoffTime) {
+        newWaitTime = (int) (newWaitTime * backoffFactor);
       }
 
-      if (newWaitTime * backoffFactor <= maxBackoffTime) {
-        newWaitTime = (int) (newWaitTime * backoffFactor);
+      if (newWaitTime != backoffConfiguration.getWaitTimeBetweenAcquistions()) {
         newNumJobsToAcquire = (int) (newNumJobsToAcquire * backoffFactor);
         log.fine("Backing off job acquisition. Timeout: " + newWaitTime + " ms; numJobs: " + newNumJobsToAcquire);
       }
@@ -56,7 +57,12 @@ public class ExponentialBackoffStrategy implements AcquisitionStrategy {
     else if (backoffConfiguration.getAcquistionAttemptsWithoutFailure() >= backoffDecreaseDelay){
       // decrease timeout if no failure occurred for n times in a row
       newWaitTime /= backoffFactor;
-      if (newWaitTime != backoffConfiguration.getWaitTimeBetweenAcquistions()) {
+      if (newWaitTime < initialBackoffTimeMillis) {
+        newWaitTime = 0;
+        newNumJobsToAcquire = initialJobsPerAcquisition;
+        log.fine("Backing off job acquisition. Timeout: " + newWaitTime + " ms; numJobs: " + newNumJobsToAcquire);
+      }
+      else if (newWaitTime != backoffConfiguration.getWaitTimeBetweenAcquistions()) {
         // if the wait time has actually changed
         newNumJobsToAcquire = (int) (newNumJobsToAcquire / backoffFactor);
         log.fine("Backing off job acquisition. Timeout: " + newWaitTime + " ms; numJobs: " + newNumJobsToAcquire);
@@ -108,12 +114,12 @@ public class ExponentialBackoffStrategy implements AcquisitionStrategy {
     this.maxBackoffTime = maxBackoffTime;
   }
 
-  public int getBackoffJitter() {
-    return backoffJitter;
+  public int getMaxBackoffJitter() {
+    return maxBackoffJitter;
   }
 
-  public void setBackoffJitter(int backoffJitter) {
-    this.backoffJitter = backoffJitter;
+  public void setMaxBackoffJitter(int maxBackoffJitter) {
+    this.maxBackoffJitter = maxBackoffJitter;
   }
 
   public int getBackoffDecreaseDelay() {

@@ -12,8 +12,10 @@
  */
 package org.camunda.bpm.engine.test.metrics;
 
+import org.apache.ibatis.logging.LogFactory;
 import org.camunda.bpm.engine.impl.ProcessEngineImpl;
 import org.camunda.bpm.engine.impl.jobexecutor.JobExecutor;
+import org.camunda.bpm.engine.impl.util.LogUtil;
 import org.camunda.bpm.engine.management.Metrics;
 import org.camunda.bpm.engine.test.Deployment;
 import org.camunda.bpm.engine.test.concurrency.ControllableThread;
@@ -102,6 +104,11 @@ public class JobExecutorMetricsTest extends AbstractMetricsTest {
     jobExecutor2.shutdown();
 
     processEngineConfiguration.getDbMetricsReporter().reportNow();
+  }
+
+  static {
+    LogUtil.readJavaUtilLoggingConfigFromClasspath();
+    LogFactory.useJdkLogging();
   }
 
   @Deployment(resources = "org/camunda/bpm/engine/test/metrics/asyncServiceTaskProcess.bpmn20.xml")

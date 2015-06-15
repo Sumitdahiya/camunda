@@ -75,4 +75,8 @@ public class AcquiredJobs {
     this.numberOfJobsFailedToLock += other.numberOfJobsFailedToLock;
   }
 
+  public void setNumberOfJobsFailedToLock(int numberOfJobsFailedToLock) {
+    this.numberOfJobsFailedToLock = numberOfJobsFailedToLock;
+  }
+
 }

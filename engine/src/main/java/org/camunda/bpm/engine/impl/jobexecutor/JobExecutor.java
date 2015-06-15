@@ -16,6 +16,7 @@ package org.camunda.bpm.engine.impl.jobexecutor;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,6 +50,8 @@ public abstract class JobExecutor {
   protected AcquireJobsRunnable acquireJobsRunnable;
   protected RejectedJobsHandler rejectedJobsHandler;
   protected Thread jobAcquisitionThread;
+
+  protected AtomicInteger acquisitionCounter = new AtomicInteger();
 
   protected boolean isAutoActivate = false;
   protected boolean isActive = false;
@@ -255,6 +258,11 @@ public abstract class JobExecutor {
 
   public void setAcquisitionStrategy(AcquisitionStrategy acquisitionStrategy) {
     this.acquisitionStrategy = acquisitionStrategy;
+  }
+
+  public int getNextAcquisitionId() {
+    // overflows are expected and fine
+    return acquisitionCounter.incrementAndGet();
   }
 
   protected void startJobAcquisitionThread() {
