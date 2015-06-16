@@ -25,8 +25,14 @@ import org.camunda.bpm.engine.management.Metrics;
 public class CallerRunsRejectedJobsHandler implements RejectedJobsHandler {
 
   public void jobsRejected(List<String> jobIds, ProcessEngineImpl processEngine) {
+    jobsRejected(new ExecuteJobsRunnable(jobIds, processEngine), jobIds, processEngine);
+  }
+
+
+  public void jobsRejected(Runnable executeJobsRunnable, List<String> jobIds, ProcessEngineImpl processEngine) {
     logRejectionHandling(jobIds, processEngine);
-    new ExecuteJobsRunnable(jobIds, processEngine).run();
+    executeJobsRunnable.run();
+
   }
 
   protected void logRejectionHandling(List<String> jobIds, ProcessEngineImpl processEngine) {
@@ -38,5 +44,6 @@ public class CallerRunsRejectedJobsHandler implements RejectedJobsHandler {
 
     }
   }
+
 
 }
