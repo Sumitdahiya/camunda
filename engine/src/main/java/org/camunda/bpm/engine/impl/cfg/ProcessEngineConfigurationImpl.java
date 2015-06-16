@@ -1241,6 +1241,7 @@ public abstract class ProcessEngineConfigurationImpl extends ProcessEngineConfig
     metricsRegistry.createMeter(Metrics.JOB_SUCCESSFUL);
     metricsRegistry.createMeter(Metrics.JOB_FAILED);
     metricsRegistry.createMeter(Metrics.JOB_LOCKED_EXCLUSIVE);
+    metricsRegistry.createMeter(Metrics.JOB_EXECUTED_BY_ACQUISITION);
   }
 
   protected void initSerialization() {
