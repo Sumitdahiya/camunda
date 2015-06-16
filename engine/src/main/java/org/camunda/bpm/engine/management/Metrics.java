@@ -43,4 +43,6 @@ public class Metrics {
    */
   public final static String JOB_LOCKED_EXCLUSIVE = "job-locked-exclusive";
 
+  public final static String JOB_EXECUTED_BY_ACQUISITION = "job-executed-acquisition";
+
 }
