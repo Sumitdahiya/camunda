@@ -58,6 +58,8 @@ public abstract class JobExecutor {
   protected String lockOwner = UUID.randomUUID().toString();
   protected int lockTimeInMillis = 5 * 60 * 1000;
 
+  protected AcquisitionStrategy acquisitionStrategy = new DefaultAcquisitionStrategy();
+
   public void start() {
     if (isActive) {
       return;
@@ -245,6 +247,14 @@ public abstract class JobExecutor {
 
   public void setRejectedJobsHandler(RejectedJobsHandler rejectedJobsHandler) {
     this.rejectedJobsHandler = rejectedJobsHandler;
+  }
+
+  public AcquisitionStrategy getAcquisitionStrategy() {
+    return acquisitionStrategy;
+  }
+
+  public void setAcquisitionStrategy(AcquisitionStrategy acquisitionStrategy) {
+    this.acquisitionStrategy = acquisitionStrategy;
   }
 
   protected void startJobAcquisitionThread() {

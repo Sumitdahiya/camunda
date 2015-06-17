@@ -42,21 +42,26 @@ public class AcquireJobsCmd implements Command<AcquiredJobs>, OptimisticLockingL
   private final JobExecutor jobExecutor;
 
   protected AcquiredJobs acquiredJobs;
+  protected int numJobsToAcquire;
 
   public AcquireJobsCmd(JobExecutor jobExecutor) {
+    this(jobExecutor, jobExecutor.getMaxJobsPerAcquisition());
+  }
+
+  public AcquireJobsCmd(JobExecutor jobExecutor, int numJobsToAcquire) {
     this.jobExecutor = jobExecutor;
+    this.numJobsToAcquire = numJobsToAcquire;
   }
 
   public AcquiredJobs execute(CommandContext commandContext) {
 
     String lockOwner = jobExecutor.getLockOwner();
     int lockTimeInMillis = jobExecutor.getLockTimeInMillis();
-    int maxNonExclusiveJobsPerAcquisition = jobExecutor.getMaxJobsPerAcquisition();
 
     acquiredJobs = new AcquiredJobs();
     List<JobEntity> jobs = commandContext
       .getJobManager()
-      .findNextJobsToExecute(new Page(0, maxNonExclusiveJobsPerAcquisition));
+      .findNextJobsToExecute(new Page(0, numJobsToAcquire));
 
     for (JobEntity job: jobs) {
       List<String> jobIds = new ArrayList<String>();

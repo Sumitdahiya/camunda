@@ -69,4 +69,10 @@ public class AcquiredJobs {
     return numberOfJobsFailedToLock;
   }
 
+  public void addAll(AcquiredJobs other) {
+    this.acquiredJobs.addAll(other.acquiredJobs);
+    this.acquiredJobBatches.addAll(other.acquiredJobBatches);
+    this.numberOfJobsFailedToLock += other.numberOfJobsFailedToLock;
+  }
+
 }
