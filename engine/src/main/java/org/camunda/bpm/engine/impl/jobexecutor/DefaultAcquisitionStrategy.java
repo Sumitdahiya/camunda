@@ -31,6 +31,9 @@ public class DefaultAcquisitionStrategy implements AcquisitionStrategy {
     if (acquiredJobs.size() == 0) {
       newConfig.setWaitTimeBetweenAcquistions(waitTimeInMillis);
     }
+    else {
+      newConfig.setWaitTimeBetweenAcquistions(0);
+    }
 
     return newConfig;
   }

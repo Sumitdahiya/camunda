@@ -1,9 +1,11 @@
 package org.camunda.bpm.engine.impl.jobexecutor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.tools.zip.UnrecognizedExtraField;
 import org.camunda.bpm.engine.impl.ProcessEngineImpl;
 import org.camunda.bpm.engine.impl.cmd.AcquireJobsCmd;
 import org.camunda.bpm.engine.impl.interceptor.CommandExecutor;
@@ -23,6 +25,20 @@ public class SequentialJobAcquisitionRunnable extends AcquireJobsRunnable {
     super(jobExecutor);
   }
 
+  // TODO: idea for rewrite
+  // * acquistion context holds: acquisition configuration + acquisition result
+  // * acquisition configuration is passed to an exchangeable Callable that retrieves jobs
+  //   (Callable since it may have more than one command)
+  // * rejected jobs handler is passed the acquisition context (??) such that it may add
+  //   rejected jobs to the acquisition result
+  // * configuring the job executor consists of three parts (could be encapsulated by a container class)
+  //   * acquisition strategy
+  //   * rejected jobs handler
+  //   * acquisition callable
+  // * the context is passed between all these objects
+  // * the acquisition runnable itself can be exchanged at any time to re-implement the wiring
+  //   of these components
+
   public synchronized void run() {
     log.info(jobExecutor.getName() + " starting to acquire jobs");
 
@@ -31,6 +47,7 @@ public class SequentialJobAcquisitionRunnable extends AcquireJobsRunnable {
 
     AcquisitionStrategy acquisitionStrategy = jobExecutor.getAcquisitionStrategy();
     AcquisitionConfiguration currentConfiguration = acquisitionStrategy.getInitialConfiguration();
+    List<List<String>> additionalBatches = new ArrayList<List<String>>();
 
     while (!isInterrupted) {
       ProcessEngineImpl currentProcessEngine = null;
@@ -76,6 +93,11 @@ public class SequentialJobAcquisitionRunnable extends AcquireJobsRunnable {
           if (numAcquiredJobs > 0) {
             acquiredJobs = commandExecutor.execute(new AcquireJobsCmd(jobExecutor, acquisitionAttempt));
           }
+
+          for (int i = 0; i < additionalBatches.size(); i++) {
+            acquiredJobs.addJobIdBatch(additionalBatches.remove(0));
+          }
+
           acquiredJobs.setNumberOfJobsFailedToLock(currentConfiguration.getNumJobsToAcquire() - numAcquiredJobs);
 
           for (List<String> jobIds : acquiredJobs.getJobIdBatches()) {
@@ -91,6 +113,10 @@ public class SequentialJobAcquisitionRunnable extends AcquireJobsRunnable {
           jobExecutionFailed = true;
         }
       }
+
+      List<List<String>> unprocessedBatches = retrieveUnprocessedBatches();
+      additionalBatches.addAll(unprocessedBatches);
+      jobsAcquiredForAllEngines.setUnprocessedBatches(additionalBatches);
 
       if (!jobExecutionFailed) {
         currentConfiguration = acquisitionStrategy.reconfigure(currentConfiguration, jobsAcquiredForAllEngines);

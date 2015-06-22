@@ -100,6 +100,12 @@ public abstract class JobExecutor {
     }
   }
 
+  public void unprocessedJobs(List<String> jobBatch) {
+    if (isActive) {
+      acquireJobsRunnable.addUnprocessedBatch(jobBatch);
+    }
+  }
+
   public synchronized void registerProcessEngine(ProcessEngineImpl processEngine) {
     processEngines.add(processEngine);
 

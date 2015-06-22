@@ -28,6 +28,8 @@ public class AcquiredJobs {
   protected List<List<String>> acquiredJobBatches = new ArrayList<List<String>>();
   protected Set<String> acquiredJobs = new HashSet<String>();
 
+  protected List<List<String>> unprocessedBatches = new ArrayList<List<String>>();
+
   protected int numberOfJobsFailedToLock = 0;
 
   public List<List<String>> getJobIdBatches() {
@@ -77,6 +79,14 @@ public class AcquiredJobs {
 
   public void setNumberOfJobsFailedToLock(int numberOfJobsFailedToLock) {
     this.numberOfJobsFailedToLock = numberOfJobsFailedToLock;
+  }
+
+  public List<List<String>> getUnprocessedBatches() {
+    return unprocessedBatches;
+  }
+
+  public void setUnprocessedBatches(List<List<String>> batches) {
+    this.unprocessedBatches = batches;
   }
 
 }

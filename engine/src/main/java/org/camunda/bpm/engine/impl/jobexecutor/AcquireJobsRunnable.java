@@ -12,6 +12,7 @@
  */
 package org.camunda.bpm.engine.impl.jobexecutor;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -42,6 +43,8 @@ public class AcquireJobsRunnable implements Runnable {
   protected long millisToWait = 0;
   protected float waitIncreaseFactor = 2;
   protected long maxWait = 60 * 1000;
+
+  protected List<List<String>> unprocessedBatches = new ArrayList<List<String>>();
 
   public AcquireJobsRunnable(JobExecutor jobExecutor) {
     this.jobExecutor = jobExecutor;
@@ -178,6 +181,20 @@ public class AcquireJobsRunnable implements Runnable {
 
   public void setMaxWait(long maxWait) {
     this.maxWait = maxWait;
+  }
+
+  public void addUnprocessedBatch(List<String> unprocessedBatch) {
+    synchronized (unprocessedBatches) {
+      this.unprocessedBatches.add(unprocessedBatch);
+    }
+  }
+
+  public List<List<String>> retrieveUnprocessedBatches() {
+    synchronized (unprocessedBatches) {
+      List<List<String>> result = new ArrayList<List<String>>(unprocessedBatches);
+      unprocessedBatches.clear();
+      return result;
+    }
   }
 
 }
