@@ -29,6 +29,7 @@ import org.camunda.bpm.engine.RuntimeService;
 import org.camunda.bpm.engine.TaskService;
 import org.camunda.bpm.engine.impl.test.TestHelper;
 import org.camunda.bpm.engine.impl.util.ClockUtil;
+import org.camunda.bpm.engine.test.authorization.alternative.AuthorizationTestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
@@ -41,10 +42,10 @@ import org.junit.runner.Description;
  *
  * <pre>
  * public class YourTest {
- * 
+ *
  *   &#64;Rule
  *   public ProcessEngineRule processEngineRule = new ProcessEngineRule();
- * 
+ *
  *   ...
  * }
  * </pre>
