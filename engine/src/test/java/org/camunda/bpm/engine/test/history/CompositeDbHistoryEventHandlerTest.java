@@ -13,9 +13,6 @@
 
 package org.camunda.bpm.engine.test.history;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.camunda.bpm.engine.exception.NullValueException;
 import org.camunda.bpm.engine.impl.history.event.HistoricVariableUpdateEventEntity;
 import org.camunda.bpm.engine.impl.history.event.HistoryEvent;
@@ -24,6 +21,9 @@ import org.camunda.bpm.engine.impl.history.handler.HistoryEventHandler;
 import org.camunda.bpm.engine.impl.test.PluggableProcessEngineTestCase;
 import org.camunda.bpm.engine.task.Task;
 import org.camunda.bpm.engine.test.Deployment;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Alexander Tyatenkov
@@ -74,6 +74,8 @@ public class CompositeDbHistoryEventHandlerTest extends PluggableProcessEngineTe
     // change the configuration it may affect following test cases.
     cachedProcessEngine.close();
     cachedProcessEngine = null;
+    processEngine.close();
+    processEngine = null;
   }
 
   /**
@@ -95,7 +97,6 @@ public class CompositeDbHistoryEventHandlerTest extends PluggableProcessEngineTe
     assertEquals(2, historyService.createHistoricDetailQuery().count());
   }
 
-  @Deployment(resources = {"org/camunda/bpm/engine/test/history/HistoryLevelTest.bpmn20.xml"})
   public void testCompositeDbHistoryEventHandlerNonArgumentConstructorAddNullEvent() {
     CompositeDbHistoryEventHandler compositeDbHistoryEventHandler = new CompositeDbHistoryEventHandler();
     try {
@@ -131,7 +132,6 @@ public class CompositeDbHistoryEventHandlerTest extends PluggableProcessEngineTe
     assertEquals(2, historyService.createHistoricDetailQuery().count());
   }
 
-  @Deployment(resources = { "org/camunda/bpm/engine/test/history/HistoryLevelTest.bpmn20.xml" })
   public void testCompositeDbHistoryEventHandlerArgumentConstructorWithNullVarargs() {
     HistoryEventHandler historyEventHandler = null;
     try {
@@ -142,7 +142,6 @@ public class CompositeDbHistoryEventHandlerTest extends PluggableProcessEngineTe
     }
   }
 
-  @Deployment(resources = { "org/camunda/bpm/engine/test/history/HistoryLevelTest.bpmn20.xml" })
   public void testCompositeDbHistoryEventHandlerArgumentConstructorWithNullTwoVarargs() {
     try {
       new CompositeDbHistoryEventHandler(null, null);
@@ -185,7 +184,6 @@ public class CompositeDbHistoryEventHandlerTest extends PluggableProcessEngineTe
     assertEquals(2, historyService.createHistoricDetailQuery().count());
   }
 
-  @Deployment(resources = {"org/camunda/bpm/engine/test/history/HistoryLevelTest.bpmn20.xml"})
   public void testCompositeDbHistoryEventHandlerArgumentConstructorWithNotEmptyListNullTwoEvents() {
     // prepare the list with two null events
     List<HistoryEventHandler> historyEventHandlers = new ArrayList<HistoryEventHandler>();
