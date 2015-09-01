@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceEntity">
+
+ <!-- insert -->
+
+ <insert id="insertHistoricDecisionInstance" parameterType="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceEntity">
+    insert into ${prefix}ACT_HI_DECINST(ID_, DECISION_KEY_, DECISION_NAME_, PROC_DEF_KEY_, PROC_DEF_ID_, PROC_INST_ID_, EXECUTION_ID_, ACT_INST_ID_, ACT_ID_, EVAL_TIME_)
+    values (#{id, jdbcType=VARCHAR},
+            #{decisionDefinitionKey, jdbcType=VARCHAR},
+            #{decisionDefinitionName, jdbcType=VARCHAR},
+            #{processDefinitionKey, jdbcType=VARCHAR},
+            #{processDefinitionId, jdbcType=VARCHAR},
+            #{processInstanceId, jdbcType=VARCHAR},
+            #{executionId, jdbcType=VARCHAR},
+            #{activityInstanceId, jdbcType=VARCHAR},
+            #{activityId, jdbcType=VARCHAR},
+            #{evaluationTime, jdbcType=TIMESTAMP}
+           )
+  </insert>
+
+  <!-- delete -->
+
+  <delete id="deleteHistoricDecisionInstancesByDecisionDefinitionKey" parameterType="string">
+    delete from ${prefix}ACT_HI_DECINST where DECISION_KEY_ = #{decisionDefinitionKey}
+  </delete>
+
+  <!-- result map -->
+
+ <resultMap id="historicDecisionInstanceResultMap" type="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceEntity">
+    <id property="id" column="ID_" jdbcType="VARCHAR" />
+    <result property="decisionDefinitionKey" column="DECISION_KEY_" jdbcType="VARCHAR" />
+    <result property="decisionDefinitionName" column="DECISION_NAME_" jdbcType="VARCHAR" />
+    <result property="processDefinitionKey" column="PROC_DEF_KEY_" jdbcType="VARCHAR" />
+    <result property="processDefinitionId" column="PROC_DEF_ID_" jdbcType="VARCHAR"/>
+    <result property="processInstanceId" column="PROC_INST_ID_" jdbcType="VARCHAR"/>
+    <result property="executionId" column="EXECUTION_ID_" jdbcType="VARCHAR"/>
+    <result property="activityInstanceId" column="ACT_INST_ID_" jdbcType="VARCHAR"/>
+    <result property="activityId" column="ACT_ID_" jdbcType="VARCHAR"/>
+    <result property="evaluationTime" column="EVAL_TIME_" jdbcType="TIMESTAMP"/>
+  </resultMap>
+
+  <!-- select -->
+
+  <select id="selectHistoricDecisionInstancesByQueryCriteria" parameterType="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceQueryImpl" resultMap="historicDecisionInstanceResultMap">
+    <include refid="org.camunda.bpm.engine.impl.persistence.entity.Commons.bindOrderBy"/>
+    ${limitBefore}
+    select RES.*
+    ${limitBetween}
+    <include refid="selectHistoricDecisionInstancesByQueryCriteriaSql"/>
+    ${orderBy}
+    ${limitAfter}
+  </select>
+
+  <select id="selectHistoricDecisionInstanceCountByQueryCriteria" parameterType="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceQueryImpl" resultType="long">
+    select count(RES.ID_)
+    <include refid="selectHistoricDecisionInstancesByQueryCriteriaSql"/>
+  </select>
+
+  <!-- mysql specific sql -->
+  
+  <select id="selectHistoricDecisionInstancesByQueryCriteria_mysql" parameterType="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceQueryImpl" resultMap="historicDecisionInstanceResultMap">
+    <include refid="org.camunda.bpm.engine.impl.persistence.entity.Commons.bindOrderBy"/>
+    ${limitBefore}
+    select distinct RES.*
+    ${limitBetween}
+    <include refid="selectHistoricDecisionInstancesByQueryCriteriaSql"/>
+    ${orderBy}
+    ${limitAfter}
+  </select>
+
+  <select id="selectHistoricDecisionInstanceCountByQueryCriteria_mysql" parameterType="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceQueryImpl" resultType="long">
+    select distinct count(RES.ID_)
+    <include refid="selectHistoricDecisionInstancesByQueryCriteriaSql"/>
+  </select>
+  
+  <!-- native queries -->
+  
+  <select id="selectHistoricDecisionInstancesByNativeQuery" parameterType="java.util.Map" resultMap="historicDecisionInstanceResultMap">
+    <if test="resultType == 'LIST_PAGE'">
+      ${limitBefore}
+    </if>
+    ${sql}
+    <if test="resultType == 'LIST_PAGE'">
+      ${limitAfter}
+    </if>
+  </select>
+
+  <select id="selectHistoricDecisionInstancesByNativeQuery_mssql_or_db2" parameterType="java.util.Map" resultMap="historicDecisionInstanceResultMap">
+    <if test="resultType == 'LIST_PAGE'">
+        ${limitBeforeNativeQuery}
+    </if>
+    ${sql}
+    <if test="resultType == 'LIST_PAGE'">
+      ${limitAfter}
+    </if>
+  </select>
+
+  <select id="selectHistoricDecisionInstanceCountByNativeQuery" parameterType="java.util.Map" resultType="long">
+    ${sql}
+  </select>
+  
+  <!-- sql query -->
+
+  <sql id="selectHistoricDecisionInstancesByQueryCriteriaSql">
+    from ${prefix}ACT_HI_DECINST RES
+    <where>
+      <if test="decisionDefinitionKey != null">
+        and RES.DECISION_KEY_ = #{decisionDefinitionKey}
+      </if>
+      <if test="decisionDefinitionName != null">
+        and RES.DECISION_NAME_ = #{decisionDefinitionName}
+      </if>
+      <if test="processDefinitionKey != null">
+        and RES.PROC_DEF_KEY_ = #{processDefinitionKey}
+      </if>
+      <if test="processDefinitionId != null">
+        and RES.PROC_DEF_ID_ = #{processDefinitionId}
+      </if>
+      <if test="processInstanceId != null">
+        and RES.PROC_INST_ID_ = #{processInstanceId}
+      </if>
+      <if test="executionId != null">
+        and RES.EXECUTION_ID_ = #{executionId}
+      </if>
+      <if test="activityInstanceId != null">
+        and RES.ACT_INST_ID_ = #{activityInstanceId}
+      </if>
+      <if test="activityId != null">
+        and RES.ACT_ID_ = #{activityId}
+      </if>
+    </where>
+  </sql>
+
+</mapper>

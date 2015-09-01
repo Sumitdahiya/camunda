@@ -53,6 +53,7 @@
     <!-- DMN -->
 
     <mapper resource="org/camunda/bpm/engine/impl/mapping/entity/DecisionDefinition.xml" />
+    <mapper resource="org/camunda/bpm/engine/impl/mapping/entity/HistoricDecisionInstance.xml" />
 
 	</mappers>
 </configuration>
