@@ -12,12 +12,17 @@
  */
 package org.camunda.bpm.engine.impl.scripting.engine;
 
+import org.camunda.bpm.application.ProcessApplicationInterface;
+import org.camunda.bpm.application.ProcessApplicationReference;
+import org.camunda.bpm.application.ProcessApplicationUnavailableException;
 import org.camunda.bpm.dmn.engine.ScriptEngineResolver;
 import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.ScriptCompilationException;
 import org.camunda.bpm.engine.delegate.VariableScope;
+import org.camunda.bpm.engine.impl.context.Context;
 
 import javax.script.*;
+
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -139,6 +144,32 @@ public class ScriptingEngines implements ScriptEngineResolver {
       language = language.toLowerCase();
     }
 
+    ProcessApplicationReference pa = Context.getCurrentProcessApplication();
+
+    ScriptEngine engine = null;
+    if(pa != null) {
+      engine = getPaScriptEngine(language, pa);
+    }
+
+    if(engine == null) {
+      engine = getGlobalScriptEngine(language);
+    }
+
+    return engine;
+  }
+
+  protected ScriptEngine getPaScriptEngine(String language, ProcessApplicationReference pa) {
+    try {
+      ProcessApplicationInterface processApplication = pa.getProcessApplication();
+      return processApplication.getScriptEngineForName(language, enableScriptEngineCaching);
+    }
+    catch (ProcessApplicationUnavailableException e) {
+      throw new ProcessEngineException("Process Application is unavailable.", e);
+    }
+  }
+
+  protected ScriptEngine getGlobalScriptEngine(String language) {
+
     ScriptEngine scriptEngine = null;
 
     if (enableScriptEngineCaching) {
@@ -152,7 +183,6 @@ public class ScriptingEngines implements ScriptEngineResolver {
     ensureNotNull("Can't find scripting engine for '" + language + "'", "scriptEngine", scriptEngine);
 
     return scriptEngine;
-
   }
 
   public Set<String> getAllSupportedLanguages() {

@@ -15,6 +15,8 @@ package org.camunda.bpm.application;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import javax.script.ScriptEngine;
+
 import org.camunda.bpm.ProcessApplicationService;
 import org.camunda.bpm.application.impl.EjbProcessApplication;
 import org.camunda.bpm.application.impl.EmbeddedProcessApplication;
@@ -202,5 +204,7 @@ public interface ProcessApplicationInterface {
    * @return a {@link TaskListener} or null.
    */
   public TaskListener getTaskListener();
+
+  public ScriptEngine getScriptEngineForName(String scriptEngineName, boolean cache);
 
 }
