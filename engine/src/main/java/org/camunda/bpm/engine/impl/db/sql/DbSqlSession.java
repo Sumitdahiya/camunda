@@ -425,7 +425,7 @@ public class DbSqlSession extends AbstractPersistenceSession {
 
   @Override
   public boolean isDmnHistoryTablePresent() {
-    return isTablePresent("ACT_RU_DECINST");
+    return isTablePresent("ACT_HI_DECINST");
   }
 
   public boolean isTablePresent(String tableName) {
