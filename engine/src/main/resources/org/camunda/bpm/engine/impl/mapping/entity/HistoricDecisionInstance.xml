@@ -131,6 +131,9 @@
       <if test="activityId != null">
         and RES.ACT_ID_ = #{activityId}
       </if>
+      
+      <include refid="org.camunda.bpm.engine.impl.persistence.entity.AuthorizationEntity.queryAuthorizationCheck" />
+      
     </where>
   </sql>
 

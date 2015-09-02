@@ -257,7 +257,7 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
     assertThat(query.count(), is(0L));
   }
 
-  private void startProcessInstanceAndEvaluateDecision() {
+  protected void startProcessInstanceAndEvaluateDecision() {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("testProcess");
 
     // TODO remove dummy impl since the entity is created by history event producer / consumer

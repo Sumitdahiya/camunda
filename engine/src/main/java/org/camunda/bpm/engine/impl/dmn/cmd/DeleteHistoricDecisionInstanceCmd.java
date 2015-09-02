@@ -17,6 +17,7 @@ import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
 
 import org.camunda.bpm.engine.impl.interceptor.Command;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
+import org.camunda.bpm.engine.impl.persistence.entity.AuthorizationManager;
 
 /**
  * Deletes historic decision instances with the given key of the decision definition.
@@ -35,6 +36,9 @@ public class DeleteHistoricDecisionInstanceCmd implements Command<Object> {
   @Override
   public Object execute(CommandContext commandContext) {
     ensureNotNull("decisionDefinitionKey", decisionDefinitionKey);
+
+    AuthorizationManager authorizationManager = commandContext.getAuthorizationManager();
+    authorizationManager.checkDeleteHistoricDecisionInstance(decisionDefinitionKey);
 
     commandContext
       .getHistoricDecisionInstanceManager()

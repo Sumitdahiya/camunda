@@ -13,6 +13,7 @@
 
 package org.camunda.bpm.engine.impl.dmn.entity.repository;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -28,20 +29,34 @@ import org.camunda.bpm.engine.impl.persistence.AbstractHistoricManager;
 public class HistoricDecisionInstanceManager extends AbstractHistoricManager {
 
   public void deleteHistoricDecisionInstancesByDecisionDefinitionKey(String decisionDefinitionKey) {
-    getDbEntityManager().delete(HistoricDecisionInstanceEntity.class, "deleteHistoricDecisionInstancesByDecisionDefinitionKey", decisionDefinitionKey);
+    if (isHistoryEnabled()) {
+      getDbEntityManager().delete(HistoricDecisionInstanceEntity.class, "deleteHistoricDecisionInstancesByDecisionDefinitionKey", decisionDefinitionKey);
+    }
   }
 
   public void insertHistoricDecisionInstance(HistoricDecisionInstanceEntity historicDecisionInstance) {
-    getDbEntityManager().insert(historicDecisionInstance);
+    if (isHistoryEnabled()) {
+      getDbEntityManager().insert(historicDecisionInstance);
+    }
   }
 
   @SuppressWarnings("unchecked")
   public List<HistoricDecisionInstance> findHistoricDecisionInstancesByQueryCriteria(HistoricDecisionInstanceQueryImpl query, Page page) {
-    return getDbEntityManager().selectList("selectHistoricDecisionInstancesByQueryCriteria", query, page);
+    if (isHistoryEnabled()) {
+      getAuthorizationManager().configureHistoricDecisionInstanceQuery(query);
+      return getDbEntityManager().selectList("selectHistoricDecisionInstancesByQueryCriteria", query, page);
+    } else {
+      return Collections.EMPTY_LIST;
+    }
   }
 
   public long findHistoricDecisionInstanceCountByQueryCriteria(HistoricDecisionInstanceQueryImpl query) {
-    return (Long) getDbEntityManager().selectOne("selectHistoricDecisionInstanceCountByQueryCriteria", query);
+    if (isHistoryEnabled()) {
+      getAuthorizationManager().configureHistoricDecisionInstanceQuery(query);
+      return (Long) getDbEntityManager().selectOne("selectHistoricDecisionInstanceCountByQueryCriteria", query);
+    } else {
+      return 0;
+    }
   }
 
   @SuppressWarnings("unchecked")

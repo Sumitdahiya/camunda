@@ -91,7 +91,12 @@ public interface HistoryService {
   /** Creates a new programmatic query to search for {@link HistoricCaseActivityInstance}s. */
   HistoricCaseActivityInstanceQuery createHistoricCaseActivityInstanceQuery();
 
-  /** Creates a new programmatic query to search for {@link HistoricDecisionInstance}s. */
+  /**
+   * Creates a new programmatic query to search for {@link HistoricDecisionInstance}s.
+   *
+   * If the user has no {@link Permissions#READ_HISTORY} permission on {@link Resources#DECISION_DEFINITION}
+   * then the result of the query is empty.
+   */
   HistoricDecisionInstanceQuery createHistoricDecisionInstanceQuery();
 
   /**
@@ -134,6 +139,9 @@ public interface HistoryService {
    *
    * @param decisionDefinitionKey
    *          the key of the decision definition
+   *
+   * @throws AuthorizationException
+   *          If the user has no {@link Permissions#DELETE_HISTORY} permission on {@link Resources#DECISION_DEFINITION}.
    */
   void deleteHistoricDecisionInstance(String decisionDefinitionKey);
 
