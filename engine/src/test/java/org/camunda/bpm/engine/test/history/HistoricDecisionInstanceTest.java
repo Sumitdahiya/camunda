@@ -187,7 +187,7 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
 
     startProcessInstanceAndEvaluateDecision();
 
-    String activityInstanceId = historyService.createHistoricVariableInstanceQuery().singleResult().getActivityInstanceId();
+    String activityInstanceId = historyService.createHistoricActivityInstanceQuery().activityId("task").singleResult().getId();
 
     HistoricDecisionInstanceQuery query = historyService.createHistoricDecisionInstanceQuery();
 
@@ -259,38 +259,6 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
 
   protected void startProcessInstanceAndEvaluateDecision() {
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("testProcess");
-
-    // TODO remove dummy impl since the entity is created by history event producer / consumer
-    final HistoricDecisionInstanceEntity entity = new HistoricDecisionInstanceEntity();
-    entity.setDecisionDefinitionKey("testDecision");
-    entity.setDecisionDefinitionName("sample decision");
-
-    ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery().processDefinitionId(processInstance.getProcessDefinitionId()).singleResult();
-
-    entity.setProcessDefinitionKey(processDefinition.getKey());
-    entity.setProcessDefinitionId(processInstance.getProcessDefinitionId());
-
-    entity.setProcessInstanceId(processInstance.getId());
-
-    entity.setExecutionId(processInstance.getId());
-
-    entity.setActivityId("task");
-
-    String activityInstanceId = historyService.createHistoricVariableInstanceQuery().listPage(0, 1).get(0).getActivityInstanceId();
-    entity.setActivityInstanceId(activityInstanceId);
-
-    entity.setEvaluationTime(ClockUtil.getCurrentTime());
-
-    processEngineConfiguration.getCommandExecutorTxRequired().execute(new Command<Void>() {
-
-      @Override
-      public Void execute(CommandContext commandContext) {
-
-        commandContext.getHistoricDecisionInstanceManager().insertHistoricDecisionInstance(entity);
-
-        return null;
-      }
-    });
-
   }
+
 }

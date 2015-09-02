@@ -133,21 +133,6 @@ public class HistoricDecisionInstanceAuthorizationTest extends AuthorizationTest
 
   protected void startProcessInstanceAndEvaluateDecision() {
     startProcessInstanceByKey(PROCESS_KEY);
-
-    // TODO remove dummy impl since the entity is created by history event producer / consumer
-    final HistoricDecisionInstanceEntity entity = new HistoricDecisionInstanceEntity();
-    entity.setDecisionDefinitionKey(DECISION_DEFINITION_KEY);
-    entity.setEvaluationTime(ClockUtil.getCurrentTime());
-
-    processEngineConfiguration.getCommandExecutorTxRequired().execute(new Command<Void>() {
-
-      @Override
-      public Void execute(CommandContext commandContext) {
-
-        commandContext.getHistoricDecisionInstanceManager().insertHistoricDecisionInstance(entity);
-
-        return null;
-      }
-    });
   }
+
 }

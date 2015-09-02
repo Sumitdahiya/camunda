@@ -109,6 +109,7 @@ import org.camunda.bpm.engine.impl.dmn.configuration.ProcessEngineDmnEngineConfi
 import org.camunda.bpm.engine.impl.dmn.deployer.DmnDeployer;
 import org.camunda.bpm.engine.impl.dmn.entity.repository.DecisionDefinitionManager;
 import org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceManager;
+import org.camunda.bpm.engine.impl.dmn.entity.repository.HistoryDecisionTableListener;
 import org.camunda.bpm.engine.impl.el.CommandContextFunctionMapper;
 import org.camunda.bpm.engine.impl.el.DateTimeFunctionMapper;
 import org.camunda.bpm.engine.impl.el.ExpressionManager;
@@ -1398,7 +1399,7 @@ public abstract class ProcessEngineConfigurationImpl extends ProcessEngineConfig
   protected void initDmnEngine() {
     if (dmnEngine == null) {
       if (dmnEngineConfiguration == null) {
-        dmnEngineConfiguration = new ProcessEngineDmnEngineConfiguration(scriptingEngines);
+        dmnEngineConfiguration = new ProcessEngineDmnEngineConfiguration(scriptingEngines, new HistoryDecisionTableListener(dmnHistoryEventProducer, historyLevel));
       }
       dmnEngine = dmnEngineConfiguration.buildEngine();
     }

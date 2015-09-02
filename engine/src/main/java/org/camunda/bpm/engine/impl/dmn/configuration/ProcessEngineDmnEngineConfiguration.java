@@ -15,12 +15,14 @@ package org.camunda.bpm.engine.impl.dmn.configuration;
 
 import org.camunda.bpm.dmn.engine.ScriptEngineResolver;
 import org.camunda.bpm.dmn.engine.impl.DmnEngineConfigurationImpl;
+import org.camunda.bpm.engine.impl.dmn.entity.repository.HistoryDecisionTableListener;
 import org.camunda.bpm.engine.impl.dmn.handler.ProcessEngineDmnElementHandlerRegistry;
 
 public class ProcessEngineDmnEngineConfiguration extends DmnEngineConfigurationImpl {
 
-  public ProcessEngineDmnEngineConfiguration(ScriptEngineResolver scriptEngineResolver) {
+  public ProcessEngineDmnEngineConfiguration(ScriptEngineResolver scriptEngineResolver, HistoryDecisionTableListener historyDecisionTableListener) {
     this.scriptEngineResolver = scriptEngineResolver;
+    this.customPostDmnDecisionTableListeners.add(historyDecisionTableListener);
   }
 
   protected void initElementHandlerRegistry() {
