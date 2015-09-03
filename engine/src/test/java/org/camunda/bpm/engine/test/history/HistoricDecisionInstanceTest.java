@@ -20,9 +20,11 @@ import static org.junit.Assert.assertThat;
 import java.util.Calendar;
 import java.util.List;
 
+import org.camunda.bpm.engine.history.HistoricDecisionInputInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionInstanceQuery;
 import org.camunda.bpm.engine.history.NativeHistoricDecisionInstanceQuery;
+import org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInputInstanceEntity;
 import org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceEntity;
 import org.camunda.bpm.engine.impl.interceptor.Command;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
@@ -65,6 +67,22 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
     // assertThat(historicDecisionInstance.getActivityInstanceId(), containsString("task"));
 
     assertThat(historicDecisionInstance.getEvaluationTime(), is(notNullValue()));
+  }
+
+  @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
+  public void testDecisionInputInstanceProperties() {
+
+    startProcessInstanceAndEvaluateDecision();
+
+    HistoricDecisionInstance historicDecisionInstance = historyService.createHistoricDecisionInstanceQuery().singleResult();
+    List<HistoricDecisionInputInstance> inputs = historicDecisionInstance.getInputs();
+    assertThat(inputs, is(notNullValue()));
+    assertThat(inputs.size(), is(1));
+
+    HistoricDecisionInputInstance input = inputs.iterator().next();
+    assertThat(input.getDecisionInstanceId(), is(historicDecisionInstance.getId()));
+    assertThat(input.getClauseId(), is("out1"));
+    assertThat(input.getClauseName(), is("result"));
   }
 
   @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
@@ -280,6 +298,11 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
     entity.setActivityInstanceId(activityInstanceId);
 
     entity.setEvaluationTime(ClockUtil.getCurrentTime());
+
+    HistoricDecisionInputInstanceEntity inputEntity = new HistoricDecisionInputInstanceEntity();
+    inputEntity.setClauseId("out1");
+    inputEntity.setClauseName("result");
+    entity.getInputs().add(inputEntity);
 
     processEngineConfiguration.getCommandExecutorTxRequired().execute(new Command<Void>() {
 

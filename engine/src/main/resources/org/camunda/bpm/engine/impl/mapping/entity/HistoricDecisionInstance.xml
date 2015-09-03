@@ -20,11 +20,15 @@
             #{evaluationTime, jdbcType=TIMESTAMP}
            )
   </insert>
-
+  
   <!-- delete -->
 
   <delete id="deleteHistoricDecisionInstancesByDecisionDefinitionKey" parameterType="string">
     delete from ${prefix}ACT_HI_DECINST where DECISION_KEY_ = #{decisionDefinitionKey}
+  </delete>
+
+  <delete id="deleteHistoricDecisionInstanceById" parameterType="string">
+    delete from ${prefix}ACT_HI_DECINST where ID_ = #{id}
   </delete>
 
   <!-- result map -->
@@ -40,9 +44,25 @@
     <result property="activityInstanceId" column="ACT_INST_ID_" jdbcType="VARCHAR"/>
     <result property="activityId" column="ACT_ID_" jdbcType="VARCHAR"/>
     <result property="evaluationTime" column="EVAL_TIME_" jdbcType="TIMESTAMP"/>
+    <!-- <collection property="inputs" resultMap="decIn" ofType="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInputInstanceEntity" columnPrefix="input_" /> -->
+    <!-- <collection property="inputs" ofType="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInputInstanceEntity" columnPrefix="input_">
+      <id property="id" column="ID_" jdbcType="VARCHAR" />
+      <result property="decisionInstanceId" column="DEC_INST_ID_" jdbcType="VARCHAR"/>
+    </collection> -->
+    <!-- <collection property="inputs" column="I.ID_" ofType="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInputInstanceEntity" javaType="ArrayList" resultMap="decIn"/> -->
   </resultMap>
 
+  <!-- <resultMap id="decIn" type="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInputInstanceEntity">
+    <id property="id" column="I.ID_" jdbcType="VARCHAR" />
+    <result property="decisionInstanceId" column="DEC_INST_ID_" jdbcType="VARCHAR"/>
+  </resultMap> -->
+
   <!-- select -->
+  
+  <select id="selectHistoricDecisionInstancesByDecisionDefinitionKey" parameterType="org.camunda.bpm.engine.impl.db.ListQueryParameterObject" resultMap="historicDecisionInstanceResultMap">
+    select * from ${prefix}ACT_HI_DECINST 
+    where DECISION_KEY_ = #{parameter, jdbcType=VARCHAR}
+  </select>
 
   <select id="selectHistoricDecisionInstancesByQueryCriteria" parameterType="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceQueryImpl" resultMap="historicDecisionInstanceResultMap">
     <include refid="org.camunda.bpm.engine.impl.persistence.entity.Commons.bindOrderBy"/>
@@ -106,6 +126,8 @@
 
   <sql id="selectHistoricDecisionInstancesByQueryCriteriaSql">
     from ${prefix}ACT_HI_DECINST RES
+    <!-- enable / disable -->
+    left outer join ${prefix}ACT_HI_DEC_IN I on RES.ID_ = I.DEC_INST_ID_
     <where>
       <if test="decisionDefinitionKey != null">
         and RES.DECISION_KEY_ = #{decisionDefinitionKey}

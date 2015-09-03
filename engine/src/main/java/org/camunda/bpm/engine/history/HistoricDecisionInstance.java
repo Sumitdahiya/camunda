@@ -14,6 +14,7 @@
 package org.camunda.bpm.engine.history;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * Represents one evaluation of a decision.
@@ -52,5 +53,11 @@ public interface HistoricDecisionInstance {
 
   /** The corresponding activity instance in case the decision was evaluated inside a process. */
   String getActivityInstanceId();
+
+  /** The input values of the evaluated decision. */
+  List<HistoricDecisionInputInstance> getInputs();
+
+  /** The output values of the evaluated decision. */
+  List<HistoricDecisionOutputInstance> getOutputs();
 
 }

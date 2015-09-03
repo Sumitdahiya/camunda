@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInputInstanceEntity">
+
+ <!-- insert -->
+ 
+  <insert id="insertHistoricDecisionInputInstance" parameterType="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInputInstanceEntity">
+     insert into ${prefix}ACT_HI_DEC_IN(ID_, DEC_INST_ID_, CLAUSE_ID_, CLAUSE_NAME_)
+     values (#{id, jdbcType=VARCHAR},
+            #{decisionInstanceId, jdbcType=VARCHAR},
+            #{clauseId, jdbcType=VARCHAR},
+            #{clauseName, jdbcType=VARCHAR}
+            )
+  </insert>
+  
+  <!-- delete -->
+
+  <delete id="deleteHistoricDecisionInputInstancesByDecisionInstanceId">
+    delete from ${prefix}ACT_HI_DEC_IN where DEC_INST_ID_ = #{decisionInstanceId}
+  </delete>
+
+  <!-- result map -->
+
+  <resultMap id="historicDecisionInputInstanceResultMap" type="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInputInstanceEntity">
+    <id property="id" column="ID_" jdbcType="VARCHAR" />
+    <result property="decisionInstanceId" column="DEC_INST_ID_" jdbcType="VARCHAR"/>
+    <result property="clauseId" column="CLAUSE_ID_" jdbcType="VARCHAR"/>
+    <result property="clauseName" column="CLAUSE_NAME_" jdbcType="VARCHAR"/>
+  </resultMap>
+  
+  <!-- select -->
+
+  <select id="selectHistoricDecisionInputInstancesByDecisionInstanceId" parameterType="org.camunda.bpm.engine.impl.db.ListQueryParameterObject" resultMap="historicDecisionInputInstanceResultMap">
+    select * from ${prefix}ACT_HI_DEC_IN 
+    where DEC_INST_ID_ = #{parameter, jdbcType=VARCHAR}
+  </select>
+  
+</mapper>

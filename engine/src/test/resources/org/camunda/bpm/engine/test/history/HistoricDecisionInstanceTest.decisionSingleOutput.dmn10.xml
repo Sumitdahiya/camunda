@@ -6,7 +6,7 @@
              namespace="http://camunda.org/dmn">
   <Decision id="testDecision" name="sample decision">
     <DecisionTable id="table">
-      <clause id="result" camunda:output="result" >
+      <clause id="out1" name="result" camunda:output="result" >
         <outputEntry id="output1">
           <text>okay</text>
         </outputEntry>

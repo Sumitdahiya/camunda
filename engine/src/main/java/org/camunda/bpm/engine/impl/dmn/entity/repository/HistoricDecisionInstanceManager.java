@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.camunda.bpm.engine.history.HistoricDecisionInputInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionInstance;
 import org.camunda.bpm.engine.impl.Page;
 import org.camunda.bpm.engine.impl.persistence.AbstractHistoricManager;
@@ -30,24 +31,58 @@ public class HistoricDecisionInstanceManager extends AbstractHistoricManager {
 
   public void deleteHistoricDecisionInstancesByDecisionDefinitionKey(String decisionDefinitionKey) {
     if (isHistoryEnabled()) {
-      getDbEntityManager().delete(HistoricDecisionInstanceEntity.class, "deleteHistoricDecisionInstancesByDecisionDefinitionKey", decisionDefinitionKey);
+      // getDbEntityManager().delete(HistoricDecisionInstanceEntity.class, "deleteHistoricDecisionInstancesByDecisionDefinitionKey", decisionDefinitionKey);
+
+      @SuppressWarnings("unchecked")
+      List<HistoricDecisionInstanceEntity> decisionInstances = getDbEntityManager().selectList("selectHistoricDecisionInstancesByDecisionDefinitionKey", decisionDefinitionKey);
+      for(HistoricDecisionInstanceEntity decisionInstance : decisionInstances) {
+        // delete decision instance
+        getDbEntityManager().delete(HistoricDecisionInstanceEntity.class, "deleteHistoricDecisionInstanceById", decisionInstance.getId());
+        // delete inputs of decision instance
+        deleteHistoricDecisionInputInstancesByDecisionInstanceId(decisionInstance);
+      }
     }
+  }
+
+  public void deleteHistoricDecisionInputInstancesByDecisionInstanceId(HistoricDecisionInstanceEntity decisionInstance) {
+    getDbEntityManager().delete(HistoricDecisionInputInstanceEntity.class, "deleteHistoricDecisionInputInstancesByDecisionInstanceId", decisionInstance.getId());
   }
 
   public void insertHistoricDecisionInstance(HistoricDecisionInstanceEntity historicDecisionInstance) {
     if (isHistoryEnabled()) {
       getDbEntityManager().insert(historicDecisionInstance);
+
+      for(HistoricDecisionInputInstance input : historicDecisionInstance.getInputs()) {
+        HistoricDecisionInputInstanceEntity inputEntity = (HistoricDecisionInputInstanceEntity) input;
+        inputEntity.setDecisionInstanceId(historicDecisionInstance.getId());
+
+        getDbEntityManager().insert(inputEntity);
+      }
+    }
+  }
+
+ public List<HistoricDecisionInstance> findHistoricDecisionInstancesByQueryCriteria(HistoricDecisionInstanceQueryImpl query, Page page) {
+    if (isHistoryEnabled()) {
+      getAuthorizationManager().configureHistoricDecisionInstanceQuery(query);
+
+      // TODO enable / disable input query
+      // TODO query inputs in better way
+      @SuppressWarnings("unchecked")
+      List<HistoricDecisionInstance> decisionInstances = getDbEntityManager().selectList("selectHistoricDecisionInstancesByQueryCriteria", query, page);
+      for(HistoricDecisionInstance decisionInstance : decisionInstances) {
+        List<HistoricDecisionInputInstance> decisionInputInstances = findHistoricDecisionInputInstancesByDecisionInstanceId(decisionInstance.getId());
+        ((HistoricDecisionInstanceEntity) decisionInstance).setInputs(decisionInputInstances);
+      }
+
+      return decisionInstances;
+    } else {
+      return Collections.emptyList();
     }
   }
 
   @SuppressWarnings("unchecked")
-  public List<HistoricDecisionInstance> findHistoricDecisionInstancesByQueryCriteria(HistoricDecisionInstanceQueryImpl query, Page page) {
-    if (isHistoryEnabled()) {
-      getAuthorizationManager().configureHistoricDecisionInstanceQuery(query);
-      return getDbEntityManager().selectList("selectHistoricDecisionInstancesByQueryCriteria", query, page);
-    } else {
-      return Collections.EMPTY_LIST;
-    }
+  public List<HistoricDecisionInputInstance> findHistoricDecisionInputInstancesByDecisionInstanceId(String decisionInstanceId) {
+    return getDbEntityManager().selectList("selectHistoricDecisionInputInstancesByDecisionInstanceId", decisionInstanceId);
   }
 
   public long findHistoricDecisionInstanceCountByQueryCriteria(HistoricDecisionInstanceQueryImpl query) {
