@@ -13,6 +13,8 @@
 
 package org.camunda.bpm.engine.impl.history.producer;
 
+import org.camunda.bpm.dmn.engine.DmnDecisionTable;
+import org.camunda.bpm.dmn.engine.DmnDecisionTableResult;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceEntity;
 import org.camunda.bpm.engine.impl.history.event.HistoryEvent;
@@ -27,29 +29,28 @@ import org.camunda.bpm.engine.impl.util.ClockUtil;
 public class DefaultDmnHistoryEventProducer implements DmnHistoryEventProducer {
 
   @Override
-  public HistoryEvent createDecisionEvaluatedEvt(DelegateExecution execution) {
+  public HistoryEvent createDecisionEvaluatedEvt(DelegateExecution execution, DmnDecisionTable decisionTable, DmnDecisionTableResult decisionTableResult) {
     final ExecutionEntity executionEntity = (ExecutionEntity) execution;
 
     // create event instance
-    HistoricDecisionInstanceEntity event = newDecisionInstanceEventEntity(executionEntity);
+    HistoricDecisionInstanceEntity event = newDecisionInstanceEventEntity(executionEntity, decisionTable, decisionTableResult);
     // initialize event
-    initDecisionInstanceEvent(event, executionEntity, HistoryEventTypes.DMN_DECISION_EVALUATE);
+    initDecisionInstanceEvent(event, executionEntity, decisionTable, decisionTableResult, HistoryEventTypes.DMN_DECISION_EVALUATE);
     // set current time as evaluation time
     event.setEvaluationTime(ClockUtil.getCurrentTime());
 
     return event;
   }
 
-  protected HistoricDecisionInstanceEntity newDecisionInstanceEventEntity(ExecutionEntity executionEntity) {
+  protected HistoricDecisionInstanceEntity newDecisionInstanceEventEntity(ExecutionEntity executionEntity, DmnDecisionTable decisionTable, DmnDecisionTableResult decisionTableResult) {
     return new HistoricDecisionInstanceEntity();
   }
 
-  protected void initDecisionInstanceEvent(HistoricDecisionInstanceEntity event, ExecutionEntity execution, HistoryEventTypes eventType) {
+  protected void initDecisionInstanceEvent(HistoricDecisionInstanceEntity event, ExecutionEntity execution, DmnDecisionTable decisionTable, DmnDecisionTableResult decisionTableResult, HistoryEventTypes eventType) {
     event.setEventType(eventType.getEventName());
 
-    // TODO set decision definition properties
-    // event.setDecisionDefinitionKey(decisionDefinitionKey);
-    // event.setDecisionDefinitionName(decisionDefinitionName);
+    event.setDecisionDefinitionKey(decisionTable.getKey());
+    event.setDecisionDefinitionName(decisionTable.getName());
 
     event.setProcessDefinitionKey(getProcessDefinitionKey(execution));
     event.setProcessDefinitionId(execution.getProcessDefinitionId());

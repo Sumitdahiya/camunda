@@ -24,10 +24,7 @@ import org.camunda.bpm.engine.history.HistoricDecisionInputInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionInstanceQuery;
 import org.camunda.bpm.engine.history.NativeHistoricDecisionInstanceQuery;
-import org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInputInstanceEntity;
 import org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceEntity;
-import org.camunda.bpm.engine.impl.interceptor.Command;
-import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.test.PluggableProcessEngineTestCase;
 import org.camunda.bpm.engine.impl.util.ClockUtil;
 import org.camunda.bpm.engine.repository.ProcessDefinition;
@@ -49,6 +46,7 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
 
     ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().singleResult();
     ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery().processDefinitionId(processInstance.getProcessDefinitionId()).singleResult();
+    String activityInstanceId = historyService.createHistoricActivityInstanceQuery().activityId("task").singleResult().getId();
 
     HistoricDecisionInstance historicDecisionInstance = historyService.createHistoricDecisionInstanceQuery().singleResult();
 
@@ -63,8 +61,7 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
     assertThat(historicDecisionInstance.getExecutionId(), is(processInstance.getId()));
 
     assertThat(historicDecisionInstance.getActivityId(), is("task"));
-    // TODO check the activity instance id
-    // assertThat(historicDecisionInstance.getActivityInstanceId(), containsString("task"));
+    assertThat(historicDecisionInstance.getActivityInstanceId(), is(activityInstanceId));
 
     assertThat(historicDecisionInstance.getEvaluationTime(), is(notNullValue()));
   }
@@ -205,10 +202,9 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
 
     startProcessInstanceAndEvaluateDecision();
 
-    String activityInstanceId = historyService.createHistoricVariableInstanceQuery().singleResult().getActivityInstanceId();
+    String activityInstanceId = historyService.createHistoricActivityInstanceQuery().activityId("task").singleResult().getId();
 
     HistoricDecisionInstanceQuery query = historyService.createHistoricDecisionInstanceQuery();
-
     assertThat(query.activityInstanceId(activityInstanceId).count(), is(1L));
     assertThat(query.activityInstanceId("other activity").count(), is(0L));
   }
@@ -276,44 +272,7 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
   }
 
   protected void startProcessInstanceAndEvaluateDecision() {
-    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("testProcess");
-
-    // TODO remove dummy impl since the entity is created by history event producer / consumer
-    final HistoricDecisionInstanceEntity entity = new HistoricDecisionInstanceEntity();
-    entity.setDecisionDefinitionKey("testDecision");
-    entity.setDecisionDefinitionName("sample decision");
-
-    ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery().processDefinitionId(processInstance.getProcessDefinitionId()).singleResult();
-
-    entity.setProcessDefinitionKey(processDefinition.getKey());
-    entity.setProcessDefinitionId(processInstance.getProcessDefinitionId());
-
-    entity.setProcessInstanceId(processInstance.getId());
-
-    entity.setExecutionId(processInstance.getId());
-
-    entity.setActivityId("task");
-
-    String activityInstanceId = historyService.createHistoricVariableInstanceQuery().listPage(0, 1).get(0).getActivityInstanceId();
-    entity.setActivityInstanceId(activityInstanceId);
-
-    entity.setEvaluationTime(ClockUtil.getCurrentTime());
-
-    HistoricDecisionInputInstanceEntity inputEntity = new HistoricDecisionInputInstanceEntity();
-    inputEntity.setClauseId("out1");
-    inputEntity.setClauseName("result");
-    entity.getInputs().add(inputEntity);
-
-    processEngineConfiguration.getCommandExecutorTxRequired().execute(new Command<Void>() {
-
-      @Override
-      public Void execute(CommandContext commandContext) {
-
-        commandContext.getHistoricDecisionInstanceManager().insertHistoricDecisionInstance(entity);
-
-        return null;
-      }
-    });
-
+    runtimeService.startProcessInstanceByKey("testProcess");
   }
+
 }
