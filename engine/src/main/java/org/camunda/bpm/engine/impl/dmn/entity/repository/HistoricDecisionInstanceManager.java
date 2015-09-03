@@ -19,6 +19,7 @@ import java.util.Map;
 
 import org.camunda.bpm.engine.history.HistoricDecisionInputInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionInstance;
+import org.camunda.bpm.engine.history.HistoricDecisionOutputInstance;
 import org.camunda.bpm.engine.impl.Page;
 import org.camunda.bpm.engine.impl.persistence.AbstractHistoricManager;
 
@@ -40,24 +41,44 @@ public class HistoricDecisionInstanceManager extends AbstractHistoricManager {
         getDbEntityManager().delete(HistoricDecisionInstanceEntity.class, "deleteHistoricDecisionInstanceById", decisionInstance.getId());
         // delete inputs of decision instance
         deleteHistoricDecisionInputInstancesByDecisionInstanceId(decisionInstance);
+        // delete outputs of decision instance
+        deleteHistoricDecisionOutputInstancesByDecisionInstanceId(decisionInstance);
       }
     }
   }
 
-  public void deleteHistoricDecisionInputInstancesByDecisionInstanceId(HistoricDecisionInstanceEntity decisionInstance) {
+  protected void deleteHistoricDecisionInputInstancesByDecisionInstanceId(HistoricDecisionInstanceEntity decisionInstance) {
     getDbEntityManager().delete(HistoricDecisionInputInstanceEntity.class, "deleteHistoricDecisionInputInstancesByDecisionInstanceId", decisionInstance.getId());
+  }
+
+  protected void deleteHistoricDecisionOutputInstancesByDecisionInstanceId(HistoricDecisionInstanceEntity decisionInstance) {
+    getDbEntityManager().delete(HistoricDecisionInputInstanceEntity.class, "deleteHistoricDecisionOutputInstancesByDecisionInstanceId", decisionInstance.getId());
   }
 
   public void insertHistoricDecisionInstance(HistoricDecisionInstanceEntity historicDecisionInstance) {
     if (isHistoryEnabled()) {
       getDbEntityManager().insert(historicDecisionInstance);
 
-      for(HistoricDecisionInputInstance input : historicDecisionInstance.getInputs()) {
-        HistoricDecisionInputInstanceEntity inputEntity = (HistoricDecisionInputInstanceEntity) input;
-        inputEntity.setDecisionInstanceId(historicDecisionInstance.getId());
+      insertHistoricDecisionInputInstances(historicDecisionInstance.getInputs(), historicDecisionInstance.getId());
+      insertHistoricDecisionOutputInstances(historicDecisionInstance.getOutputs(), historicDecisionInstance.getId());
+    }
+  }
 
-        getDbEntityManager().insert(inputEntity);
-      }
+  protected void insertHistoricDecisionInputInstances(List<HistoricDecisionInputInstance> inputs, String decisionInstanceId) {
+    for (HistoricDecisionInputInstance input : inputs) {
+      HistoricDecisionInputInstanceEntity inputEntity = (HistoricDecisionInputInstanceEntity) input;
+      inputEntity.setDecisionInstanceId(decisionInstanceId);
+
+      getDbEntityManager().insert(inputEntity);
+    }
+  }
+
+  protected void insertHistoricDecisionOutputInstances(List<HistoricDecisionOutputInstance> outputs, String decisionInstanceId) {
+    for (HistoricDecisionOutputInstance output : outputs) {
+      HistoricDecisionOutputInstanceEntity outputEntity = (HistoricDecisionOutputInstanceEntity) output;
+      outputEntity.setDecisionInstanceId(decisionInstanceId);
+
+      getDbEntityManager().insert(outputEntity);
     }
   }
 
@@ -70,8 +91,13 @@ public class HistoricDecisionInstanceManager extends AbstractHistoricManager {
       @SuppressWarnings("unchecked")
       List<HistoricDecisionInstance> decisionInstances = getDbEntityManager().selectList("selectHistoricDecisionInstancesByQueryCriteria", query, page);
       for(HistoricDecisionInstance decisionInstance : decisionInstances) {
+        HistoricDecisionInstanceEntity historicDecisionInstanceEntity = (HistoricDecisionInstanceEntity) decisionInstance;
+
         List<HistoricDecisionInputInstance> decisionInputInstances = findHistoricDecisionInputInstancesByDecisionInstanceId(decisionInstance.getId());
-        ((HistoricDecisionInstanceEntity) decisionInstance).setInputs(decisionInputInstances);
+        historicDecisionInstanceEntity.setInputs(decisionInputInstances);
+
+        List<HistoricDecisionOutputInstance> decisionOutputInstances = findHistoricDecisionOutputInstancesByDecisionInstanceId(decisionInstance.getId());
+        historicDecisionInstanceEntity.setOuputs(decisionOutputInstances);
       }
 
       return decisionInstances;
@@ -83,6 +109,11 @@ public class HistoricDecisionInstanceManager extends AbstractHistoricManager {
   @SuppressWarnings("unchecked")
   public List<HistoricDecisionInputInstance> findHistoricDecisionInputInstancesByDecisionInstanceId(String decisionInstanceId) {
     return getDbEntityManager().selectList("selectHistoricDecisionInputInstancesByDecisionInstanceId", decisionInstanceId);
+  }
+
+  @SuppressWarnings("unchecked")
+  public List<HistoricDecisionOutputInstance> findHistoricDecisionOutputInstancesByDecisionInstanceId(String decisionInstanceId) {
+    return getDbEntityManager().selectList("selectHistoricDecisionOutputInstancesByDecisionInstanceId", decisionInstanceId);
   }
 
   public long findHistoricDecisionInstanceCountByQueryCriteria(HistoricDecisionInstanceQueryImpl query) {

@@ -23,6 +23,7 @@ import java.util.List;
 import org.camunda.bpm.engine.history.HistoricDecisionInputInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionInstanceQuery;
+import org.camunda.bpm.engine.history.HistoricDecisionOutputInstance;
 import org.camunda.bpm.engine.history.NativeHistoricDecisionInstanceQuery;
 import org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceEntity;
 import org.camunda.bpm.engine.impl.test.PluggableProcessEngineTestCase;
@@ -78,8 +79,31 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
 
     HistoricDecisionInputInstance input = inputs.iterator().next();
     assertThat(input.getDecisionInstanceId(), is(historicDecisionInstance.getId()));
-    assertThat(input.getClauseId(), is("out1"));
-    assertThat(input.getClauseName(), is("result"));
+    assertThat(input.getClauseId(), is("in"));
+    assertThat(input.getClauseName(), is("input"));
+    // TODO assert input value
+  }
+
+  @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
+  public void testDecisionOutputInstanceProperties() {
+
+    startProcessInstanceAndEvaluateDecision();
+
+    HistoricDecisionInstance historicDecisionInstance = historyService.createHistoricDecisionInstanceQuery().singleResult();
+    List<HistoricDecisionOutputInstance> outputs = historicDecisionInstance.getOutputs();
+    assertThat(outputs, is(notNullValue()));
+    assertThat(outputs.size(), is(1));
+
+    HistoricDecisionOutputInstance output = outputs.iterator().next();
+    assertThat(output.getDecisionInstanceId(), is(historicDecisionInstance.getId()));
+    assertThat(output.getClauseId(), is("out"));
+    assertThat(output.getClauseName(), is("output"));
+
+    assertThat(output.getRuleId(), is("rule"));
+    assertThat(output.getRuleOrder(), is(1));
+
+    assertThat(output.getVariableName(), is("result"));
+    // TODO assert output value
   }
 
   @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })

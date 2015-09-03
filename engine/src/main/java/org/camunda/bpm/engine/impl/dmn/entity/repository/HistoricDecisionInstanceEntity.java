@@ -14,7 +14,6 @@
 package org.camunda.bpm.engine.impl.dmn.entity.repository;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -42,6 +41,7 @@ public class HistoricDecisionInstanceEntity extends HistoryEvent implements Hist
   protected Date evaluationTime;
 
   protected List<HistoricDecisionInputInstance> inputs = new ArrayList<HistoricDecisionInputInstance>();
+  protected List<HistoricDecisionOutputInstance> outputs = new ArrayList<HistoricDecisionOutputInstance>();
 
   public String getDecisionDefinitionKey() {
     return decisionDefinitionKey;
@@ -90,12 +90,15 @@ public class HistoricDecisionInstanceEntity extends HistoryEvent implements Hist
 
   @Override
   public List<HistoricDecisionOutputInstance> getOutputs() {
-    // TODO Auto-generated method stub
-    return Collections.emptyList();
+    return outputs;
   }
 
   public void setInputs(List<HistoricDecisionInputInstance> inputs) {
     this.inputs = inputs;
+  }
+
+  public void setOuputs(List<HistoricDecisionOutputInstance> outputs) {
+    this.outputs = outputs;
   }
 
 }

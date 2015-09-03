@@ -38,4 +38,6 @@ public interface HistoricDecisionOutputInstance {
   /** The order of the rule that is matched. */
   Integer getRuleOrder();
 
+  /** The name of the output variable. */
+  String getVariableName();
 }

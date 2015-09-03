@@ -13,10 +13,19 @@
 
 package org.camunda.bpm.engine.impl.history.producer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.camunda.bpm.dmn.engine.DmnDecisionTable;
 import org.camunda.bpm.dmn.engine.DmnDecisionTableResult;
+import org.camunda.bpm.dmn.engine.DmnDecisionTableRule;
+import org.camunda.bpm.dmn.engine.DmnDecisionTableValue;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
+import org.camunda.bpm.engine.history.HistoricDecisionInputInstance;
+import org.camunda.bpm.engine.history.HistoricDecisionOutputInstance;
+import org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInputInstanceEntity;
 import org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceEntity;
+import org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionOutputInstanceEntity;
 import org.camunda.bpm.engine.impl.history.event.HistoryEvent;
 import org.camunda.bpm.engine.impl.history.event.HistoryEventTypes;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
@@ -60,6 +69,12 @@ public class DefaultDmnHistoryEventProducer implements DmnHistoryEventProducer {
 
     event.setActivityId(execution.getActivityId());
     event.setActivityInstanceId(execution.getActivityInstanceId());
+
+    List<HistoricDecisionInputInstance> historicDecisionInputInstances = createHistoricDecisionInputInstances(decisionTableResult);
+    event.setInputs(historicDecisionInputInstances);
+
+    List<HistoricDecisionOutputInstance> historicDecisionOutputInstances = createHistoricDecisionOutputInstances(decisionTableResult);
+    event.setOuputs(historicDecisionOutputInstances);
   }
 
   protected String getProcessDefinitionKey(ExecutionEntity execution) {
@@ -70,4 +85,50 @@ public class DefaultDmnHistoryEventProducer implements DmnHistoryEventProducer {
       return null;
     }
   }
+
+  protected List<HistoricDecisionInputInstance> createHistoricDecisionInputInstances(DmnDecisionTableResult decisionTableResult) {
+    List<HistoricDecisionInputInstance> inputInstances = new ArrayList<HistoricDecisionInputInstance>();
+
+    for(DmnDecisionTableValue inputClause : decisionTableResult.getInputs().values()) {
+
+      HistoricDecisionInputInstanceEntity inputInstance = new HistoricDecisionInputInstanceEntity();
+      inputInstance.setClauseId(inputClause.getKey());
+      inputInstance.setClauseName(inputClause.getName());
+      // TODO set input value
+
+      inputInstances.add(inputInstance);
+    }
+
+    return inputInstances;
+  }
+
+  protected List<HistoricDecisionOutputInstance> createHistoricDecisionOutputInstances(DmnDecisionTableResult decisionTableResult) {
+    List<HistoricDecisionOutputInstance> outputInstances = new ArrayList<HistoricDecisionOutputInstance>();
+
+    List<DmnDecisionTableRule> matchingRules = decisionTableResult.getMatchingRules();
+    for(int index = 0; index < matchingRules.size(); index++) {
+      DmnDecisionTableRule rule = matchingRules.get(index);
+
+      String ruleId = rule.getKey();
+      Integer ruleOrder = index + 1;
+
+      for(DmnDecisionTableValue outputClause : rule.getOutputs().values()) {
+
+        HistoricDecisionOutputInstanceEntity outputInstance = new HistoricDecisionOutputInstanceEntity();
+        outputInstance.setClauseId(outputClause.getKey());
+        outputInstance.setClauseName(outputClause.getName());
+
+        outputInstance.setRuleId(ruleId);
+        outputInstance.setRuleOrder(ruleOrder);
+
+        outputInstance.setVariableName(outputClause.getOutputName());
+        // TODO set output value
+
+        outputInstances.add(outputInstance);
+      }
+    }
+
+    return outputInstances;
+  }
+
 }
