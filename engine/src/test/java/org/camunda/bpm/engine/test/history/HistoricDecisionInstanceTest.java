@@ -70,11 +70,33 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
   }
 
   @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
+  public void testQueryIncludeInputs() {
+
+    startProcessInstanceAndEvaluateDecision();
+
+    HistoricDecisionInstanceQuery query = historyService.createHistoricDecisionInstanceQuery();
+
+    assertThat(query.singleResult().getInputs().size(), is(0));
+    assertThat(query.includeInputs().singleResult().getInputs().size(), is(1));
+  }
+
+  @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
+  public void testQueryIncludeOutputs() {
+
+    startProcessInstanceAndEvaluateDecision();
+
+    HistoricDecisionInstanceQuery query = historyService.createHistoricDecisionInstanceQuery();
+
+    assertThat(query.singleResult().getOutputs().size(), is(0));
+    assertThat(query.includeOutputs().singleResult().getOutputs().size(), is(1));
+  }
+
+  @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
   public void testDecisionInputInstanceProperties() {
 
     startProcessInstanceAndEvaluateDecision();
 
-    HistoricDecisionInstance historicDecisionInstance = historyService.createHistoricDecisionInstanceQuery().singleResult();
+    HistoricDecisionInstance historicDecisionInstance = historyService.createHistoricDecisionInstanceQuery().includeInputs().singleResult();
     List<HistoricDecisionInputInstance> inputs = historicDecisionInstance.getInputs();
     assertThat(inputs, is(notNullValue()));
     assertThat(inputs.size(), is(1));
@@ -88,16 +110,62 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
   @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
   public void testDecisionInputInstanceStringValue() {
 
-    startProcessInstanceAndEvaluateDecision();
+    startProcessInstanceAndEvaluateDecision("a");
 
-    HistoricDecisionInstance historicDecisionInstance = historyService.createHistoricDecisionInstanceQuery().singleResult();
+    HistoricDecisionInstance historicDecisionInstance = historyService.createHistoricDecisionInstanceQuery().includeInputs().singleResult();
     List<HistoricDecisionInputInstance> inputs = historicDecisionInstance.getInputs();
     assertThat(inputs.size(), is(1));
 
     HistoricDecisionInputInstance input = inputs.iterator().next();
     assertThat(input.getSerializerName(), is("string"));
     assertThat(input.getTextValue(), is("a"));
-    assertThat(input.getTextValue(), is((Object) "a"));
+    assertThat(input.getValue(), is((Object) "a"));
+  }
+
+  @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
+  public void testDecisionInputInstanceLongValue() {
+
+    startProcessInstanceAndEvaluateDecision(1L);
+
+    HistoricDecisionInstance historicDecisionInstance = historyService.createHistoricDecisionInstanceQuery().includeInputs().singleResult();
+    List<HistoricDecisionInputInstance> inputs = historicDecisionInstance.getInputs();
+    assertThat(inputs.size(), is(1));
+
+    HistoricDecisionInputInstance input = inputs.iterator().next();
+    assertThat(input.getSerializerName(), is("long"));
+    assertThat(input.getLongValue(), is(1L));
+    assertThat(input.getValue(), is((Object) 1L));
+  }
+
+  @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
+  public void testDecisionInputInstanceDoubleValue() {
+
+    startProcessInstanceAndEvaluateDecision(2.5);
+
+    HistoricDecisionInstance historicDecisionInstance = historyService.createHistoricDecisionInstanceQuery().includeInputs().singleResult();
+    List<HistoricDecisionInputInstance> inputs = historicDecisionInstance.getInputs();
+    assertThat(inputs.size(), is(1));
+
+    HistoricDecisionInputInstance input = inputs.iterator().next();
+    assertThat(input.getSerializerName(), is("double"));
+    assertThat(input.getDoubleValue(), is(2.5));
+    assertThat(input.getValue(), is((Object) 2.5));
+  }
+
+  @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
+  public void FAILING_testDecisionInputInstanceByteValue() {
+
+    byte[] bytes = "object".getBytes();
+    startProcessInstanceAndEvaluateDecision(bytes);
+
+    HistoricDecisionInstance historicDecisionInstance = historyService.createHistoricDecisionInstanceQuery().includeInputs().singleResult();
+    List<HistoricDecisionInputInstance> inputs = historicDecisionInstance.getInputs();
+    assertThat(inputs.size(), is(1));
+
+    HistoricDecisionInputInstance input = inputs.iterator().next();
+    assertThat(input.getSerializerName(), is("bytes"));
+    assertThat(input.getByteArrayValueId(), is(notNullValue()));
+    assertThat(input.getValue(), is((Object) bytes));
   }
 
   @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
@@ -105,7 +173,7 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
 
     startProcessInstanceAndEvaluateDecision();
 
-    HistoricDecisionInstance historicDecisionInstance = historyService.createHistoricDecisionInstanceQuery().singleResult();
+    HistoricDecisionInstance historicDecisionInstance = historyService.createHistoricDecisionInstanceQuery().includeOutputs().singleResult();
     List<HistoricDecisionOutputInstance> outputs = historicDecisionInstance.getOutputs();
     assertThat(outputs, is(notNullValue()));
     assertThat(outputs.size(), is(1));
@@ -314,10 +382,13 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
   }
 
   protected void startProcessInstanceAndEvaluateDecision() {
-
-    Map<String, Object> variables = new HashMap<String, Object>();
-    variables.put("input1", "a");
-    runtimeService.startProcessInstanceByKey("testProcess", variables);
+    startProcessInstanceAndEvaluateDecision(null);
   }
 
+
+  protected void startProcessInstanceAndEvaluateDecision(Object input) {
+    Map<String, Object> variables = new HashMap<String, Object>();
+    variables.put("input1", input);
+    runtimeService.startProcessInstanceByKey("testProcess", variables);
+  }
 }

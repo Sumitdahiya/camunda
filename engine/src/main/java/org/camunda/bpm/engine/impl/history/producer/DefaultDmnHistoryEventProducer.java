@@ -96,7 +96,6 @@ public class DefaultDmnHistoryEventProducer implements DmnHistoryEventProducer {
       HistoricDecisionInputInstanceEntity inputInstance = new HistoricDecisionInputInstanceEntity();
       inputInstance.setClauseId(inputClause.getKey());
       inputInstance.setClauseName(inputClause.getName());
-      // TODO set input value
 
       TypedValue typedValue = Variables.untypedValue(inputClause.getValue());
       inputInstance.setValue(typedValue);
@@ -127,7 +126,6 @@ public class DefaultDmnHistoryEventProducer implements DmnHistoryEventProducer {
         outputInstance.setRuleOrder(ruleOrder);
 
         outputInstance.setVariableName(outputClause.getOutputName());
-        // TODO set output value
 
         TypedValue typedValue = Variables.untypedValue(outputClause.getValue());
         outputInstance.setValue(typedValue);

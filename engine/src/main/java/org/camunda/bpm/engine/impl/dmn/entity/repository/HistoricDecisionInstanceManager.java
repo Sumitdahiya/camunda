@@ -32,8 +32,6 @@ public class HistoricDecisionInstanceManager extends AbstractHistoricManager {
 
   public void deleteHistoricDecisionInstancesByDecisionDefinitionKey(String decisionDefinitionKey) {
     if (isHistoryEnabled()) {
-      // TODO insert inputs and outputs in a better way
-      // getDbEntityManager().delete(HistoricDecisionInstanceEntity.class, "deleteHistoricDecisionInstancesByDecisionDefinitionKey", decisionDefinitionKey);
 
       @SuppressWarnings("unchecked")
       List<HistoricDecisionInstanceEntity> decisionInstances = getDbEntityManager().selectList("selectHistoricDecisionInstancesByDecisionDefinitionKey", decisionDefinitionKey);
@@ -41,8 +39,10 @@ public class HistoricDecisionInstanceManager extends AbstractHistoricManager {
         // delete decision instance
         getDbEntityManager().delete(HistoricDecisionInstanceEntity.class, "deleteHistoricDecisionInstanceById", decisionInstance.getId());
         // delete inputs of decision instance
+        // TODO delete byte values
         deleteHistoricDecisionInputInstancesByDecisionInstanceId(decisionInstance);
         // delete outputs of decision instance
+        // TODO delete byte values
         deleteHistoricDecisionOutputInstancesByDecisionInstanceId(decisionInstance);
       }
     }
@@ -87,18 +87,21 @@ public class HistoricDecisionInstanceManager extends AbstractHistoricManager {
     if (isHistoryEnabled()) {
       getAuthorizationManager().configureHistoricDecisionInstanceQuery(query);
 
-      // TODO enable / disable input query
       // TODO query inputs in better way
       @SuppressWarnings("unchecked")
       List<HistoricDecisionInstance> decisionInstances = getDbEntityManager().selectList("selectHistoricDecisionInstancesByQueryCriteria", query, page);
       for(HistoricDecisionInstance decisionInstance : decisionInstances) {
         HistoricDecisionInstanceEntity historicDecisionInstanceEntity = (HistoricDecisionInstanceEntity) decisionInstance;
 
-        List<HistoricDecisionInputInstance> decisionInputInstances = findHistoricDecisionInputInstancesByDecisionInstanceId(decisionInstance.getId());
-        historicDecisionInstanceEntity.setInputs(decisionInputInstances);
+        if (query.isIncludeInput()) {
+          List<HistoricDecisionInputInstance> decisionInputInstances = findHistoricDecisionInputInstancesByDecisionInstanceId(decisionInstance.getId());
+          historicDecisionInstanceEntity.setInputs(decisionInputInstances);
+        }
 
-        List<HistoricDecisionOutputInstance> decisionOutputInstances = findHistoricDecisionOutputInstancesByDecisionInstanceId(decisionInstance.getId());
-        historicDecisionInstanceEntity.setOuputs(decisionOutputInstances);
+        if (query.isIncludeOutputs()) {
+          List<HistoricDecisionOutputInstance> decisionOutputInstances = findHistoricDecisionOutputInstancesByDecisionInstanceId(decisionInstance.getId());
+          historicDecisionInstanceEntity.setOuputs(decisionOutputInstances);
+        }
       }
 
       return decisionInstances;

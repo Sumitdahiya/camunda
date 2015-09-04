@@ -56,4 +56,9 @@ public interface HistoricDecisionInstanceQuery extends Query<HistoricDecisionIns
    * (needs to be followed by {@link #asc()} or {@link #desc()}). */
   HistoricDecisionInstanceQuery orderByEvaluationTime();
 
+  /** Enable fetch corresponding {@link HistoricDecisionInputInstance} of evaluated decision. */
+  HistoricDecisionInstanceQuery includeInputs();
+
+  /** Enable fetch corresponding {@link HistoricDecisionOutputInstance} of evaluated decision. */
+  HistoricDecisionInstanceQuery includeOutputs();
 }

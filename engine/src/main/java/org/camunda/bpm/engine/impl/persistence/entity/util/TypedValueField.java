@@ -68,7 +68,6 @@ public class TypedValueField implements TypedValueFields, DbEntityLifecycleAware
   }
 
   public TypedValue getTypedValue(boolean deserializeValue) {
-    // TODO check if it's ok for all - it's copied from VariableInstanceEntity
     if (cachedValue != null && cachedValue instanceof SerializableValue && Context.getCommandContext() != null) {
       SerializableValue serializableValue = (SerializableValue) cachedValue;
       if(deserializeValue && !serializableValue.isDeserialized()) {

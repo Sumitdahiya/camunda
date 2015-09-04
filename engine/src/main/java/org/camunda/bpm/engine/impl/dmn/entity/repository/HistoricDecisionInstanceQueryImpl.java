@@ -44,6 +44,9 @@ public class HistoricDecisionInstanceQueryImpl extends AbstractQuery<HistoricDec
   protected String activityInstanceId;
   protected String activityId;
 
+  protected boolean includeInput = false;
+  protected boolean includeOutputs = false;
+
   public HistoricDecisionInstanceQueryImpl() {
   }
 
@@ -137,63 +140,50 @@ public class HistoricDecisionInstanceQueryImpl extends AbstractQuery<HistoricDec
     return decisionDefinitionKey;
   }
 
-  public void setDecisionDefinitionKey(String decisionDefinitionKey) {
-    this.decisionDefinitionKey = decisionDefinitionKey;
-  }
-
   public String getDecisionDefinitionName() {
     return decisionDefinitionName;
-  }
-
-  public void setDecisionDefinitionName(String decisionDefinitionName) {
-    this.decisionDefinitionName = decisionDefinitionName;
   }
 
   public String getProcessDefinitionKey() {
     return processDefinitionKey;
   }
 
-  public void setProcessDefinitionKey(String processDefinitionKey) {
-    this.processDefinitionKey = processDefinitionKey;
-  }
-
   public String getProcessDefinitionId() {
     return processDefinitionId;
-  }
-
-  public void setProcessDefinitionId(String processDefinitionId) {
-    this.processDefinitionId = processDefinitionId;
   }
 
   public String getProcessInstanceId() {
     return processInstanceId;
   }
 
-  public void setProcessInstanceId(String processInstanceId) {
-    this.processInstanceId = processInstanceId;
-  }
-
   public String getExecutionId() {
     return executionId;
-  }
-
-  public void setExecutionId(String executionId) {
-    this.executionId = executionId;
   }
 
   public String getActivityInstanceId() {
     return activityInstanceId;
   }
 
-  public void setActivityInstanceId(String activityInstanceId) {
-    this.activityInstanceId = activityInstanceId;
-  }
-
   public String getActivityId() {
     return activityId;
   }
 
-  public void setActivityId(String activityId) {
-    this.activityId = activityId;
+  public HistoricDecisionInstanceQuery includeInputs() {
+    includeInput = true;
+    return this;
+  }
+
+  @Override
+  public HistoricDecisionInstanceQuery includeOutputs() {
+    includeOutputs = true;
+    return this;
+  }
+
+  public boolean isIncludeInput() {
+    return includeInput;
+  }
+
+  public boolean isIncludeOutputs() {
+    return includeOutputs;
   }
 }

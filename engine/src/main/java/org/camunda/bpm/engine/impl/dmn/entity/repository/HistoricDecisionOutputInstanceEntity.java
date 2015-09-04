@@ -169,6 +169,10 @@ public class HistoricDecisionOutputInstanceEntity extends HistoryEvent implement
     return byteArrayField.getByteArrayId();
   }
 
+  public void setByteArrayValueId(String byteArrayId) {
+    byteArrayField.setByteArrayId(byteArrayId);
+  }
+
   @Override
   public ByteArrayEntity getByteArrayValue() {
     return byteArrayField.getByteArrayValue();
