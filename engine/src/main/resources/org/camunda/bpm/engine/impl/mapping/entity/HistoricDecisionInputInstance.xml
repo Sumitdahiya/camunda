@@ -7,12 +7,29 @@
  <!-- insert -->
  
   <insert id="insertHistoricDecisionInputInstance" parameterType="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInputInstanceEntity">
-     insert into ${prefix}ACT_HI_DEC_IN(ID_, DEC_INST_ID_, CLAUSE_ID_, CLAUSE_NAME_)
-     values (#{id, jdbcType=VARCHAR},
-            #{decisionInstanceId, jdbcType=VARCHAR},
-            #{clauseId, jdbcType=VARCHAR},
-            #{clauseName, jdbcType=VARCHAR}
-            )
+     insert into ${prefix}ACT_HI_DEC_IN(
+          ID_, 
+          DEC_INST_ID_, 
+          CLAUSE_ID_, 
+          CLAUSE_NAME_,
+          VAR_TYPE_,
+          BYTEARRAY_ID_,
+          DOUBLE_,
+          LONG_,
+          TEXT_,
+          TEXT2_
+      ) values ( 
+          #{id, jdbcType=VARCHAR},
+          #{decisionInstanceId, jdbcType=VARCHAR},
+          #{clauseId, jdbcType=VARCHAR},
+          #{clauseName, jdbcType=VARCHAR},
+          #{serializerName, jdbcType=VARCHAR},
+          #{byteArrayId, jdbcType=VARCHAR},
+          #{doubleValue, jdbcType=DOUBLE},
+          #{longValue, jdbcType=BIGINT},
+          #{textValue, jdbcType=VARCHAR},
+          #{textValue2, jdbcType=VARCHAR}
+      )
   </insert>
   
   <!-- delete -->
@@ -28,6 +45,12 @@
     <result property="decisionInstanceId" column="DEC_INST_ID_" jdbcType="VARCHAR"/>
     <result property="clauseId" column="CLAUSE_ID_" jdbcType="VARCHAR"/>
     <result property="clauseName" column="CLAUSE_NAME_" jdbcType="VARCHAR"/>
+    <result property="serializerName" column="VAR_TYPE_" jdbcType="VARCHAR"/>
+    <result property="byteArrayId" column="BYTEARRAY_ID_" jdbcType="VARCHAR" />
+    <result property="doubleValue" column="DOUBLE_" jdbcType="DOUBLE" />
+    <result property="textValue" column="TEXT_" jdbcType="VARCHAR" />
+    <result property="textValue2" column="TEXT2_" jdbcType="VARCHAR" />
+    <result property="longValue" column="LONG_" jdbcType="BIGINT" />
   </resultMap>
   
   <!-- select -->

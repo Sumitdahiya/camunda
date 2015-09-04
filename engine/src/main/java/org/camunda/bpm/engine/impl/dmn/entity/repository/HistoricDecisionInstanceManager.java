@@ -32,6 +32,7 @@ public class HistoricDecisionInstanceManager extends AbstractHistoricManager {
 
   public void deleteHistoricDecisionInstancesByDecisionDefinitionKey(String decisionDefinitionKey) {
     if (isHistoryEnabled()) {
+      // TODO insert inputs and outputs in a better way
       // getDbEntityManager().delete(HistoricDecisionInstanceEntity.class, "deleteHistoricDecisionInstancesByDecisionDefinitionKey", decisionDefinitionKey);
 
       @SuppressWarnings("unchecked")

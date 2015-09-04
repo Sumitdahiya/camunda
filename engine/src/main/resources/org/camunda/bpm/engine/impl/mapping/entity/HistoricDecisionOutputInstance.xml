@@ -7,15 +7,35 @@
  <!-- insert -->
  
   <insert id="insertHistoricDecisionOutputInstance" parameterType="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionOutputInstanceEntity">
-     insert into ${prefix}ACT_HI_DEC_OUT(ID_, DEC_INST_ID_, CLAUSE_ID_, CLAUSE_NAME_, RULE_ID_, RULE_ORDER_, VAR_NAME_)
-     values (#{id, jdbcType=VARCHAR},
-            #{decisionInstanceId, jdbcType=VARCHAR},
-            #{clauseId, jdbcType=VARCHAR},
-            #{clauseName, jdbcType=VARCHAR},
-            #{ruleId, jdbcType=VARCHAR},
-            #{ruleOrder, jdbcType=VARCHAR},
-            #{variableName, jdbcType=VARCHAR}
-            )
+     insert into ${prefix}ACT_HI_DEC_OUT(
+          ID_, 
+          DEC_INST_ID_, 
+          CLAUSE_ID_, 
+          CLAUSE_NAME_, 
+          RULE_ID_, 
+          RULE_ORDER_, 
+          VAR_NAME_,
+          VAR_TYPE_,
+          BYTEARRAY_ID_,
+          DOUBLE_,
+          LONG_,
+          TEXT_,
+          TEXT2_
+     ) values (
+          #{id, jdbcType=VARCHAR},
+          #{decisionInstanceId, jdbcType=VARCHAR},
+          #{clauseId, jdbcType=VARCHAR},
+          #{clauseName, jdbcType=VARCHAR},
+          #{ruleId, jdbcType=VARCHAR},
+          #{ruleOrder, jdbcType=VARCHAR},
+          #{variableName, jdbcType=VARCHAR},
+          #{serializerName, jdbcType=VARCHAR},
+          #{byteArrayId, jdbcType=VARCHAR},
+          #{doubleValue, jdbcType=DOUBLE},
+          #{longValue, jdbcType=BIGINT},
+          #{textValue, jdbcType=VARCHAR},
+          #{textValue2, jdbcType=VARCHAR}
+     )
   </insert>
   
   <!-- delete -->
@@ -34,6 +54,12 @@
     <result property="ruleId" column="RULE_ID_" jdbcType="VARCHAR" />
     <result property="ruleOrder" column="RULE_ORDER_" jdbcType="INTEGER" />
     <result property="variableName" column="VAR_NAME_" jdbcType="VARCHAR"/>
+    <result property="serializerName" column="VAR_TYPE_" jdbcType="VARCHAR"/>
+    <result property="byteArrayId" column="BYTEARRAY_ID_" jdbcType="VARCHAR" />
+    <result property="doubleValue" column="DOUBLE_" jdbcType="DOUBLE" />
+    <result property="textValue" column="TEXT_" jdbcType="VARCHAR" />
+    <result property="textValue2" column="TEXT2_" jdbcType="VARCHAR" />
+    <result property="longValue" column="LONG_" jdbcType="BIGINT" />
   </resultMap>
   
   <!-- select -->

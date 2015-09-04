@@ -12,22 +12,24 @@
  */
 package org.camunda.bpm.engine.impl.db;
 
-import org.camunda.bpm.engine.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import org.camunda.bpm.engine.AuthorizationException;
+import org.camunda.bpm.engine.BadUserRequestException;
+import org.camunda.bpm.engine.OptimisticLockingException;
+import org.camunda.bpm.engine.ProcessEngineException;
+import org.camunda.bpm.engine.SuspendedEntityInteractionException;
+import org.camunda.bpm.engine.WrongDbException;
 import org.camunda.bpm.engine.exception.NotValidException;
 import org.camunda.bpm.engine.impl.ProcessEngineLogger;
 import org.camunda.bpm.engine.impl.db.entitymanager.cache.CachedDbEntity;
 import org.camunda.bpm.engine.impl.db.entitymanager.cache.DbEntityState;
 import org.camunda.bpm.engine.impl.db.entitymanager.operation.DbOperation;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
-import org.camunda.bpm.engine.impl.persistence.entity.HistoricDetailVariableInstanceUpdateEntity;
-import org.camunda.bpm.engine.impl.persistence.entity.HistoricVariableInstanceEntity;
-import org.camunda.bpm.engine.impl.persistence.entity.VariableInstanceEntity;
 import org.camunda.bpm.engine.impl.util.ClassNameUtil;
 import org.camunda.bpm.model.xml.instance.ModelElementInstance;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author Stefan Hentschel.
@@ -369,19 +371,7 @@ public class EnginePersistenceLogger extends ProcessEngineLogger {
     return new ProcessEngineException(exceptionMessage("039", "Unsupported resource type '{}'", type));
   }
 
-  public ProcessEngineException serializerNotDefinedException(VariableInstanceEntity entity) {
-    return genericSerializerNotDefinedException(entity);
-  }
-
-  public ProcessEngineException serializerNotDefinedException(HistoricDetailVariableInstanceUpdateEntity entity) {
-    return genericSerializerNotDefinedException(entity);
-  }
-
-  public ProcessEngineException serializerNotDefinedException(HistoricVariableInstanceEntity entity) {
-    return genericSerializerNotDefinedException(entity);
-  }
-
-  public ProcessEngineException genericSerializerNotDefinedException(Object entity) {
+  public ProcessEngineException serializerNotDefinedException(Object entity) {
     return new ProcessEngineException(exceptionMessage("040", "No serializer defined for variable instance '{}'", entity));
   }
 
