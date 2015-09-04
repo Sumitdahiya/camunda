@@ -44,18 +44,7 @@
     <result property="activityInstanceId" column="ACT_INST_ID_" jdbcType="VARCHAR"/>
     <result property="activityId" column="ACT_ID_" jdbcType="VARCHAR"/>
     <result property="evaluationTime" column="EVAL_TIME_" jdbcType="TIMESTAMP"/>
-    <!-- <collection property="inputs" resultMap="decIn" ofType="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInputInstanceEntity" columnPrefix="input_" /> -->
-    <!-- <collection property="inputs" ofType="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInputInstanceEntity" columnPrefix="input_">
-      <id property="id" column="ID_" jdbcType="VARCHAR" />
-      <result property="decisionInstanceId" column="DEC_INST_ID_" jdbcType="VARCHAR"/>
-    </collection> -->
-    <!-- <collection property="inputs" column="I.ID_" ofType="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInputInstanceEntity" javaType="ArrayList" resultMap="decIn"/> -->
   </resultMap>
-
-  <!-- <resultMap id="decIn" type="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInputInstanceEntity">
-    <id property="id" column="I.ID_" jdbcType="VARCHAR" />
-    <result property="decisionInstanceId" column="DEC_INST_ID_" jdbcType="VARCHAR"/>
-  </resultMap> -->
 
   <!-- select -->
   
@@ -126,8 +115,6 @@
 
   <sql id="selectHistoricDecisionInstancesByQueryCriteriaSql">
     from ${prefix}ACT_HI_DECINST RES
-    <!-- enable / disable -->
-    left outer join ${prefix}ACT_HI_DEC_IN I on RES.ID_ = I.DEC_INST_ID_
     <where>
       <if test="decisionDefinitionKey != null">
         and RES.DECISION_KEY_ = #{decisionDefinitionKey}

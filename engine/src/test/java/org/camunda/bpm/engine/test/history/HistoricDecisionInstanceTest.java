@@ -41,6 +41,9 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
 
   public static final String DECISION_PROCESS = "org/camunda/bpm/engine/test/history/HistoricDecisionInstanceTest.processWithBusinessRuleTask.bpmn20.xml";
   public static final String DECISION_SINGLE_OUTPUT_DMN = "org/camunda/bpm/engine/test/history/HistoricDecisionInstanceTest.decisionSingleOutput.dmn10.xml";
+  public static final String DECISION_MULTIPLE_OUTPUT_DMN = "org/camunda/bpm/engine/test/history/HistoricDecisionInstanceTest.decisionMultipleOutput.dmn10.xml";
+  public static final String DECISION_COMPOUND_OUTPUT_DMN = "org/camunda/bpm/engine/test/history/HistoricDecisionInstanceTest.decisionCompoundOutput.dmn10.xml";
+  public static final String DECISION_MULTIPLE_INTPUT_DMN = "org/camunda/bpm/engine/test/history/HistoricDecisionInstanceTest.decisionMultipleInput.dmn10.xml";
 
   @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
   public void testDecisionInstanceProperties() {
@@ -105,6 +108,44 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
     assertThat(input.getDecisionInstanceId(), is(historicDecisionInstance.getId()));
     assertThat(input.getClauseId(), is("in"));
     assertThat(input.getClauseName(), is("input"));
+  }
+
+  @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
+  public void testMultipleDecisionInstances() {
+
+    startProcessInstanceAndEvaluateDecision("a");
+    startProcessInstanceAndEvaluateDecision("b");
+
+    List<HistoricDecisionInstance> historicDecisionInstances = historyService
+        .createHistoricDecisionInstanceQuery()
+        .includeInputs()
+        .orderByEvaluationTime().asc()
+        .list();
+    assertThat(historicDecisionInstances.size(), is(2));
+
+    List<HistoricDecisionInputInstance> inputsOfFirstDecision = historicDecisionInstances.get(0).getInputs();
+    assertThat(inputsOfFirstDecision.size(), is(1));
+    assertThat(inputsOfFirstDecision.get(0).getTextValue(), is("a"));
+
+    List<HistoricDecisionInputInstance> inputsOfSecondDecision = historicDecisionInstances.get(1).getInputs();
+    assertThat(inputsOfSecondDecision.size(), is(1));
+    assertThat(inputsOfSecondDecision.get(0).getTextValue(), is("b"));
+  }
+
+  @Deployment(resources = { DECISION_PROCESS, DECISION_MULTIPLE_INTPUT_DMN })
+  public void testMultipleDecisionInputInstances() {
+
+    Map<String, Object> variables = new HashMap<String, Object>();
+    variables.put("input1", "a");
+    variables.put("input2", 1);
+    runtimeService.startProcessInstanceByKey("testProcess", variables);
+
+    HistoricDecisionInstance historicDecisionInstance = historyService.createHistoricDecisionInstanceQuery().includeInputs().singleResult();
+    List<HistoricDecisionInputInstance> inputs = historicDecisionInstance.getInputs();
+    assertThat(inputs.size(), is(2));
+
+    assertThat(inputs.get(0).getTextValue(), is("a"));
+    assertThat(inputs.get(1).getTextValue(), is("1"));
   }
 
   @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
@@ -190,6 +231,54 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
     assertThat(output.getSerializerName(), is("string"));
     assertThat(output.getTextValue(), is("okay"));
     assertThat(output.getValue(), is((Object) "okay"));
+  }
+
+  @Deployment(resources = { DECISION_PROCESS, DECISION_MULTIPLE_OUTPUT_DMN })
+  public void testMultipleDeceisionOutputInstances() {
+
+    startProcessInstanceAndEvaluateDecision();
+
+    HistoricDecisionInstance historicDecisionInstance = historyService.createHistoricDecisionInstanceQuery().includeOutputs().singleResult();
+    List<HistoricDecisionOutputInstance> outputs = historicDecisionInstance.getOutputs();
+    assertThat(outputs.size(), is(2));
+
+    HistoricDecisionOutputInstance firstOutput = outputs.get(0);
+    assertThat(firstOutput.getClauseId(), is("out1"));
+    assertThat(firstOutput.getRuleId(), is("rule1"));
+    assertThat(firstOutput.getRuleOrder(), is(1));
+    assertThat(firstOutput.getVariableName(), is("result1"));
+    assertThat(firstOutput.getTextValue(), is("okay"));
+
+    HistoricDecisionOutputInstance secondOutput = outputs.get(1);
+    assertThat(secondOutput.getClauseId(), is("out1"));
+    assertThat(secondOutput.getRuleId(), is("rule2"));
+    assertThat(secondOutput.getRuleOrder(), is(2));
+    assertThat(secondOutput.getVariableName(), is("result1"));
+    assertThat(secondOutput.getTextValue(), is("not okay"));
+  }
+
+  @Deployment(resources = { DECISION_PROCESS, DECISION_COMPOUND_OUTPUT_DMN })
+  public void testCompoundDeceisionOutputInstances() {
+
+    startProcessInstanceAndEvaluateDecision();
+
+    HistoricDecisionInstance historicDecisionInstance = historyService.createHistoricDecisionInstanceQuery().includeOutputs().singleResult();
+    List<HistoricDecisionOutputInstance> outputs = historicDecisionInstance.getOutputs();
+    assertThat(outputs.size(), is(2));
+
+    HistoricDecisionOutputInstance firstOutput = outputs.get(0);
+    assertThat(firstOutput.getClauseId(), is("out1"));
+    assertThat(firstOutput.getRuleId(), is("rule1"));
+    assertThat(firstOutput.getRuleOrder(), is(1));
+    assertThat(firstOutput.getVariableName(), is("result1"));
+    assertThat(firstOutput.getTextValue(), is("okay"));
+
+    HistoricDecisionOutputInstance secondOutput = outputs.get(1);
+    assertThat(secondOutput.getClauseId(), is("out2"));
+    assertThat(secondOutput.getRuleId(), is("rule1"));
+    assertThat(secondOutput.getRuleOrder(), is(1));
+    assertThat(secondOutput.getVariableName(), is("result2"));
+    assertThat(secondOutput.getTextValue(), is("not okay"));
   }
 
   @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })

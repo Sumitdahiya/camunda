@@ -60,4 +60,13 @@
     where DEC_INST_ID_ = #{parameter, jdbcType=VARCHAR}
   </select>
   
+  <select id="selectHistoricDecisionInputInstancesByDecisionInstanceIds" parameterType="org.camunda.bpm.engine.impl.db.ListQueryParameterObject" resultMap="historicDecisionInputInstanceResultMap">
+    select * from ${prefix}ACT_HI_DEC_IN 
+    where DEC_INST_ID_ in
+    <foreach collection="parameter" index="index" item="decisionInstanceId" open="(" separator="," close=")">
+      #{decisionInstanceId}
+    </foreach>
+    order by CLAUSE_ID_
+  </select>
+  
 </mapper>

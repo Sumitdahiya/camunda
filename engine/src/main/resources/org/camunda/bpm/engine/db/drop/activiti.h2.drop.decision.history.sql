@@ -1,8 +1,10 @@
 drop index ACT_IDX_HI_DEC_INST_EXE;
 
 drop index ACT_IDX_HI_DEC_IN_INST;
+drop index ACT_IDX_HI_DEC_IN_CLASUE;
 
 drop index ACT_IDX_HI_DEC_OUT_INST;
+drop index ACT_IDX_HI_DEC_OUT_RULE;
 
 
 drop table ACT_HI_DECINST if exists;

@@ -14,6 +14,7 @@
 package org.camunda.bpm.engine.impl.dmn.entity.repository;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -87,21 +88,20 @@ public class HistoricDecisionInstanceManager extends AbstractHistoricManager {
     if (isHistoryEnabled()) {
       getAuthorizationManager().configureHistoricDecisionInstanceQuery(query);
 
-      // TODO query inputs in better way
       @SuppressWarnings("unchecked")
       List<HistoricDecisionInstance> decisionInstances = getDbEntityManager().selectList("selectHistoricDecisionInstancesByQueryCriteria", query, page);
+
+      Map<String, HistoricDecisionInstance> decisionInstancesById = new HashMap<String, HistoricDecisionInstance>();
       for(HistoricDecisionInstance decisionInstance : decisionInstances) {
-        HistoricDecisionInstanceEntity historicDecisionInstanceEntity = (HistoricDecisionInstanceEntity) decisionInstance;
+        decisionInstancesById.put(decisionInstance.getId(), decisionInstance);
+      }
 
-        if (query.isIncludeInput()) {
-          List<HistoricDecisionInputInstance> decisionInputInstances = findHistoricDecisionInputInstancesByDecisionInstanceId(decisionInstance.getId());
-          historicDecisionInstanceEntity.setInputs(decisionInputInstances);
-        }
+      if (query.isIncludeInput()) {
+        appendHistoricDecisionInputInstances(decisionInstancesById);
+      }
 
-        if (query.isIncludeOutputs()) {
-          List<HistoricDecisionOutputInstance> decisionOutputInstances = findHistoricDecisionOutputInstancesByDecisionInstanceId(decisionInstance.getId());
-          historicDecisionInstanceEntity.setOuputs(decisionOutputInstances);
-        }
+      if(query.isIncludeOutputs()) {
+        appendHistoricDecisionOutputInstances(decisionInstancesById);
       }
 
       return decisionInstances;
@@ -110,28 +110,32 @@ public class HistoricDecisionInstanceManager extends AbstractHistoricManager {
     }
   }
 
-  @SuppressWarnings("unchecked")
-  public List<HistoricDecisionInputInstance> findHistoricDecisionInputInstancesByDecisionInstanceId(String decisionInstanceId) {
-    List<HistoricDecisionInputInstance> decisionInputInstances = getDbEntityManager().selectList("selectHistoricDecisionInputInstancesByDecisionInstanceId", decisionInstanceId);
+  protected void appendHistoricDecisionInputInstances(Map<String, HistoricDecisionInstance> decisionInstancesById) {
+    @SuppressWarnings("unchecked")
+    List<HistoricDecisionInputInstance> decisionInputInstances = getDbEntityManager()
+        .selectList("selectHistoricDecisionInputInstancesByDecisionInstanceIds", decisionInstancesById.keySet());
 
-    // TODO enable / disable value fetch for bytes
-    for(HistoricDecisionInputInstance decisionInputInstance : decisionInputInstances){
+    for (HistoricDecisionInputInstance decisionInputInstance : decisionInputInstances) {
+
+      HistoricDecisionInstance historicDecisionInstance = decisionInstancesById.get(decisionInputInstance.getDecisionInstanceId());
+      historicDecisionInstance.getInputs().add(decisionInputInstance);
+      // TODO enable / disable value fetch for bytes
       decisionInputInstance.getTypedValue();
     }
-
-    return decisionInputInstances;
   }
 
-  @SuppressWarnings("unchecked")
-  public List<HistoricDecisionOutputInstance> findHistoricDecisionOutputInstancesByDecisionInstanceId(String decisionInstanceId) {
-    List<HistoricDecisionOutputInstance> decisionOutputInstances = getDbEntityManager().selectList("selectHistoricDecisionOutputInstancesByDecisionInstanceId", decisionInstanceId);
+  protected void appendHistoricDecisionOutputInstances(Map<String, HistoricDecisionInstance> decisionInstancesById) {
+    @SuppressWarnings("unchecked")
+    List<HistoricDecisionOutputInstance> decisionInputInstances = getDbEntityManager()
+        .selectList("selectHistoricDecisionOutputInstancesByDecisionInstanceIds", decisionInstancesById.keySet());
 
-    // TODO enable / disable value fetch for bytes
-    for(HistoricDecisionOutputInstance decisionOutputInstance : decisionOutputInstances) {
-      decisionOutputInstance.getTypedValue();
+    for (HistoricDecisionOutputInstance decisionInputInstance : decisionInputInstances) {
+
+      HistoricDecisionInstance historicDecisionInstance = decisionInstancesById.get(decisionInputInstance.getDecisionInstanceId());
+      historicDecisionInstance.getOutputs().add(decisionInputInstance);
+      // TODO enable / disable value fetch for bytes
+      decisionInputInstance.getTypedValue();
     }
-
-    return decisionOutputInstances;
   }
 
   public long findHistoricDecisionInstanceCountByQueryCriteria(HistoricDecisionInstanceQueryImpl query) {
