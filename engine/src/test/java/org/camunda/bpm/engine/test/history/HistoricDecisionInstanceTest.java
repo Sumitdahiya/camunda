@@ -427,7 +427,7 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
 
     NativeHistoricDecisionInstanceQuery nativeQueryWithParameter = historyService
         .createNativeHistoricDecisionInstanceQuery()
-        .sql("SELECT * FROM ACT_HI_DECINST H WHERE H.DECISION_KEY_ = #{decisionDefinitionKey}");
+        .sql("SELECT * FROM ACT_HI_DECINST H WHERE H.DEC_DEF_KEY_ = #{decisionDefinitionKey}");
 
     assertThat(nativeQueryWithParameter.parameter("decisionDefinitionKey", "testDecision").list().size(), is(1));
     assertThat(nativeQueryWithParameter.parameter("decisionDefinitionKey", "other decision").list().size(), is(0));

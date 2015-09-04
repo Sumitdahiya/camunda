@@ -13,15 +13,16 @@
 
 package org.camunda.bpm.engine.history;
 
-import org.camunda.bpm.engine.impl.variable.serializer.TypedValueFields;
+import org.camunda.bpm.engine.impl.variable.serializer.TypedValueSerializer;
 import org.camunda.bpm.engine.impl.variable.serializer.ValueFields;
+import org.camunda.bpm.engine.variable.value.TypedValue;
 
 /**
  * Represents one output variable of a decision evaluation.
  *
  * @author Philipp Ossler
  */
-public interface HistoricDecisionOutputInstance extends ValueFields, TypedValueFields {
+public interface HistoricDecisionOutputInstance extends ValueFields {
 
   /** The unique identifier of this historic decision output instance. */
   String getId();
@@ -43,4 +44,32 @@ public interface HistoricDecisionOutputInstance extends ValueFields, TypedValueF
 
   /** The name of the output variable. */
   String getVariableName();
+
+  /**
+   * Returns the type name of the variable
+   */
+  String getTypeName();
+
+  /**
+   * Returns the value of this variable instance.
+   */
+  Object getValue();
+
+  /**
+   * Returns the {@link TypedValue} for this value.
+   */
+  TypedValue getTypedValue();
+
+  /**
+   * If the variable value could not be loaded, this returns the error message.
+   *
+   * @return an error message indicating why the variable value could not be loaded.
+   */
+  String getErrorMessage();
+
+  /** Returns the name of the {@link TypedValueSerializer} what serialize the value.  */
+  String getSerializerName();
+
+  /** Set the name of the {@link TypedValueSerializer} what serialize the value. */
+  void setSerializerName(String serializerName);
 }

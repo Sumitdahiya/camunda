@@ -7,7 +7,7 @@
  <!-- insert -->
 
  <insert id="insertHistoricDecisionInstance" parameterType="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceEntity">
-    insert into ${prefix}ACT_HI_DECINST(ID_, DECISION_KEY_, DECISION_NAME_, PROC_DEF_KEY_, PROC_DEF_ID_, PROC_INST_ID_, EXECUTION_ID_, ACT_INST_ID_, ACT_ID_, EVAL_TIME_)
+    insert into ${prefix}ACT_HI_DECINST(ID_, DEC_DEF_KEY_, DEC_DEF_NAME_, PROC_DEF_KEY_, PROC_DEF_ID_, PROC_INST_ID_, EXECUTION_ID_, ACT_INST_ID_, ACT_ID_, EVAL_TIME_)
     values (#{id, jdbcType=VARCHAR},
             #{decisionDefinitionKey, jdbcType=VARCHAR},
             #{decisionDefinitionName, jdbcType=VARCHAR},
@@ -24,7 +24,7 @@
   <!-- delete -->
 
   <delete id="deleteHistoricDecisionInstancesByDecisionDefinitionKey" parameterType="string">
-    delete from ${prefix}ACT_HI_DECINST where DECISION_KEY_ = #{decisionDefinitionKey}
+    delete from ${prefix}ACT_HI_DECINST where DEC_DEF_KEY_ = #{decisionDefinitionKey}
   </delete>
 
   <delete id="deleteHistoricDecisionInstanceById" parameterType="string">
@@ -35,8 +35,8 @@
 
  <resultMap id="historicDecisionInstanceResultMap" type="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceEntity">
     <id property="id" column="ID_" jdbcType="VARCHAR" />
-    <result property="decisionDefinitionKey" column="DECISION_KEY_" jdbcType="VARCHAR" />
-    <result property="decisionDefinitionName" column="DECISION_NAME_" jdbcType="VARCHAR" />
+    <result property="decisionDefinitionKey" column="DEC_DEF_KEY_" jdbcType="VARCHAR" />
+    <result property="decisionDefinitionName" column="DEC_DEF_NAME_" jdbcType="VARCHAR" />
     <result property="processDefinitionKey" column="PROC_DEF_KEY_" jdbcType="VARCHAR" />
     <result property="processDefinitionId" column="PROC_DEF_ID_" jdbcType="VARCHAR"/>
     <result property="processInstanceId" column="PROC_INST_ID_" jdbcType="VARCHAR"/>
@@ -50,7 +50,7 @@
   
   <select id="selectHistoricDecisionInstancesByDecisionDefinitionKey" parameterType="org.camunda.bpm.engine.impl.db.ListQueryParameterObject" resultMap="historicDecisionInstanceResultMap">
     select * from ${prefix}ACT_HI_DECINST 
-    where DECISION_KEY_ = #{parameter, jdbcType=VARCHAR}
+    where DEC_DEF_KEY_ = #{parameter, jdbcType=VARCHAR}
   </select>
 
   <select id="selectHistoricDecisionInstancesByQueryCriteria" parameterType="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceQueryImpl" resultMap="historicDecisionInstanceResultMap">
@@ -117,10 +117,10 @@
     from ${prefix}ACT_HI_DECINST RES
     <where>
       <if test="decisionDefinitionKey != null">
-        and RES.DECISION_KEY_ = #{decisionDefinitionKey}
+        and RES.DEC_DEF_KEY_ = #{decisionDefinitionKey}
       </if>
       <if test="decisionDefinitionName != null">
-        and RES.DECISION_NAME_ = #{decisionDefinitionName}
+        and RES.DEC_DEF_NAME_ = #{decisionDefinitionName}
       </if>
       <if test="processDefinitionKey != null">
         and RES.PROC_DEF_KEY_ = #{processDefinitionKey}

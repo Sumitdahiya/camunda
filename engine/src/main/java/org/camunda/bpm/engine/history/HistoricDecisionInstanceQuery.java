@@ -56,9 +56,20 @@ public interface HistoricDecisionInstanceQuery extends Query<HistoricDecisionIns
    * (needs to be followed by {@link #asc()} or {@link #desc()}). */
   HistoricDecisionInstanceQuery orderByEvaluationTime();
 
-  /** Enable fetch corresponding {@link HistoricDecisionInputInstance} of evaluated decision. */
+  /** Enable fetching {@link HistoricDecisionInputInstance} of evaluated decision. */
   HistoricDecisionInstanceQuery includeInputs();
 
-  /** Enable fetch corresponding {@link HistoricDecisionOutputInstance} of evaluated decision. */
+  /** Enable fetching {@link HistoricDecisionOutputInstance} of evaluated decision. */
   HistoricDecisionInstanceQuery includeOutputs();
+
+  /** Disable fetching of byte array input and output values. By default, the query will fetch the value of a byte array.
+   * By calling this method you can prevent the values of (potentially large) blob data chunks to be fetched. */
+  HistoricDecisionInstanceQuery disableBinaryFetching();
+
+  /** Disable deserialization of input and output values that are custom objects. By default, the query
+   * will attempt to deserialize the value of these variables. By calling this method you can
+   * prevent such attempts in environments where their classes are not available.
+   * Independent of this setting, variable serialized values are accessible. */
+  HistoricDecisionInstanceQuery disableCustomObjectDeserialization();
+
 }

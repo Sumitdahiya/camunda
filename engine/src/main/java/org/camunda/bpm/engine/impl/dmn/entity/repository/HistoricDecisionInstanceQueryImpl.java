@@ -47,6 +47,9 @@ public class HistoricDecisionInstanceQueryImpl extends AbstractQuery<HistoricDec
   protected boolean includeInput = false;
   protected boolean includeOutputs = false;
 
+  protected boolean isByteArrayFetchingEnabled = true;
+  protected boolean isCustomObjectDeserializationEnabled = true;
+
   public HistoricDecisionInstanceQueryImpl() {
   }
 
@@ -185,5 +188,25 @@ public class HistoricDecisionInstanceQueryImpl extends AbstractQuery<HistoricDec
 
   public boolean isIncludeOutputs() {
     return includeOutputs;
+  }
+
+  @Override
+  public HistoricDecisionInstanceQuery disableBinaryFetching() {
+    isByteArrayFetchingEnabled = false;
+    return this;
+  }
+
+  @Override
+  public HistoricDecisionInstanceQuery disableCustomObjectDeserialization() {
+    isCustomObjectDeserializationEnabled = false;
+    return null;
+  }
+
+  public boolean isByteArrayFetchingEnabled() {
+    return isByteArrayFetchingEnabled;
+  }
+
+  public boolean isCustomObjectDeserializationEnabled() {
+    return isCustomObjectDeserializationEnabled;
   }
 }
