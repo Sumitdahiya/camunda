@@ -109,12 +109,26 @@ public class HistoricDecisionInstanceManager extends AbstractHistoricManager {
 
   @SuppressWarnings("unchecked")
   public List<HistoricDecisionInputInstance> findHistoricDecisionInputInstancesByDecisionInstanceId(String decisionInstanceId) {
-    return getDbEntityManager().selectList("selectHistoricDecisionInputInstancesByDecisionInstanceId", decisionInstanceId);
+    List<HistoricDecisionInputInstance> decisionInputInstances = getDbEntityManager().selectList("selectHistoricDecisionInputInstancesByDecisionInstanceId", decisionInstanceId);
+
+    // TODO enable / disable value fetch for bytes
+    for(HistoricDecisionInputInstance decisionInputInstance : decisionInputInstances){
+      decisionInputInstance.getTypedValue();
+    }
+
+    return decisionInputInstances;
   }
 
   @SuppressWarnings("unchecked")
   public List<HistoricDecisionOutputInstance> findHistoricDecisionOutputInstancesByDecisionInstanceId(String decisionInstanceId) {
-    return getDbEntityManager().selectList("selectHistoricDecisionOutputInstancesByDecisionInstanceId", decisionInstanceId);
+    List<HistoricDecisionOutputInstance> decisionOutputInstances = getDbEntityManager().selectList("selectHistoricDecisionOutputInstancesByDecisionInstanceId", decisionInstanceId);
+
+    // TODO enable / disable value fetch for bytes
+    for(HistoricDecisionOutputInstance decisionOutputInstance : decisionOutputInstances) {
+      decisionOutputInstance.getTypedValue();
+    }
+
+    return decisionOutputInstances;
   }
 
   public long findHistoricDecisionInstanceCountByQueryCriteria(HistoricDecisionInstanceQueryImpl query) {

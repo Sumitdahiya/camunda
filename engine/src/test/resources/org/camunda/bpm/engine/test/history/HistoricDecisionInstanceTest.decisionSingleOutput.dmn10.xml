@@ -7,8 +7,11 @@
   <Decision id="testDecision" name="sample decision">
     <DecisionTable id="table">
       <clause id="in" name="input">
+      <inputExpression id="inputExpression">
+        <text>${input1}</text>
+      </inputExpression>
         <inputEntry id="input1">
-          <text>${input1}</text>
+          <text>a</text>
         </inputEntry>
       </clause>
       <clause id="out" name="output" camunda:output="result" >

@@ -30,7 +30,7 @@
           #{ruleOrder, jdbcType=VARCHAR},
           #{variableName, jdbcType=VARCHAR},
           #{serializerName, jdbcType=VARCHAR},
-          #{byteArrayId, jdbcType=VARCHAR},
+          #{byteArrayValueId, jdbcType=VARCHAR},
           #{doubleValue, jdbcType=DOUBLE},
           #{longValue, jdbcType=BIGINT},
           #{textValue, jdbcType=VARCHAR},

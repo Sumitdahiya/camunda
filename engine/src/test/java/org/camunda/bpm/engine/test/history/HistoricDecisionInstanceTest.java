@@ -18,7 +18,9 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.camunda.bpm.engine.history.HistoricDecisionInputInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionInstance;
@@ -81,7 +83,21 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
     assertThat(input.getDecisionInstanceId(), is(historicDecisionInstance.getId()));
     assertThat(input.getClauseId(), is("in"));
     assertThat(input.getClauseName(), is("input"));
-    // TODO assert input value
+  }
+
+  @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
+  public void testDecisionInputInstanceStringValue() {
+
+    startProcessInstanceAndEvaluateDecision();
+
+    HistoricDecisionInstance historicDecisionInstance = historyService.createHistoricDecisionInstanceQuery().singleResult();
+    List<HistoricDecisionInputInstance> inputs = historicDecisionInstance.getInputs();
+    assertThat(inputs.size(), is(1));
+
+    HistoricDecisionInputInstance input = inputs.iterator().next();
+    assertThat(input.getSerializerName(), is("string"));
+    assertThat(input.getTextValue(), is("a"));
+    assertThat(input.getTextValue(), is((Object) "a"));
   }
 
   @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
@@ -103,7 +119,9 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
     assertThat(output.getRuleOrder(), is(1));
 
     assertThat(output.getVariableName(), is("result"));
-    // TODO assert output value
+    assertThat(output.getSerializerName(), is("string"));
+    assertThat(output.getTextValue(), is("okay"));
+    assertThat(output.getValue(), is((Object) "okay"));
   }
 
   @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
@@ -296,7 +314,10 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
   }
 
   protected void startProcessInstanceAndEvaluateDecision() {
-    runtimeService.startProcessInstanceByKey("testProcess");
+
+    Map<String, Object> variables = new HashMap<String, Object>();
+    variables.put("input1", "a");
+    runtimeService.startProcessInstanceByKey("testProcess", variables);
   }
 
 }

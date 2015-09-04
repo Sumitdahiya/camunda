@@ -23,6 +23,7 @@ import org.camunda.bpm.engine.impl.db.EnginePersistenceLogger;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.interceptor.CommandContextListener;
 import org.camunda.bpm.engine.impl.variable.serializer.ByteArrayValueSerializer;
+import org.camunda.bpm.engine.impl.variable.serializer.TypedValueFields;
 import org.camunda.bpm.engine.impl.variable.serializer.TypedValueSerializer;
 import org.camunda.bpm.engine.impl.variable.serializer.ValueFields;
 import org.camunda.bpm.engine.impl.variable.serializer.VariableSerializers;
@@ -36,7 +37,7 @@ import org.camunda.bpm.engine.variable.value.TypedValue;
  *
  * @author Philipp Ossler
  */
-public class TypedValueField implements DbEntityLifecycleAware, CommandContextListener {
+public class TypedValueField implements TypedValueFields, DbEntityLifecycleAware, CommandContextListener {
 
   protected static final EnginePersistenceLogger LOG = ProcessEngineLogger.PERSISTENCE_LOGGER;
 

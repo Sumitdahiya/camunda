@@ -13,12 +13,15 @@
 
 package org.camunda.bpm.engine.history;
 
+import org.camunda.bpm.engine.impl.variable.serializer.TypedValueFields;
+import org.camunda.bpm.engine.impl.variable.serializer.ValueFields;
+
 /**
  * Represents one input variable of a decision evaluation.
  *
  * @author Philipp Ossler
  */
-public interface HistoricDecisionInputInstance {
+public interface HistoricDecisionInputInstance extends ValueFields, TypedValueFields {
 
   /** The unique identifier of this historic decision input instance. */
   String getId();

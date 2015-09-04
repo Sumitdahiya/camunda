@@ -31,6 +31,8 @@ import org.camunda.bpm.engine.impl.history.event.HistoryEventTypes;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
 import org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity;
 import org.camunda.bpm.engine.impl.util.ClockUtil;
+import org.camunda.bpm.engine.variable.Variables;
+import org.camunda.bpm.engine.variable.value.TypedValue;
 
 /**
  * @author Philipp Ossler
@@ -96,6 +98,9 @@ public class DefaultDmnHistoryEventProducer implements DmnHistoryEventProducer {
       inputInstance.setClauseName(inputClause.getName());
       // TODO set input value
 
+      TypedValue typedValue = Variables.untypedValue(inputClause.getValue());
+      inputInstance.setValue(typedValue);
+
       inputInstances.add(inputInstance);
     }
 
@@ -123,6 +128,9 @@ public class DefaultDmnHistoryEventProducer implements DmnHistoryEventProducer {
 
         outputInstance.setVariableName(outputClause.getOutputName());
         // TODO set output value
+
+        TypedValue typedValue = Variables.untypedValue(outputClause.getValue());
+        outputInstance.setValue(typedValue);
 
         outputInstances.add(outputInstance);
       }

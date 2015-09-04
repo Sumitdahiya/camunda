@@ -100,5 +100,4 @@ public class HistoricDecisionInstanceEntity extends HistoryEvent implements Hist
   public void setOuputs(List<HistoricDecisionOutputInstance> outputs) {
     this.outputs = outputs;
   }
-
 }

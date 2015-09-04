@@ -15,6 +15,10 @@ package org.camunda.bpm.engine.impl.dmn.entity.repository;
 
 import org.camunda.bpm.engine.history.HistoricDecisionInputInstance;
 import org.camunda.bpm.engine.impl.history.event.HistoryEvent;
+import org.camunda.bpm.engine.impl.persistence.entity.ByteArrayEntity;
+import org.camunda.bpm.engine.impl.persistence.entity.util.ByteArrayField;
+import org.camunda.bpm.engine.impl.persistence.entity.util.TypedValueField;
+import org.camunda.bpm.engine.variable.value.TypedValue;
 
 /**
  * @author Philipp Ossler
@@ -27,6 +31,14 @@ public class HistoricDecisionInputInstanceEntity extends HistoryEvent implements
 
   protected String clauseId;
   protected String clauseName;
+
+  protected Long longValue;
+  protected Double doubleValue;
+  protected String textValue;
+  protected String textValue2;
+
+  protected ByteArrayField byteArrayField = new ByteArrayField(this);
+  protected TypedValueField typedValueField = new TypedValueField(this);
 
   @Override
   public String getDecisionInstanceId() {
@@ -53,6 +65,101 @@ public class HistoricDecisionInputInstanceEntity extends HistoryEvent implements
 
   public void setClauseName(String clauseName) {
     this.clauseName = clauseName;
+  }
+
+  @Override
+  public String getTypeName() {
+    return typedValueField.getTypeName();
+  }
+
+  @Override
+  public Object getValue() {
+    return typedValueField.getValue();
+  }
+
+  @Override
+  public TypedValue getTypedValue() {
+    return typedValueField.getTypedValue();
+  }
+
+  @Override
+  public String getErrorMessage() {
+    return typedValueField.getErrorMessage();
+  }
+
+  @Override
+  public String getName() {
+    // used for save a byte value
+    return clauseId;
+  }
+
+  @Override
+  public String getTextValue() {
+    return textValue;
+  }
+
+  @Override
+  public void setTextValue(String textValue) {
+    this.textValue = textValue;
+  }
+
+  @Override
+  public String getTextValue2() {
+    return textValue2;
+  }
+
+  @Override
+  public void setTextValue2(String textValue2) {
+    this.textValue2 = textValue2;
+  }
+
+  @Override
+  public Long getLongValue() {
+    return longValue;
+  }
+
+  @Override
+  public void setLongValue(Long longValue) {
+    this.longValue = longValue;
+  }
+
+  @Override
+  public Double getDoubleValue() {
+    return doubleValue;
+  }
+
+  @Override
+  public void setDoubleValue(Double doubleValue) {
+    this.doubleValue = doubleValue;
+  }
+
+  @Override
+  public String getByteArrayValueId() {
+    return byteArrayField.getByteArrayId();
+  }
+
+  @Override
+  public ByteArrayEntity getByteArrayValue() {
+    return byteArrayField.getByteArrayValue();
+  }
+
+  @Override
+  public void setByteArrayValue(byte[] bytes) {
+    byteArrayField.setByteArrayValue(bytes);
+  }
+
+  @Override
+  public String getSerializerName() {
+    return typedValueField.getSerializerName();
+  }
+
+  @Override
+  public void setSerializerName(String serializerName) {
+    typedValueField.setSerializerName(serializerName);
+  }
+
+  public void setValue(TypedValue typedValue) {
+    typedValueField.setValue(typedValue);
   }
 
 }
