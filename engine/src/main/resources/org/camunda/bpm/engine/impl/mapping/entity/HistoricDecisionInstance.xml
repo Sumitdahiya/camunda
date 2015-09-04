@@ -7,8 +7,9 @@
  <!-- insert -->
 
  <insert id="insertHistoricDecisionInstance" parameterType="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceEntity">
-    insert into ${prefix}ACT_HI_DECINST(ID_, DECISION_KEY_, DECISION_NAME_, PROC_DEF_KEY_, PROC_DEF_ID_, PROC_INST_ID_, EXECUTION_ID_, ACT_INST_ID_, ACT_ID_, EVAL_TIME_)
+    insert into ${prefix}ACT_HI_DECINST(ID_, DEC_DEF_ID_, DECISION_KEY_, DECISION_NAME_, PROC_DEF_KEY_, PROC_DEF_ID_, PROC_INST_ID_, EXECUTION_ID_, ACT_INST_ID_, ACT_ID_, EVAL_TIME_)
     values (#{id, jdbcType=VARCHAR},
+            #{decisionDefinitionId, jdbcType=VARCHAR},
             #{decisionDefinitionKey, jdbcType=VARCHAR},
             #{decisionDefinitionName, jdbcType=VARCHAR},
             #{processDefinitionKey, jdbcType=VARCHAR},
@@ -33,8 +34,9 @@
 
   <!-- result map -->
 
- <resultMap id="historicDecisionInstanceResultMap" type="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceEntity">
+  <resultMap id="historicDecisionInstanceResultMap" type="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceEntity">
     <id property="id" column="ID_" jdbcType="VARCHAR" />
+    <result property="decisionDefinitionId" column="DEC_DEF_ID_" jdbcType="VARCHAR" />
     <result property="decisionDefinitionKey" column="DECISION_KEY_" jdbcType="VARCHAR" />
     <result property="decisionDefinitionName" column="DECISION_NAME_" jdbcType="VARCHAR" />
     <result property="processDefinitionKey" column="PROC_DEF_KEY_" jdbcType="VARCHAR" />
@@ -116,6 +118,9 @@
   <sql id="selectHistoricDecisionInstancesByQueryCriteriaSql">
     from ${prefix}ACT_HI_DECINST RES
     <where>
+      <if test="decisionDefinitionId != null">
+        and RES.DEC_DEF_ID_ = #{decisionDefinitionId}
+      </if>
       <if test="decisionDefinitionKey != null">
         and RES.DECISION_KEY_ = #{decisionDefinitionKey}
       </if>

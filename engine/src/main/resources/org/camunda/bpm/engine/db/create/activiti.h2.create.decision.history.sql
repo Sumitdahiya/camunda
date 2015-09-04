@@ -1,6 +1,7 @@
 -- create history decision instance table --
 create table ACT_HI_DECINST (
     ID_ varchar(64) NOT NULL,
+    DEC_DEF_ID_ varchar(64) NOT NULL,
     DECISION_KEY_ varchar(255) NOT NULL,
     DECISION_NAME_ varchar(255),
     PROC_DEF_KEY_ varchar(255),             

@@ -32,6 +32,7 @@ public class HistoricDecisionInstanceEntity extends HistoryEvent implements Hist
 
   private static final long serialVersionUID = 1L;
 
+  protected String decisionDefinitionId;
   protected String decisionDefinitionKey;
   protected String decisionDefinitionName;
 
@@ -42,6 +43,14 @@ public class HistoricDecisionInstanceEntity extends HistoryEvent implements Hist
 
   protected List<HistoricDecisionInputInstance> inputs = new ArrayList<HistoricDecisionInputInstance>();
   protected List<HistoricDecisionOutputInstance> outputs = new ArrayList<HistoricDecisionOutputInstance>();
+
+  public String getDecisionDefinitionId() {
+    return decisionDefinitionId;
+  }
+
+  public void setDecisionDefinitionId(String decisionDefinitionId) {
+    this.decisionDefinitionId = decisionDefinitionId;
+  }
 
   public String getDecisionDefinitionKey() {
     return decisionDefinitionKey;
@@ -97,7 +106,7 @@ public class HistoricDecisionInstanceEntity extends HistoryEvent implements Hist
     this.inputs = inputs;
   }
 
-  public void setOuputs(List<HistoricDecisionOutputInstance> outputs) {
+  public void setOutputs(List<HistoricDecisionOutputInstance> outputs) {
     this.outputs = outputs;
   }
 }
