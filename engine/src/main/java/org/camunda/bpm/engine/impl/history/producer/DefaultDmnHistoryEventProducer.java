@@ -31,6 +31,7 @@ import org.camunda.bpm.engine.impl.history.event.HistoryEventTypes;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
 import org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity;
 import org.camunda.bpm.engine.impl.util.ClockUtil;
+import org.camunda.bpm.engine.repository.DecisionDefinition;
 import org.camunda.bpm.engine.variable.Variables;
 import org.camunda.bpm.engine.variable.value.TypedValue;
 
@@ -60,6 +61,7 @@ public class DefaultDmnHistoryEventProducer implements DmnHistoryEventProducer {
   protected void initDecisionInstanceEvent(HistoricDecisionInstanceEntity event, ExecutionEntity execution, DmnDecisionTable decisionTable, DmnDecisionTableResult decisionTableResult, HistoryEventTypes eventType) {
     event.setEventType(eventType.getEventName());
 
+    event.setDecisionDefinitionId(((DecisionDefinition) decisionTable).getId());
     event.setDecisionDefinitionKey(decisionTable.getKey());
     event.setDecisionDefinitionName(decisionTable.getName());
 
@@ -76,7 +78,7 @@ public class DefaultDmnHistoryEventProducer implements DmnHistoryEventProducer {
     event.setInputs(historicDecisionInputInstances);
 
     List<HistoricDecisionOutputInstance> historicDecisionOutputInstances = createHistoricDecisionOutputInstances(decisionTableResult);
-    event.setOuputs(historicDecisionOutputInstances);
+    event.setOutputs(historicDecisionOutputInstances);
   }
 
   protected String getProcessDefinitionKey(ExecutionEntity execution) {

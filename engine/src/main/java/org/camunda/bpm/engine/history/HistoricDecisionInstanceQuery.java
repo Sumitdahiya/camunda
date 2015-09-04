@@ -22,6 +22,9 @@ import org.camunda.bpm.engine.query.Query;
  */
 public interface HistoricDecisionInstanceQuery extends Query<HistoricDecisionInstanceQuery, HistoricDecisionInstance> {
 
+  /** Only select historic decision instances for the given decision definition */
+  HistoricDecisionInstanceQuery decisionDefinitionId(String decisionDefinitionId);
+
   /** Only select historic decision instances with the given key of the decision definition. */
   HistoricDecisionInstanceQuery decisionDefinitionKey(String decisionDefinitionKey);
 

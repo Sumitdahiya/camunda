@@ -32,6 +32,7 @@ public class HistoricDecisionInstanceQueryImpl extends AbstractQuery<HistoricDec
 
   private static final long serialVersionUID = 1L;
 
+  protected String decisionDefinitionId;
   protected String decisionDefinitionKey;
   protected String decisionDefinitionName;
 
@@ -59,6 +60,12 @@ public class HistoricDecisionInstanceQueryImpl extends AbstractQuery<HistoricDec
 
   public HistoricDecisionInstanceQueryImpl(CommandExecutor commandExecutor) {
     super(commandExecutor);
+  }
+
+  public HistoricDecisionInstanceQuery decisionDefinitionId(String decisionDefinitionId) {
+    ensureNotNull(NotValidException.class, "decisionDefinitionId", decisionDefinitionId);
+    this.decisionDefinitionId = decisionDefinitionId;
+    return this;
   }
 
   @Override
@@ -137,6 +144,10 @@ public class HistoricDecisionInstanceQueryImpl extends AbstractQuery<HistoricDec
     return commandContext
         .getHistoricDecisionInstanceManager()
         .findHistoricDecisionInstancesByQueryCriteria(this, page);
+  }
+
+  public String getDecisionDefinitionId() {
+    return decisionDefinitionId;
   }
 
   public String getDecisionDefinitionKey() {

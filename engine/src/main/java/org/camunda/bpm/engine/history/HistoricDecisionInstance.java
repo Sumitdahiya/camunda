@@ -27,6 +27,9 @@ public interface HistoricDecisionInstance {
   /** The unique identifier of this historic decision instance. */
   String getId();
 
+  /** The decision definition reference. */
+  String getDecisionDefinitionId();
+
   /** The unique identifier of the decision definition */
   String getDecisionDefinitionKey();
 
