@@ -114,6 +114,15 @@
   <sql id="selectHistoricDecisionInstancesByQueryCriteriaSql">
     from ${prefix}ACT_HI_DECINST RES
     <where>
+      <if test="decisionInstanceId != null">
+        RES.ID_ = #{decisionInstanceId}
+      </if>
+      <if test="decisionInstanceIds != null and !decisionInstanceIds.isEmpty()">
+        and RES.ID_ in
+        <foreach item="item" index="index" collection="decisionInstanceIds" open="(" separator="," close=")">
+          #{item}
+        </foreach>
+      </if>
       <if test="decisionDefinitionId != null">
         and RES.DEC_DEF_ID_ = #{decisionDefinitionId}
       </if>

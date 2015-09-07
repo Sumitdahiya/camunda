@@ -14,6 +14,7 @@
 package org.camunda.bpm.engine.history;
 
 import java.util.Date;
+import java.util.Set;
 
 import org.camunda.bpm.engine.query.Query;
 
@@ -23,6 +24,12 @@ import org.camunda.bpm.engine.query.Query;
  * @author Philipp Ossler
  */
 public interface HistoricDecisionInstanceQuery extends Query<HistoricDecisionInstanceQuery, HistoricDecisionInstance> {
+
+  /** Only select historic decision instances with the given decision instance id. */
+  HistoricDecisionInstanceQuery decisionInstanceId(String decisionInstanceId);
+
+  /** Only select historic decision instances whose id is in the given set of ids. */
+  HistoricDecisionInstanceQuery decisionInstanceIds(Set<String> decisionInstanceIds);
 
   /** Only select historic decision instances for the given decision definition */
   HistoricDecisionInstanceQuery decisionDefinitionId(String decisionDefinitionId);

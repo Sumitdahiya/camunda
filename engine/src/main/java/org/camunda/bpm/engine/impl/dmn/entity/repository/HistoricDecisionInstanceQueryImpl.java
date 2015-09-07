@@ -13,10 +13,12 @@
 
 package org.camunda.bpm.engine.impl.dmn.entity.repository;
 
+import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotEmpty;
 import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import org.camunda.bpm.engine.exception.NotValidException;
 import org.camunda.bpm.engine.history.HistoricDecisionInstance;
@@ -32,6 +34,9 @@ import org.camunda.bpm.engine.impl.interceptor.CommandExecutor;
 public class HistoricDecisionInstanceQueryImpl extends AbstractQuery<HistoricDecisionInstanceQuery, HistoricDecisionInstance> implements HistoricDecisionInstanceQuery {
 
   private static final long serialVersionUID = 1L;
+
+  protected String decisionInstanceId;
+  protected Set<String> decisionInstanceIds;
 
   protected String decisionDefinitionId;
   protected String decisionDefinitionKey;
@@ -64,6 +69,18 @@ public class HistoricDecisionInstanceQueryImpl extends AbstractQuery<HistoricDec
 
   public HistoricDecisionInstanceQueryImpl(CommandExecutor commandExecutor) {
     super(commandExecutor);
+  }
+
+  public HistoricDecisionInstanceQuery decisionInstanceId(String decisionInstanceId) {
+    ensureNotNull(NotValidException.class, "decisionInstanceId", decisionInstanceId);
+    this.decisionInstanceId = decisionInstanceId;
+    return this;
+  }
+
+  public HistoricDecisionInstanceQuery decisionInstanceIds(Set<String> decisionInstanceIds) {
+    ensureNotEmpty(NotValidException.class, "decisionInstanceIds", decisionInstanceIds);
+    this.decisionInstanceIds = decisionInstanceIds;
+    return this;
   }
 
   public HistoricDecisionInstanceQuery decisionDefinitionId(String decisionDefinitionId) {
