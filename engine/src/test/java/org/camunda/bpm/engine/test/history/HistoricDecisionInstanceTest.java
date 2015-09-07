@@ -261,7 +261,7 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
     assertThat(output.getRuleOrder(), is(1));
 
     assertThat(output.getVariableName(), is("result"));
-    assertThat(output.getSerializerName(), is("string"));
+    assertThat(output.getTypeName(), is("string"));
     assertThat(output.getTextValue(), is("okay"));
     assertThat(output.getValue(), is((Object) "okay"));
   }

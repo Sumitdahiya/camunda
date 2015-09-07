@@ -89,7 +89,6 @@ public class ByteArrayField {
         .deleteByteArrayById(this.byteArrayId);
 
       byteArrayId = null;
-      byteArrayValue = null;
     }
   }
 

@@ -78,6 +78,11 @@ public class TypedValueField implements DbEntityLifecycleAware, CommandContextLi
     if (cachedValue == null && errorMessage == null) {
       try {
         cachedValue = getSerializer().readValue(valueFields, deserializeValue);
+
+        if (isMutableValue(cachedValue)) {
+          Context.getCommandContext().registerCommandContextListener(this);
+        }
+
       } catch (RuntimeException e) {
         // intercept the error message
         this.errorMessage = e.getMessage();
