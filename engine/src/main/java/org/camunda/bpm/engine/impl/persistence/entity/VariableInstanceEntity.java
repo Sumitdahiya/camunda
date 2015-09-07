@@ -28,6 +28,7 @@ import org.camunda.bpm.engine.impl.db.EnginePersistenceLogger;
 import org.camunda.bpm.engine.impl.db.HasDbRevision;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.interceptor.CommandContextListener;
+import org.camunda.bpm.engine.impl.persistence.entity.util.ByteArrayField;
 import org.camunda.bpm.engine.impl.variable.serializer.ByteArrayValueSerializer;
 import org.camunda.bpm.engine.impl.variable.serializer.TypedValueSerializer;
 import org.camunda.bpm.engine.impl.variable.serializer.ValueFields;
@@ -64,8 +65,7 @@ public class VariableInstanceEntity implements VariableInstance, CoreVariableIns
   protected String textValue;
   protected String textValue2;
 
-  protected ByteArrayEntity byteArrayValue;
-  protected String byteArrayValueId;
+  protected ByteArrayField byteArrayField = new ByteArrayField(this);
 
   protected TypedValue cachedValue;
 
@@ -160,8 +160,8 @@ public class VariableInstanceEntity implements VariableInstance, CoreVariableIns
     if (textValue2 != null) {
       persistentState.put("textValue2", textValue2);
     }
-    if (byteArrayValueId != null) {
-      persistentState.put("byteArrayValueId", byteArrayValueId);
+    if (byteArrayField.getByteArrayId() != null) {
+      persistentState.put("byteArrayValueId", byteArrayField.getByteArrayId());
     }
     if (forcedUpdate) {
       persistentState.put("forcedUpdate", Boolean.TRUE);
@@ -202,61 +202,23 @@ public class VariableInstanceEntity implements VariableInstance, CoreVariableIns
   // HistoricVariableInstance and HistoricDetailVariableInstanceUpdateEntity
 
   public String getByteArrayValueId() {
-    return byteArrayValueId;
+    return byteArrayField.getByteArrayId();
   }
 
   public void setByteArrayValueId(String byteArrayValueId) {
-    this.byteArrayValueId = byteArrayValueId;
-    this.byteArrayValue = null;
+    this.byteArrayField.setByteArrayId(byteArrayValueId);
   }
 
   public ByteArrayEntity getByteArrayValue() {
-    if ((byteArrayValue == null) && (byteArrayValueId != null)) {
-      // no lazy fetching outside of command context
-      if(Context.getCommandContext() != null) {
-        byteArrayValue = Context
-          .getCommandContext()
-          .getDbEntityManager()
-          .selectById(ByteArrayEntity.class, byteArrayValueId);
-      }
-    }
-    return byteArrayValue;
+    return byteArrayField.getByteArrayValue();
   }
 
   public void setByteArrayValue(byte[] bytes) {
-    ByteArrayEntity byteArrayValue = null;
-    if (this.byteArrayValueId!=null) {
-      getByteArrayValue();
-      Context
-        .getCommandContext()
-        .getByteArrayManager()
-        .deleteByteArrayById(byteArrayValueId);
-    }
-    if (bytes!=null) {
-      byteArrayValue = new ByteArrayEntity(bytes);
-      Context
-        .getCommandContext()
-        .getDbEntityManager()
-        .insert(byteArrayValue);
-    }
-    this.byteArrayValue = byteArrayValue;
-    if (byteArrayValue != null) {
-      this.byteArrayValueId = byteArrayValue.getId();
-    } else {
-      this.byteArrayValueId = null;
-    }
+    byteArrayField.setByteArrayValue(bytes);
   }
 
   protected void deleteByteArrayValue() {
-    if (byteArrayValueId != null) {
-      // the next apparently useless line is probably to ensure consistency in the DbSqlSession
-      // cache, but should be checked and docced here (or removed if it turns out to be unnecessary)
-      getByteArrayValue();
-      Context
-        .getCommandContext()
-        .getByteArrayManager()
-        .deleteByteArrayById(byteArrayValueId);
-    }
+    byteArrayField.deleteByteArrayValue();
   }
 
   // type /////////////////////////////////////////////////////////////////////
@@ -341,10 +303,7 @@ public class VariableInstanceEntity implements VariableInstance, CoreVariableIns
     this.textValue2 = null;
     this.cachedValue = null;
 
-    if(this.byteArrayValueId != null) {
-      deleteByteArrayValue();
-      setByteArrayValueId(null);
-    }
+    deleteByteArrayValue();
   }
 
   public void onCommandContextClose(CommandContext commandContext) {
@@ -603,8 +562,7 @@ public class VariableInstanceEntity implements VariableInstance, CoreVariableIns
       + ", doubleValue=" + doubleValue
       + ", textValue=" + textValue
       + ", textValue2=" + textValue2
-      + ", byteArrayValue=" + byteArrayValue
-      + ", byteArrayValueId=" + byteArrayValueId
+      + ", byteArrayValueId=" + getByteArrayValueId()
       + ", forcedUpdate=" + forcedUpdate
       + ", configuration=" + configuration
       + ", isConcurrentLocal=" + isConcurrentLocal
