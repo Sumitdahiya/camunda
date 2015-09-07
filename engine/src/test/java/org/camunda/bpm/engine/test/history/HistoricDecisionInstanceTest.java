@@ -68,7 +68,6 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
     assertThat(historicDecisionInstance.getProcessDefinitionId(), is(processDefinition.getId()));
 
     assertThat(historicDecisionInstance.getProcessInstanceId(), is(processInstance.getId()));
-    assertThat(historicDecisionInstance.getExecutionId(), is(processInstance.getId()));
 
     assertThat(historicDecisionInstance.getActivityId(), is("task"));
     assertThat(historicDecisionInstance.getActivityInstanceId(), is(activityInstanceId));
@@ -414,19 +413,6 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
 
     assertThat(query.processInstanceId(processInstanceId).count(), is(1L));
     assertThat(query.processInstanceId("other process").count(), is(0L));
-  }
-
-  @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
-  public void testQueryByExecutionId() {
-
-    startProcessInstanceAndEvaluateDecision();
-
-    String executionId = runtimeService.createProcessInstanceQuery().singleResult().getId();
-
-    HistoricDecisionInstanceQuery query = historyService.createHistoricDecisionInstanceQuery();
-
-    assertThat(query.executionId(executionId).count(), is(1L));
-    assertThat(query.executionId("other process").count(), is(0L));
   }
 
   @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })

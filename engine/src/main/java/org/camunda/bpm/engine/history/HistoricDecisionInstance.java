@@ -50,9 +50,6 @@ public interface HistoricDecisionInstance {
   /** The corresponding process instance in case the decision was evaluated inside a process. */
   String getProcessInstanceId();
 
-  /** The corresponding execution in case the decision was evaluated inside a process. */
-  String getExecutionId();
-
   /** The corresponding activity in case the decision was evaluated inside a process. */
   String getActivityId();
 

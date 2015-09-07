@@ -69,7 +69,6 @@ public class DefaultDmnHistoryEventProducer implements DmnHistoryEventProducer {
     event.setProcessDefinitionId(execution.getProcessDefinitionId());
 
     event.setProcessInstanceId(execution.getProcessInstanceId());
-    event.setExecutionId(execution.getId());
 
     event.setActivityId(execution.getActivityId());
     event.setActivityInstanceId(execution.getActivityInstanceId());
