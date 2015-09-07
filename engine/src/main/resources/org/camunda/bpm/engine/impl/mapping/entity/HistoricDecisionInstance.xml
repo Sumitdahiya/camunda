@@ -138,7 +138,13 @@
       <if test="activityId != null">
         and RES.ACT_ID_ = #{activityId}
       </if>
-      
+      <if test="evaluatedBefore != null">
+        and RES.EVAL_TIME_ &lt;= #{evaluatedBefore}
+      </if>
+      <if test="evaluatedAfter != null">
+        and RES.EVAL_TIME_ &gt;= #{evaluatedAfter}
+      </if>
+
       <include refid="org.camunda.bpm.engine.impl.persistence.entity.AuthorizationEntity.queryAuthorizationCheck" />
       
     </where>

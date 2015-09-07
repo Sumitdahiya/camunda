@@ -15,6 +15,7 @@ package org.camunda.bpm.engine.impl.dmn.entity.repository;
 
 import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
 
+import java.util.Date;
 import java.util.List;
 
 import org.camunda.bpm.engine.exception.NotValidException;
@@ -44,6 +45,9 @@ public class HistoricDecisionInstanceQueryImpl extends AbstractQuery<HistoricDec
 
   protected String activityInstanceId;
   protected String activityId;
+
+  protected Date evaluatedBefore;
+  protected Date evaluatedAfter;
 
   protected boolean includeInput = false;
   protected boolean includeOutputs = false;
@@ -121,6 +125,16 @@ public class HistoricDecisionInstanceQueryImpl extends AbstractQuery<HistoricDec
   public HistoricDecisionInstanceQuery activityInstanceId(String activityInstanceId) {
     ensureNotNull(NotValidException.class, "activityInstanceId", activityInstanceId);
     this.activityInstanceId = activityInstanceId;
+    return this;
+  }
+
+  public HistoricDecisionInstanceQuery evaluatedBefore(Date evaluatedBefore) {
+    this.evaluatedBefore = evaluatedBefore;
+    return this;
+  }
+
+  public HistoricDecisionInstanceQuery evaluatedAfter(Date evaluatedAfter) {
+    this.evaluatedAfter = evaluatedAfter;
     return this;
   }
 

@@ -19,6 +19,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -448,6 +449,40 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
     HistoricDecisionInstanceQuery query = historyService.createHistoricDecisionInstanceQuery();
     assertThat(query.activityInstanceId(activityInstanceId).count(), is(1L));
     assertThat(query.activityInstanceId("other activity").count(), is(0L));
+  }
+
+  @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
+  public void testQueryByEvaluatedBefore() {
+    Date beforeEvaluated = new Date(1441612000);
+    Date evaluated = new Date(1441613000);
+    Date afterEvaluated = new Date(1441614000);
+
+    ClockUtil.setCurrentTime(evaluated);
+    startProcessInstanceAndEvaluateDecision();
+
+    HistoricDecisionInstanceQuery query = historyService.createHistoricDecisionInstanceQuery();
+    assertThat(query.evaluatedBefore(afterEvaluated).count(), is(1L));
+    assertThat(query.evaluatedBefore(evaluated).count(), is(1L));
+    assertThat(query.evaluatedBefore(beforeEvaluated).count(), is(0L));
+
+    ClockUtil.reset();
+  }
+
+  @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
+  public void testQueryByEvaluatedAfter() {
+    Date beforeEvaluated = new Date(1441612000);
+    Date evaluated = new Date(1441613000);
+    Date afterEvaluated = new Date(1441614000);
+
+    ClockUtil.setCurrentTime(evaluated);
+    startProcessInstanceAndEvaluateDecision();
+
+    HistoricDecisionInstanceQuery query = historyService.createHistoricDecisionInstanceQuery();
+    assertThat(query.evaluatedAfter(beforeEvaluated).count(), is(1L));
+    assertThat(query.evaluatedAfter(evaluated).count(), is(1L));
+    assertThat(query.evaluatedAfter(afterEvaluated).count(), is(0L));
+
+    ClockUtil.reset();
   }
 
   public void testTableNames() {
