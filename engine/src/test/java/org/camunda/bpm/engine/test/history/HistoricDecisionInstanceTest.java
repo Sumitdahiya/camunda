@@ -435,8 +435,9 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
 
     HistoricDecisionInstanceQuery query = historyService.createHistoricDecisionInstanceQuery();
 
-    assertThat(query.activityId("task").count(), is(1L));
-    assertThat(query.activityId("other activity").count(), is(0L));
+    assertThat(query.activityIdIn("task").count(), is(1L));
+    assertThat(query.activityIdIn("other activity").count(), is(0L));
+    assertThat(query.activityIdIn("task", "other activity").count(), is(1L));
   }
 
   @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
@@ -447,8 +448,9 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
     String activityInstanceId = historyService.createHistoricActivityInstanceQuery().activityId("task").singleResult().getId();
 
     HistoricDecisionInstanceQuery query = historyService.createHistoricDecisionInstanceQuery();
-    assertThat(query.activityInstanceId(activityInstanceId).count(), is(1L));
-    assertThat(query.activityInstanceId("other activity").count(), is(0L));
+    assertThat(query.activityInstanceIdIn(activityInstanceId).count(), is(1L));
+    assertThat(query.activityInstanceIdIn("other activity").count(), is(0L));
+    assertThat(query.activityInstanceIdIn(activityInstanceId, "other activity").count(), is(1L));
   }
 
   @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })

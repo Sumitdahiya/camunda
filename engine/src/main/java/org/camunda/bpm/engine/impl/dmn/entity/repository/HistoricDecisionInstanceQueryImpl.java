@@ -43,8 +43,8 @@ public class HistoricDecisionInstanceQueryImpl extends AbstractQuery<HistoricDec
   protected String processInstanceId;
   protected String executionId;
 
-  protected String activityInstanceId;
-  protected String activityId;
+  protected String[] activityInstanceIds;
+  protected String[] activityIds;
 
   protected Date evaluatedBefore;
   protected Date evaluatedAfter;
@@ -115,25 +115,26 @@ public class HistoricDecisionInstanceQueryImpl extends AbstractQuery<HistoricDec
   }
 
   @Override
-  public HistoricDecisionInstanceQuery activityId(String activityId) {
-    ensureNotNull(NotValidException.class, "activityId", activityId);
-    this.activityId = activityId;
+  public HistoricDecisionInstanceQuery activityIdIn(String... activityIds) {
+    ensureNotNull("activityIds", (Object[]) activityIds);
+    this.activityIds = activityIds;
     return this;
   }
 
-  @Override
-  public HistoricDecisionInstanceQuery activityInstanceId(String activityInstanceId) {
-    ensureNotNull(NotValidException.class, "activityInstanceId", activityInstanceId);
-    this.activityInstanceId = activityInstanceId;
+  public HistoricDecisionInstanceQuery activityInstanceIdIn(String... activityInstanceIds) {
+    ensureNotNull("activityInstanceIds", (Object[]) activityInstanceIds);
+    this.activityInstanceIds = activityInstanceIds;
     return this;
   }
 
   public HistoricDecisionInstanceQuery evaluatedBefore(Date evaluatedBefore) {
+    ensureNotNull(NotValidException.class, "evaluatedBefore", evaluatedBefore);
     this.evaluatedBefore = evaluatedBefore;
     return this;
   }
 
   public HistoricDecisionInstanceQuery evaluatedAfter(Date evaluatedAfter) {
+    ensureNotNull(NotValidException.class, "evaluatedAfter", evaluatedAfter);
     this.evaluatedAfter = evaluatedAfter;
     return this;
   }
@@ -188,12 +189,12 @@ public class HistoricDecisionInstanceQueryImpl extends AbstractQuery<HistoricDec
     return executionId;
   }
 
-  public String getActivityInstanceId() {
-    return activityInstanceId;
+  public String[] getActivityInstanceIds() {
+    return activityInstanceIds;
   }
 
-  public String getActivityId() {
-    return activityId;
+  public String[] getActivityIds() {
+    return activityIds;
   }
 
   public HistoricDecisionInstanceQuery includeInputs() {

@@ -50,12 +50,12 @@ public interface HistoricDecisionInstanceQuery extends Query<HistoricDecisionIns
   HistoricDecisionInstanceQuery executionId(String executionId);
 
   /** Only select historic decision instances that are evaluated inside a process
-   * with the given activity id. */
-  HistoricDecisionInstanceQuery activityId(String activityId);
+   * which have one of the activity ids. */
+  HistoricDecisionInstanceQuery activityIdIn(String... activityIds);
 
   /** Only select historic decision instances that are evaluated inside a process
-   * with the given activity instance id. */
-  HistoricDecisionInstanceQuery activityInstanceId(String activityInstanceId);
+   * which have one of the activity instance ids. */
+  HistoricDecisionInstanceQuery activityInstanceIdIn(String... activityInstanceIds);
 
   /** Only select historic decision instances that were evaluated before the given date. */
   HistoricDecisionInstanceQuery evaluatedBefore(Date date);

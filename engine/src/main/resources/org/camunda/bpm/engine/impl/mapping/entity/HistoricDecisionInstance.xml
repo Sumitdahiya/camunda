@@ -132,12 +132,21 @@
       <if test="processInstanceId != null">
         and RES.PROC_INST_ID_ = #{processInstanceId}
       </if>
-      <if test="activityInstanceId != null">
-        and RES.ACT_INST_ID_ = #{activityInstanceId}
+      
+      <if test="activityInstanceIds != null &amp;&amp; activityInstanceIds.length > 0">
+        and RES.ACT_INST_ID_ in
+        <foreach item="activityInstanceId" index="index" collection="activityInstanceIds" open="(" separator="," close=")">
+          #{activityInstanceId}
+        </foreach>
       </if>
-      <if test="activityId != null">
-        and RES.ACT_ID_ = #{activityId}
+      
+      <if test="activityIds != null &amp;&amp; activityIds.length > 0">
+        and RES.ACT_ID_ in
+        <foreach item="activityId" index="index" collection="activityIds" open="(" separator="," close=")">
+          #{activityId}
+        </foreach>
       </if>
+      
       <if test="evaluatedBefore != null">
         and RES.EVAL_TIME_ &lt;= #{evaluatedBefore}
       </if>
