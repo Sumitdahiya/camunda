@@ -46,6 +46,7 @@ import org.camunda.bpm.engine.history.HistoricActivityInstance;
 import org.camunda.bpm.engine.history.HistoricActivityStatistics;
 import org.camunda.bpm.engine.history.HistoricCaseActivityInstance;
 import org.camunda.bpm.engine.history.HistoricCaseInstance;
+import org.camunda.bpm.engine.history.HistoricDecisionInstance;
 import org.camunda.bpm.engine.history.HistoricDetail;
 import org.camunda.bpm.engine.history.HistoricFormField;
 import org.camunda.bpm.engine.history.HistoricIncident;
@@ -591,6 +592,16 @@ public abstract class MockProvider {
   public static final boolean EXAMPLE_HISTORIC_JOB_LOG_IS_SUCCESS_LOG = true;
   public static final boolean EXAMPLE_HISTORIC_JOB_LOG_IS_DELETION_LOG = true;
 
+  // historic decision instance
+
+  public static final String EXAMPLE_HISTORIC_DECISION_INSTANCE_ID = "aHistoricDecisionInstanceId";
+  public static final String EXAMPLE_HISTORIC_DECISION_INSTANCE_IDS = "aHistoricDecisionInstanceId,anotherHistoricDecisionInstanceId";
+  public static final String EXAMPLE_HISTORIC_DECISION_INSTANCE_ACTIVITY_ID = "aHistoricDecisionInstanceActivityId";
+  public static final String EXAMPLE_HISTORIC_DECISION_INSTANCE_ACTIVITY_INSTANCE_ID = "aHistoricDecisionInstanceActivityInstanceId";
+  public static final String EXAMPLE_HISTORIC_DECISION_INSTANCE_EVALUTION_TIME = "2015-09-07T11:00:00";
+  public static final String EXAMPLE_HISTORIC_DECISION_INSTANCE_EVALUTIED_BEFORE = "2015-09-08T11:00:00";
+
+  public static final String EXAMPLE_HISTORIC_DECISION_INSTANCE_EVALUTIED_AFTER = "2015-09-06T11:00:00";
   // metrics
   public static final String EXAMPLE_METRICS_START_DATE = "2015-01-01T00:00:00";
   public static final String EXAMPLE_METRICS_END_DATE = "2015-02-01T00:00:00";
@@ -1893,4 +1904,30 @@ public abstract class MockProvider {
 
     return mock;
   }
+
+  // Historic decision instance
+
+  public static List<HistoricDecisionInstance> createMockHistoricDecisionInstances() {
+    List<HistoricDecisionInstance> mockList = new ArrayList<HistoricDecisionInstance>();
+    mockList.add(createMockHistoricDecisionInstance());
+    return mockList;
+  }
+
+  public static HistoricDecisionInstance createMockHistoricDecisionInstance() {
+    HistoricDecisionInstance mock = mock(HistoricDecisionInstance.class);
+
+    when(mock.getId()).thenReturn(EXAMPLE_HISTORIC_DECISION_INSTANCE_ID);
+    when(mock.getDecisionDefinitionId()).thenReturn(EXAMPLE_DECISION_DEFINITION_ID);
+    when(mock.getDecisionDefinitionKey()).thenReturn(EXAMPLE_DECISION_DEFINITION_KEY);
+    when(mock.getDecisionDefinitionName()).thenReturn(EXAMPLE_DECISION_DEFINITION_NAME);
+    when(mock.getProcessDefinitionId()).thenReturn(EXAMPLE_PROCESS_DEFINITION_ID);
+    when(mock.getProcessDefinitionKey()).thenReturn(EXAMPLE_PROCESS_DEFINITION_KEY);
+    when(mock.getProcessInstanceId()).thenReturn(EXAMPLE_PROCESS_INSTANCE_ID);
+    when(mock.getActivityId()).thenReturn(EXAMPLE_HISTORIC_DECISION_INSTANCE_ACTIVITY_ID);
+    when(mock.getActivityInstanceId()).thenReturn(EXAMPLE_HISTORIC_DECISION_INSTANCE_ACTIVITY_INSTANCE_ID);
+    when(mock.getEvaluationTime()).thenReturn(DateTimeUtil.parseDate(EXAMPLE_HISTORIC_DECISION_INSTANCE_EVALUTION_TIME));
+
+    return mock;
+  }
+
 }
