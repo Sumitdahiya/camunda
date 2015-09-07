@@ -25,10 +25,12 @@ import org.camunda.bpm.engine.ProcessEngine;
 import org.camunda.bpm.engine.history.HistoricDecisionInstanceQuery;
 import org.camunda.bpm.engine.rest.dto.AbstractQueryDto;
 import org.camunda.bpm.engine.rest.dto.CamundaQueryParam;
+import org.camunda.bpm.engine.rest.dto.converter.BooleanConverter;
 import org.camunda.bpm.engine.rest.dto.converter.DateConverter;
 import org.camunda.bpm.engine.rest.dto.converter.StringSetConverter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 
 public class HistoricDecisionInstanceQueryDto extends AbstractQueryDto<HistoricDecisionInstanceQuery> {
 
@@ -53,6 +55,8 @@ public class HistoricDecisionInstanceQueryDto extends AbstractQueryDto<HistoricD
   protected String activityInstanceId;
   protected Date evaluatedBefore;
   protected Date evaluatedAfter;
+  protected Boolean includeInputs;
+  protected Boolean includeOutputs;
 
   public HistoricDecisionInstanceQueryDto() {}
 
@@ -120,6 +124,16 @@ public class HistoricDecisionInstanceQueryDto extends AbstractQueryDto<HistoricD
     this.evaluatedAfter = evaluatedAfter;
   }
 
+  @CamundaQueryParam(value = "includeInputs", converter = BooleanConverter.class)
+  public void setIncludeInputs(Boolean includeInputs) {
+    this.includeInputs = includeInputs;
+  }
+
+  @CamundaQueryParam(value = "includeOutputs", converter = BooleanConverter.class)
+  public void setIncludeOutputs(Boolean includeOutputs) {
+    this.includeOutputs = includeOutputs;
+  }
+
   protected boolean isValidSortByValue(String value) {
     return VALID_SORT_BY_VALUES.contains(value);
   }
@@ -164,6 +178,12 @@ public class HistoricDecisionInstanceQueryDto extends AbstractQueryDto<HistoricD
     }
     if (evaluatedAfter != null) {
       query.evaluatedAfter(evaluatedAfter);
+    }
+    if (includeInputs != null && includeInputs) {
+      query.includeInputs();
+    }
+    if (includeOutputs != null && includeOutputs) {
+      query.includeOutputs();
     }
   }
 

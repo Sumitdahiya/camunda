@@ -13,9 +13,17 @@
 
 package org.camunda.bpm.engine.rest.dto.history;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
+import org.camunda.bpm.engine.ProcessEngineException;
+import org.camunda.bpm.engine.history.HistoricDecisionInputInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionInstance;
+import org.camunda.bpm.engine.history.HistoricDecisionOutputInstance;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 public class HistoricDecisionInstanceDto {
 
@@ -29,6 +37,8 @@ public class HistoricDecisionInstanceDto {
   protected String processInstanceId;
   protected String activityId;
   protected String activityInstanceId;
+  protected List<HistoricDecisionInputInstanceDto> inputs;
+  protected List<HistoricDecisionOutputInstanceDto> outputs;
 
   public String getId() {
     return id;
@@ -70,6 +80,16 @@ public class HistoricDecisionInstanceDto {
     return activityInstanceId;
   }
 
+  @JsonInclude(Include.NON_NULL)
+  public List<HistoricDecisionInputInstanceDto> getInputs() {
+    return inputs;
+  }
+
+  @JsonInclude(Include.NON_NULL)
+  public List<HistoricDecisionOutputInstanceDto> getOutputs() {
+    return outputs;
+  }
+
   public static HistoricDecisionInstanceDto fromHistoricDecisionInstance(HistoricDecisionInstance historicDecisionInstance) {
     HistoricDecisionInstanceDto dto = new HistoricDecisionInstanceDto();
 
@@ -83,6 +103,30 @@ public class HistoricDecisionInstanceDto {
     dto.processInstanceId = historicDecisionInstance.getProcessInstanceId();
     dto.activityId = historicDecisionInstance.getActivityId();
     dto.activityInstanceId = historicDecisionInstance.getActivityInstanceId();
+
+    try {
+      List<HistoricDecisionInputInstanceDto> inputs = new ArrayList<HistoricDecisionInputInstanceDto>();
+      for (HistoricDecisionInputInstance input : historicDecisionInstance.getInputs()) {
+        HistoricDecisionInputInstanceDto inputDto = HistoricDecisionInputInstanceDto.fromHistoricDecisionInputInstance(input);
+        inputs.add(inputDto);
+      }
+      dto.inputs = inputs;
+    }
+    catch (ProcessEngineException e) {
+      // no inputs fetched
+    }
+
+    try {
+      List<HistoricDecisionOutputInstanceDto> outputs = new ArrayList<HistoricDecisionOutputInstanceDto>();
+      for (HistoricDecisionOutputInstance output : historicDecisionInstance.getOutputs()) {
+        HistoricDecisionOutputInstanceDto outputDto = HistoricDecisionOutputInstanceDto.fromHistoricDecisionOutputInstance(output);
+        outputs.add(outputDto);
+      }
+      dto.outputs = outputs;
+    }
+    catch (ProcessEngineException e) {
+      // no outputs fetched
+    }
 
     return dto;
   }

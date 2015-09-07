@@ -31,6 +31,7 @@ import java.util.Set;
 
 import org.camunda.bpm.application.ProcessApplicationInfo;
 import org.camunda.bpm.engine.EntityTypes;
+import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.authorization.Authorization;
 import org.camunda.bpm.engine.authorization.Permission;
 import org.camunda.bpm.engine.authorization.Permissions;
@@ -46,7 +47,9 @@ import org.camunda.bpm.engine.history.HistoricActivityInstance;
 import org.camunda.bpm.engine.history.HistoricActivityStatistics;
 import org.camunda.bpm.engine.history.HistoricCaseActivityInstance;
 import org.camunda.bpm.engine.history.HistoricCaseInstance;
+import org.camunda.bpm.engine.history.HistoricDecisionInputInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionInstance;
+import org.camunda.bpm.engine.history.HistoricDecisionOutputInstance;
 import org.camunda.bpm.engine.history.HistoricDetail;
 import org.camunda.bpm.engine.history.HistoricFormField;
 import org.camunda.bpm.engine.history.HistoricIncident;
@@ -1913,7 +1916,7 @@ public abstract class MockProvider {
     return mockList;
   }
 
-  public static HistoricDecisionInstance createMockHistoricDecisionInstance() {
+  public static HistoricDecisionInstance createMockHistoricDecisionInstanceBase() {
     HistoricDecisionInstance mock = mock(HistoricDecisionInstance.class);
 
     when(mock.getId()).thenReturn(EXAMPLE_HISTORIC_DECISION_INSTANCE_ID);
@@ -1927,6 +1930,34 @@ public abstract class MockProvider {
     when(mock.getActivityInstanceId()).thenReturn(EXAMPLE_HISTORIC_DECISION_INSTANCE_ACTIVITY_INSTANCE_ID);
     when(mock.getEvaluationTime()).thenReturn(DateTimeUtil.parseDate(EXAMPLE_HISTORIC_DECISION_INSTANCE_EVALUTION_TIME));
 
+    return mock;
+  }
+
+  public static HistoricDecisionInstance createMockHistoricDecisionInstance() {
+    HistoricDecisionInstance mock = createMockHistoricDecisionInstanceBase();
+    when(mock.getInputs()).thenThrow(new ProcessEngineException("ENGINE-03060 The input instances for the historic decision instance are not fetched. You must call 'includeInputs()' on the query to enable fetching."));
+    when(mock.getOutputs()).thenThrow(new ProcessEngineException("ENGINE-03061 The output instances for the historic decision instance are not fetched. You must call 'includeOutputs()' on the query to enable fetching."));
+    return mock;
+  }
+
+  public static HistoricDecisionInstance createMockHistoricDecisionInstanceWithInputs() {
+    HistoricDecisionInstance mock = createMockHistoricDecisionInstanceBase();
+    when(mock.getInputs()).thenReturn(new ArrayList<HistoricDecisionInputInstance>());
+    when(mock.getOutputs()).thenThrow(new ProcessEngineException("ENGINE-03061 The output instances for the historic decision instance are not fetched. You must call 'includeOutputs()' on the query to enable fetching."));
+    return mock;
+  }
+
+  public static HistoricDecisionInstance createMockHistoricDecisionInstanceWithOutputs() {
+    HistoricDecisionInstance mock = createMockHistoricDecisionInstanceBase();
+    when(mock.getInputs()).thenThrow(new ProcessEngineException("ENGINE-03060 The input instances for the historic decision instance are not fetched. You must call 'includeInputs()' on the query to enable fetching."));
+    when(mock.getOutputs()).thenReturn(new ArrayList<HistoricDecisionOutputInstance>());
+    return mock;
+  }
+
+  public static HistoricDecisionInstance createMockHistoricDecisionInstanceWithInputsAndOutputs() {
+    HistoricDecisionInstance mock = createMockHistoricDecisionInstanceBase();
+    when(mock.getInputs()).thenReturn(new ArrayList<HistoricDecisionInputInstance>());
+    when(mock.getOutputs()).thenReturn(new ArrayList<HistoricDecisionOutputInstance>());
     return mock;
   }
 

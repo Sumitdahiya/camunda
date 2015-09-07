@@ -16,17 +16,22 @@ import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.path.json.JsonPath.from;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import javax.ws.rs.core.Response.Status;
 
 import org.camunda.bpm.engine.HistoryService;
 import org.camunda.bpm.engine.history.HistoricDecisionInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionInstanceQuery;
 import org.camunda.bpm.engine.rest.AbstractRestServiceTest;
+import org.camunda.bpm.engine.rest.dto.history.HistoricDecisionInputInstanceDto;
+import org.camunda.bpm.engine.rest.dto.history.HistoricDecisionOutputInstanceDto;
 import org.camunda.bpm.engine.rest.exception.InvalidRequestException;
 import org.camunda.bpm.engine.rest.helper.MockProvider;
 import org.junit.Before;
@@ -80,6 +85,8 @@ public abstract class AbstractHistoricDecisionInstanceRestServiceInteractionTest
     String returnedProcessInstanceId = from(content).getString("processInstanceId");
     String returnedActivityId = from(content).getString("activityId");
     String returnedActivityInstanceId = from(content).getString("activityInstanceId");
+    List<HistoricDecisionInputInstanceDto> returnedInputs = from(content).getList("inputs");
+    List<HistoricDecisionOutputInstanceDto> returnedOutputs = from(content).getList("outputs");
 
     assertThat(returnedHistoricDecisionInstanceId, is(MockProvider.EXAMPLE_HISTORIC_DECISION_INSTANCE_ID));
     assertThat(returnedDecisionDefinitionId, is(MockProvider.EXAMPLE_DECISION_DEFINITION_ID));
@@ -91,6 +98,8 @@ public abstract class AbstractHistoricDecisionInstanceRestServiceInteractionTest
     assertThat(returnedProcessInstanceId, is(MockProvider.EXAMPLE_PROCESS_INSTANCE_ID));
     assertThat(returnedActivityId, is(MockProvider.EXAMPLE_HISTORIC_DECISION_INSTANCE_ACTIVITY_ID));
     assertThat(returnedActivityInstanceId, is(MockProvider.EXAMPLE_HISTORIC_DECISION_INSTANCE_ACTIVITY_INSTANCE_ID));
+    assertThat(returnedInputs, nullValue());
+    assertThat(returnedOutputs, nullValue());
   }
 
   @Test
