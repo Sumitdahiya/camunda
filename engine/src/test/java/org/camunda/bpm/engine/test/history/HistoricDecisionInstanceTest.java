@@ -13,6 +13,7 @@
 
 package org.camunda.bpm.engine.test.history;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -21,10 +22,13 @@ import static org.junit.Assert.assertThat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.camunda.bpm.engine.ProcessEngineException;
+import org.camunda.bpm.engine.exception.NotValidException;
 import org.camunda.bpm.engine.history.HistoricDecisionInputInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionInstanceQuery;
@@ -75,6 +79,58 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
     assertThat(historicDecisionInstance.getActivityInstanceId(), is(activityInstanceId));
 
     assertThat(historicDecisionInstance.getEvaluationTime(), is(notNullValue()));
+  }
+
+  @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
+  public void testHistoricDecisionInstanceQuery() {
+    ProcessInstance pi1 = startProcessInstanceAndEvaluateDecision();
+    ProcessInstance pi2 = startProcessInstanceAndEvaluateDecision();
+
+    String decisionInstanceId1 = historyService.createHistoricDecisionInstanceQuery().processInstanceId(pi1.getId()).singleResult().getId();
+    String decisionInstanceId2 = historyService.createHistoricDecisionInstanceQuery().processInstanceId(pi2.getId()).singleResult().getId();
+
+    HistoricDecisionInstanceQuery query = historyService.createHistoricDecisionInstanceQuery();
+
+    assertThat(query.decisionInstanceId(decisionInstanceId1).count(), is(1l));
+    assertThat(query.decisionInstanceId(decisionInstanceId2).count(), is(1l));
+    assertThat(query.decisionInstanceId("unknown").count(), is(0l));
+
+    try {
+      query.decisionInstanceId(null);
+      fail("Exception expected");
+    }
+    catch (NotValidException e) {
+      assertThat(e.getMessage(), containsString("decisionInstanceId is null"));
+    }
+
+    query = historyService.createHistoricDecisionInstanceQuery();
+
+    try {
+      query.decisionInstanceIds(null);
+      fail("Exception expected");
+    }
+    catch (NotValidException e) {
+      assertThat(e.getMessage(), containsString("decisionInstanceIds is null"));
+    }
+
+    Set<String> decisionInstanceIds = new HashSet<String>();
+
+    try {
+      query.decisionInstanceIds(decisionInstanceIds);
+      fail("Exception expected");
+    }
+    catch (NotValidException e) {
+      assertThat(e.getMessage(), containsString("decisionInstanceIds is empty"));
+    }
+
+    decisionInstanceIds.add(decisionInstanceId1);
+    assertThat(query.decisionInstanceIds(decisionInstanceIds).count(), is(1l));
+
+    decisionInstanceIds.add(decisionInstanceId2);
+    assertThat(query.decisionInstanceIds(decisionInstanceIds).count(), is(2l));
+
+    decisionInstanceIds.remove(decisionInstanceId1);
+    assertThat(query.decisionInstanceIds(decisionInstanceIds).count(), is(1l));
   }
 
   @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
@@ -267,7 +323,7 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
   }
 
   @Deployment(resources = { DECISION_PROCESS, DECISION_MULTIPLE_OUTPUT_DMN })
-  public void testMultipleDeceisionOutputInstances() {
+  public void testMultipleDecisionOutputInstances() {
 
     startProcessInstanceAndEvaluateDecision();
 
@@ -291,7 +347,7 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
   }
 
   @Deployment(resources = { DECISION_PROCESS, DECISION_COMPOUND_OUTPUT_DMN })
-  public void testCompoundDeceisionOutputInstances() {
+  public void testCompoundDecisionOutputInstances() {
 
     startProcessInstanceAndEvaluateDecision();
 
@@ -549,14 +605,15 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
     assertThat(query.count(), is(0L));
   }
 
-  protected void startProcessInstanceAndEvaluateDecision() {
-    startProcessInstanceAndEvaluateDecision(null);
+  protected ProcessInstance startProcessInstanceAndEvaluateDecision() {
+    return startProcessInstanceAndEvaluateDecision(null);
   }
 
 
-  protected void startProcessInstanceAndEvaluateDecision(Object input) {
+  protected ProcessInstance startProcessInstanceAndEvaluateDecision(Object input) {
     Map<String, Object> variables = new HashMap<String, Object>();
     variables.put("input1", input);
-    runtimeService.startProcessInstanceByKey("testProcess", variables);
+    return runtimeService.startProcessInstanceByKey("testProcess", variables);
   }
+
 }
