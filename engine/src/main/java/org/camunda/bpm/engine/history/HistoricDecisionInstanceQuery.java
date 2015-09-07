@@ -13,6 +13,8 @@
 
 package org.camunda.bpm.engine.history;
 
+import java.util.Date;
+
 import org.camunda.bpm.engine.query.Query;
 
 /**
@@ -54,6 +56,12 @@ public interface HistoricDecisionInstanceQuery extends Query<HistoricDecisionIns
   /** Only select historic decision instances that are evaluated inside a process
    * with the given activity instance id. */
   HistoricDecisionInstanceQuery activityInstanceId(String activityInstanceId);
+
+  /** Only select historic decision instances that were evaluated before the given date. */
+  HistoricDecisionInstanceQuery evaluatedBefore(Date date);
+
+  /** Only select historic decision instances that were evaluated after the given date. */
+  HistoricDecisionInstanceQuery evaluatedAfter(Date date);
 
   /** Order by the time when the decisions was evaluated
    * (needs to be followed by {@link #asc()} or {@link #desc()}). */
