@@ -484,4 +484,8 @@ public class EnginePersistenceLogger extends ProcessEngineLogger {
   public ProcessEngineException unableToFetchDbSchemaVersion(Throwable cause) {
     return new ProcessEngineException(exceptionMessage("058", "Could not fetch the database schema version."), cause);
   }
+
+  public void failedTofetchVariableValue(Throwable cause) {
+    logDebug("059", "Could not fetch value for variable.", cause);
+  }
 }

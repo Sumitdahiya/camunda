@@ -15,17 +15,20 @@ package org.camunda.bpm.engine.impl.dmn.entity.repository;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.camunda.bpm.engine.history.HistoricDecisionInputInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionOutputInstance;
 import org.camunda.bpm.engine.impl.Page;
 import org.camunda.bpm.engine.impl.persistence.AbstractHistoricManager;
+import org.camunda.bpm.engine.variable.type.ValueType;
 
 /**
- * Manager for {@link HistoricDecisionInstanceEntity}.
+ * Data base operations for {@link HistoricDecisionInstanceEntity}.
  *
  * @author Philipp Ossler
  */
@@ -33,28 +36,42 @@ public class HistoricDecisionInstanceManager extends AbstractHistoricManager {
 
   public void deleteHistoricDecisionInstancesByDecisionDefinitionKey(String decisionDefinitionKey) {
     if (isHistoryEnabled()) {
+      List<HistoricDecisionInstanceEntity> decisionInstances = findHistoricDecisionInstancesByDecisionDefinitionKey(decisionDefinitionKey);
 
-      @SuppressWarnings("unchecked")
-      List<HistoricDecisionInstanceEntity> decisionInstances = getDbEntityManager().selectList("selectHistoricDecisionInstancesByDecisionDefinitionKey", decisionDefinitionKey);
+      Set<String> decisionInstanceKeys = new HashSet<String>();
       for(HistoricDecisionInstanceEntity decisionInstance : decisionInstances) {
+        decisionInstanceKeys.add(decisionInstance.getId());
         // delete decision instance
-        getDbEntityManager().delete(HistoricDecisionInstanceEntity.class, "deleteHistoricDecisionInstanceById", decisionInstance.getId());
-        // delete inputs of decision instance
-        // TODO delete byte values
-        deleteHistoricDecisionInputInstancesByDecisionInstanceId(decisionInstance);
-        // delete outputs of decision instance
-        // TODO delete byte values
-        deleteHistoricDecisionOutputInstancesByDecisionInstanceId(decisionInstance);
+        decisionInstance.delete();
+      }
+
+      if(!decisionInstanceKeys.isEmpty()) {
+        deleteHistoricDecisionInputInstancesByDecisionInstanceKeys(decisionInstanceKeys);
+
+        deleteHistoricDecisionOutputInstancesByDecisionInstanceKeys(decisionInstanceKeys);
       }
     }
   }
 
-  protected void deleteHistoricDecisionInputInstancesByDecisionInstanceId(HistoricDecisionInstanceEntity decisionInstance) {
-    getDbEntityManager().delete(HistoricDecisionInputInstanceEntity.class, "deleteHistoricDecisionInputInstancesByDecisionInstanceId", decisionInstance.getId());
+  @SuppressWarnings("unchecked")
+  protected List<HistoricDecisionInstanceEntity> findHistoricDecisionInstancesByDecisionDefinitionKey(String decisionDefinitionKey) {
+    return getDbEntityManager().selectList("selectHistoricDecisionInstancesByDecisionDefinitionKey", decisionDefinitionKey);
   }
 
-  protected void deleteHistoricDecisionOutputInstancesByDecisionInstanceId(HistoricDecisionInstanceEntity decisionInstance) {
-    getDbEntityManager().delete(HistoricDecisionInputInstanceEntity.class, "deleteHistoricDecisionOutputInstancesByDecisionInstanceId", decisionInstance.getId());
+  protected void deleteHistoricDecisionInputInstancesByDecisionInstanceKeys(Set<String> decisionInstanceKeys) {
+    List<HistoricDecisionInputInstanceEntity> decisionInputInstances = findHistoricDecisionInputInstancesByDecisionInstanceIds(decisionInstanceKeys);
+    for (HistoricDecisionInputInstanceEntity decisionInputInstance : decisionInputInstances) {
+      // delete input instance and byte array value if exists
+      decisionInputInstance.delete();
+    }
+  }
+
+  protected void deleteHistoricDecisionOutputInstancesByDecisionInstanceKeys(Set<String> decisionInstanceKeys) {
+    List<HistoricDecisionOutputInstanceEntity> decisionOutputInstances = findHistoricDecisionOutputInstancesByDecisionInstanceIds(decisionInstanceKeys);
+    for (HistoricDecisionOutputInstanceEntity decisionOutputInstance : decisionOutputInstances) {
+      // delete output instance and byte array value if exists
+      decisionOutputInstance.delete();
+    }
   }
 
   public void insertHistoricDecisionInstance(HistoricDecisionInstanceEntity historicDecisionInstance) {
@@ -97,11 +114,11 @@ public class HistoricDecisionInstanceManager extends AbstractHistoricManager {
       }
 
       if (query.isIncludeInput()) {
-        appendHistoricDecisionInputInstances(decisionInstancesById);
+        appendHistoricDecisionInputInstances(decisionInstancesById, query);
       }
 
       if(query.isIncludeOutputs()) {
-        appendHistoricDecisionOutputInstances(decisionInstancesById);
+        appendHistoricDecisionOutputInstances(decisionInstancesById, query);
       }
 
       return decisionInstances;
@@ -110,31 +127,69 @@ public class HistoricDecisionInstanceManager extends AbstractHistoricManager {
     }
   }
 
-  protected void appendHistoricDecisionInputInstances(Map<String, HistoricDecisionInstance> decisionInstancesById) {
-    @SuppressWarnings("unchecked")
-    List<HistoricDecisionInputInstance> decisionInputInstances = getDbEntityManager()
-        .selectList("selectHistoricDecisionInputInstancesByDecisionInstanceIds", decisionInstancesById.keySet());
+  protected void appendHistoricDecisionInputInstances(Map<String, HistoricDecisionInstance> decisionInstancesById, HistoricDecisionInstanceQueryImpl query) {
+    List<HistoricDecisionInputInstanceEntity> decisionInputInstances = findHistoricDecisionInputInstancesByDecisionInstanceIds(decisionInstancesById.keySet());
 
     for (HistoricDecisionInputInstance decisionInputInstance : decisionInputInstances) {
 
       HistoricDecisionInstance historicDecisionInstance = decisionInstancesById.get(decisionInputInstance.getDecisionInstanceId());
       historicDecisionInstance.getInputs().add(decisionInputInstance);
-      // TODO enable / disable value fetch for bytes
-      decisionInputInstance.getTypedValue();
+
+      // do not fetch values for byte arrays eagerly (unless requested by the user)
+      if (!isByteArrayValue(decisionInputInstance) || query.isByteArrayFetchingEnabled()) {
+        fetchVariableValue(decisionInputInstance, query.isCustomObjectDeserializationEnabled());
+      }
     }
   }
 
-  protected void appendHistoricDecisionOutputInstances(Map<String, HistoricDecisionInstance> decisionInstancesById) {
-    @SuppressWarnings("unchecked")
-    List<HistoricDecisionOutputInstance> decisionInputInstances = getDbEntityManager()
-        .selectList("selectHistoricDecisionOutputInstancesByDecisionInstanceIds", decisionInstancesById.keySet());
+  @SuppressWarnings("unchecked")
+  protected List<HistoricDecisionInputInstanceEntity> findHistoricDecisionInputInstancesByDecisionInstanceIds(Set<String> historicDecisionInstanceKeys) {
+    return getDbEntityManager().selectList("selectHistoricDecisionInputInstancesByDecisionInstanceIds", historicDecisionInstanceKeys);
+  }
 
-    for (HistoricDecisionOutputInstance decisionInputInstance : decisionInputInstances) {
+  protected boolean isByteArrayValue(HistoricDecisionInputInstance decisionInputInstance) {
+    return ValueType.BYTES.getName().equals(decisionInputInstance.getTypeName());
+  }
 
-      HistoricDecisionInstance historicDecisionInstance = decisionInstancesById.get(decisionInputInstance.getDecisionInstanceId());
-      historicDecisionInstance.getOutputs().add(decisionInputInstance);
-      // TODO enable / disable value fetch for bytes
-      decisionInputInstance.getTypedValue();
+  protected void fetchVariableValue(HistoricDecisionInputInstance decisionInputInstance, boolean isCustomObjectDeserializationEnabled) {
+    try {
+      decisionInputInstance.getTypedValue(isCustomObjectDeserializationEnabled);
+    } catch(Exception t) {
+      // do not fail if one of the variables fails to load
+      LOG.failedTofetchVariableValue(t);
+    }
+  }
+
+  protected void appendHistoricDecisionOutputInstances(Map<String, HistoricDecisionInstance> decisionInstancesById, HistoricDecisionInstanceQueryImpl query) {
+    List<HistoricDecisionOutputInstanceEntity> decisionInputInstances = findHistoricDecisionOutputInstancesByDecisionInstanceIds(decisionInstancesById.keySet());
+
+    for (HistoricDecisionOutputInstance decisionOutputInstance : decisionInputInstances) {
+
+      HistoricDecisionInstance historicDecisionInstance = decisionInstancesById.get(decisionOutputInstance.getDecisionInstanceId());
+      historicDecisionInstance.getOutputs().add(decisionOutputInstance);
+
+      // do not fetch values for byte arrays eagerly (unless requested by the user)
+      if(!isByteArrayValue(decisionOutputInstance) || query.isByteArrayFetchingEnabled()) {
+        fetchVariableValue(decisionOutputInstance, query.isCustomObjectDeserializationEnabled());
+      }
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  protected List<HistoricDecisionOutputInstanceEntity> findHistoricDecisionOutputInstancesByDecisionInstanceIds(Set<String> decisionInstanceKeys) {
+    return getDbEntityManager().selectList("selectHistoricDecisionOutputInstancesByDecisionInstanceIds", decisionInstanceKeys);
+  }
+
+  protected boolean isByteArrayValue(HistoricDecisionOutputInstance decisionOutputInstance) {
+    return ValueType.BYTES.getName().equals(decisionOutputInstance.getTypeName());
+  }
+
+  protected void fetchVariableValue(HistoricDecisionOutputInstance decisionOutputInstance, boolean isCustomObjectDeserializationEnabled) {
+    try {
+      decisionOutputInstance.getTypedValue(isCustomObjectDeserializationEnabled);
+    } catch(Exception t) {
+      // do not fail if one of the variables fails to load
+      LOG.failedTofetchVariableValue(t);
     }
   }
 

@@ -23,12 +23,8 @@
   </insert>
   
   <!-- delete -->
-
-  <delete id="deleteHistoricDecisionInstancesByDecisionDefinitionKey" parameterType="string">
-    delete from ${prefix}ACT_HI_DECINST where DEC_DEF_KEY_ = #{decisionDefinitionKey}
-  </delete>
-
-  <delete id="deleteHistoricDecisionInstanceById" parameterType="string">
+  
+  <delete id="deleteHistoricDecisionInstance" parameterType="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceEntity">
     delete from ${prefix}ACT_HI_DECINST where ID_ = #{id}
   </delete>
 

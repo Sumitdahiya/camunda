@@ -20,6 +20,7 @@ import java.util.List;
 import org.camunda.bpm.engine.history.HistoricDecisionInputInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionOutputInstance;
+import org.camunda.bpm.engine.impl.context.Context;
 import org.camunda.bpm.engine.impl.history.event.HistoryEvent;
 
 /**
@@ -109,4 +110,12 @@ public class HistoricDecisionInstanceEntity extends HistoryEvent implements Hist
   public void setOutputs(List<HistoricDecisionOutputInstance> outputs) {
     this.outputs = outputs;
   }
+
+  public void delete() {
+    Context
+      .getCommandContext()
+      .getDbEntityManager()
+      .delete(this);
+  }
+
 }

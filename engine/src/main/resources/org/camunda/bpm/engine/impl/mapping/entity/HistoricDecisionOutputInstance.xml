@@ -39,9 +39,9 @@
   </insert>
   
   <!-- delete -->
-
-  <delete id="deleteHistoricDecisionOutputInstancesByDecisionInstanceId">
-    delete from ${prefix}ACT_HI_DEC_OUT where DEC_INST_ID_ = #{decisionInstanceId}
+  
+  <delete id="deleteHistoricDecisionOutputInstance" parameterType="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionOutputInstanceEntity">
+    delete from ${prefix}ACT_HI_DEC_OUT where ID_ = #{id}
   </delete>
 
   <!-- result map -->

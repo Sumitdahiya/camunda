@@ -15,6 +15,7 @@ package org.camunda.bpm.engine.test.history;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import java.util.Calendar;
@@ -196,7 +197,7 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
   }
 
   @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
-  public void FAILING_testDecisionInputInstanceByteValue() {
+  public void testDecisionInputInstanceByteValue() {
 
     byte[] bytes = "object".getBytes();
     startProcessInstanceAndEvaluateDecision(bytes);
@@ -209,6 +210,22 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
     assertThat(input.getSerializerName(), is("bytes"));
     assertThat(input.getByteArrayValueId(), is(notNullValue()));
     assertThat(input.getValue(), is((Object) bytes));
+  }
+
+  @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
+  public void testDisableDecisionInputInstanceByteValue() {
+
+    byte[] bytes = "object".getBytes();
+    startProcessInstanceAndEvaluateDecision(bytes);
+
+    HistoricDecisionInstance historicDecisionInstance = historyService.createHistoricDecisionInstanceQuery().includeInputs().disableBinaryFetching().singleResult();
+    List<HistoricDecisionInputInstance> inputs = historicDecisionInstance.getInputs();
+    assertThat(inputs.size(), is(1));
+
+    HistoricDecisionInputInstance input = inputs.iterator().next();
+    assertThat(input.getSerializerName(), is("bytes"));
+    assertThat(input.getByteArrayValueId(), is(notNullValue()));
+    assertThat(input.getValue(), is(nullValue()));
   }
 
   @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })

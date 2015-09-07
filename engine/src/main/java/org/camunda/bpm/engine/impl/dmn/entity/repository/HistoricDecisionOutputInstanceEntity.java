@@ -14,6 +14,7 @@
 package org.camunda.bpm.engine.impl.dmn.entity.repository;
 
 import org.camunda.bpm.engine.history.HistoricDecisionOutputInstance;
+import org.camunda.bpm.engine.impl.context.Context;
 import org.camunda.bpm.engine.impl.history.event.HistoryEvent;
 import org.camunda.bpm.engine.impl.persistence.entity.ByteArrayEntity;
 import org.camunda.bpm.engine.impl.persistence.entity.util.ByteArrayField;
@@ -115,6 +116,11 @@ public class HistoricDecisionOutputInstanceEntity extends HistoryEvent implement
   }
 
   @Override
+  public TypedValue getTypedValue(boolean deserializeValue) {
+    return typedValueField.getTypedValue(deserializeValue);
+  }
+
+  @Override
   public String getErrorMessage() {
     return typedValueField.getErrorMessage();
   }
@@ -195,6 +201,15 @@ public class HistoricDecisionOutputInstanceEntity extends HistoryEvent implement
 
   public void setValue(TypedValue typedValue) {
     typedValueField.setValue(typedValue);
+  }
+
+  public void delete() {
+    byteArrayField.deleteByteArrayValue();
+
+    Context
+      .getCommandContext()
+      .getDbEntityManager()
+      .delete(this);
   }
 
 }

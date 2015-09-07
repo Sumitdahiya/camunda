@@ -61,6 +61,13 @@ public interface HistoricDecisionOutputInstance extends ValueFields {
   TypedValue getTypedValue();
 
   /**
+   * Returns the {@link TypedValue} for this value.
+   *
+   * @param deserializeValue return only a deserialized value, if <code>true</code>
+   */
+  TypedValue getTypedValue(boolean deserializeValue);
+
+  /**
    * If the variable value could not be loaded, this returns the error message.
    *
    * @return an error message indicating why the variable value could not be loaded.
