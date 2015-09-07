@@ -488,4 +488,18 @@ public class EnginePersistenceLogger extends ProcessEngineLogger {
   public void failedTofetchVariableValue(Throwable cause) {
     logDebug("059", "Could not fetch value for variable.", cause);
   }
+
+  public ProcessEngineException historicDecisionInputInstancesNotFetchedException() {
+    return new ProcessEngineException(exceptionMessage(
+        "060",
+        "The input instances for the historic decision instance are not fetched. You must call 'includeInputs()' on the query to enable fetching."
+        ));
+  }
+
+  public ProcessEngineException historicDecisionOutputInstancesNotFetchedException() {
+    return new ProcessEngineException(exceptionMessage(
+        "061",
+        "The output instances for the historic decision instance are not fetched. You must call 'includeOutputs()' on the query to enable fetching."
+        ));
+  }
 }

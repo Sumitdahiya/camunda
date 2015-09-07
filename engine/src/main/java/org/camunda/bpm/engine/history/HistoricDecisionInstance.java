@@ -16,6 +16,8 @@ package org.camunda.bpm.engine.history;
 import java.util.Date;
 import java.util.List;
 
+import org.camunda.bpm.engine.ProcessEngineException;
+
 /**
  * Represents one evaluation of a decision.
  *
@@ -57,10 +59,22 @@ public interface HistoricDecisionInstance {
   /** The corresponding activity instance in case the decision was evaluated inside a process. */
   String getActivityInstanceId();
 
-  /** The input values of the evaluated decision. */
+  /**
+   * The input values of the evaluated decision. The fetching of the input values must be enabled on the query.
+   *
+   * @throws ProcessEngineException if the input values are not fetched.
+   *
+   * @see HistoricDecisionInstanceQuery#includeInputs()
+   */
   List<HistoricDecisionInputInstance> getInputs();
 
-  /** The output values of the evaluated decision. */
+  /**
+   * The output values of the evaluated decision. The fetching of the output values must be enabled on the query.
+   *
+   * @throws ProcessEngineException if the output values are not fetched.
+   *
+   * @see HistoricDecisionInstanceQuery#includeOutputs()
+   */
   List<HistoricDecisionOutputInstance> getOutputs();
 
 }

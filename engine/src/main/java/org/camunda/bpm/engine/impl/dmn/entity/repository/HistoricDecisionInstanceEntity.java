@@ -20,7 +20,9 @@ import java.util.List;
 import org.camunda.bpm.engine.history.HistoricDecisionInputInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionOutputInstance;
+import org.camunda.bpm.engine.impl.ProcessEngineLogger;
 import org.camunda.bpm.engine.impl.context.Context;
+import org.camunda.bpm.engine.impl.db.EnginePersistenceLogger;
 import org.camunda.bpm.engine.impl.history.event.HistoryEvent;
 
 /**
@@ -30,6 +32,8 @@ import org.camunda.bpm.engine.impl.history.event.HistoryEvent;
  *
  */
 public class HistoricDecisionInstanceEntity extends HistoryEvent implements HistoricDecisionInstance {
+
+  protected static final EnginePersistenceLogger LOG = ProcessEngineLogger.PERSISTENCE_LOGGER;
 
   private static final long serialVersionUID = 1L;
 
@@ -42,8 +46,8 @@ public class HistoricDecisionInstanceEntity extends HistoryEvent implements Hist
 
   protected Date evaluationTime;
 
-  protected List<HistoricDecisionInputInstance> inputs = new ArrayList<HistoricDecisionInputInstance>();
-  protected List<HistoricDecisionOutputInstance> outputs = new ArrayList<HistoricDecisionOutputInstance>();
+  protected List<HistoricDecisionInputInstance> inputs;
+  protected List<HistoricDecisionOutputInstance> outputs;
 
   public String getDecisionDefinitionId() {
     return decisionDefinitionId;
@@ -95,12 +99,20 @@ public class HistoricDecisionInstanceEntity extends HistoryEvent implements Hist
 
   @Override
   public List<HistoricDecisionInputInstance> getInputs() {
-    return inputs;
+    if(inputs != null) {
+      return inputs;
+    } else {
+      throw LOG.historicDecisionInputInstancesNotFetchedException();
+    }
   }
 
   @Override
   public List<HistoricDecisionOutputInstance> getOutputs() {
-    return outputs;
+    if(outputs != null) {
+      return outputs;
+    } else {
+      throw LOG.historicDecisionOutputInstancesNotFetchedException();
+    }
   }
 
   public void setInputs(List<HistoricDecisionInputInstance> inputs) {
@@ -116,6 +128,20 @@ public class HistoricDecisionInstanceEntity extends HistoryEvent implements Hist
       .getCommandContext()
       .getDbEntityManager()
       .delete(this);
+  }
+
+  public void addInput(HistoricDecisionInputInstance decisionInputInstance) {
+    if(inputs == null) {
+      inputs = new ArrayList<HistoricDecisionInputInstance>();
+    }
+    inputs.add(decisionInputInstance);
+  }
+
+  public void addOutput(HistoricDecisionOutputInstance decisionOutputInstance) {
+    if(outputs == null) {
+      outputs = new ArrayList<HistoricDecisionOutputInstance>();
+    }
+    outputs.add(decisionOutputInstance);
   }
 
 }

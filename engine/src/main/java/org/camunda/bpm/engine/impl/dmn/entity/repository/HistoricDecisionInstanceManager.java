@@ -108,9 +108,9 @@ public class HistoricDecisionInstanceManager extends AbstractHistoricManager {
       @SuppressWarnings("unchecked")
       List<HistoricDecisionInstance> decisionInstances = getDbEntityManager().selectList("selectHistoricDecisionInstancesByQueryCriteria", query, page);
 
-      Map<String, HistoricDecisionInstance> decisionInstancesById = new HashMap<String, HistoricDecisionInstance>();
+      Map<String, HistoricDecisionInstanceEntity> decisionInstancesById = new HashMap<String, HistoricDecisionInstanceEntity>();
       for(HistoricDecisionInstance decisionInstance : decisionInstances) {
-        decisionInstancesById.put(decisionInstance.getId(), decisionInstance);
+        decisionInstancesById.put(decisionInstance.getId(), (HistoricDecisionInstanceEntity) decisionInstance);
       }
 
       if (query.isIncludeInput()) {
@@ -127,13 +127,13 @@ public class HistoricDecisionInstanceManager extends AbstractHistoricManager {
     }
   }
 
-  protected void appendHistoricDecisionInputInstances(Map<String, HistoricDecisionInstance> decisionInstancesById, HistoricDecisionInstanceQueryImpl query) {
+  protected void appendHistoricDecisionInputInstances(Map<String, HistoricDecisionInstanceEntity> decisionInstancesById, HistoricDecisionInstanceQueryImpl query) {
     List<HistoricDecisionInputInstanceEntity> decisionInputInstances = findHistoricDecisionInputInstancesByDecisionInstanceIds(decisionInstancesById.keySet());
 
     for (HistoricDecisionInputInstance decisionInputInstance : decisionInputInstances) {
 
-      HistoricDecisionInstance historicDecisionInstance = decisionInstancesById.get(decisionInputInstance.getDecisionInstanceId());
-      historicDecisionInstance.getInputs().add(decisionInputInstance);
+      HistoricDecisionInstanceEntity historicDecisionInstance = decisionInstancesById.get(decisionInputInstance.getDecisionInstanceId());
+      historicDecisionInstance.addInput(decisionInputInstance);
 
       // do not fetch values for byte arrays eagerly (unless requested by the user)
       if (!isByteArrayValue(decisionInputInstance) || query.isByteArrayFetchingEnabled()) {
@@ -160,13 +160,13 @@ public class HistoricDecisionInstanceManager extends AbstractHistoricManager {
     }
   }
 
-  protected void appendHistoricDecisionOutputInstances(Map<String, HistoricDecisionInstance> decisionInstancesById, HistoricDecisionInstanceQueryImpl query) {
+  protected void appendHistoricDecisionOutputInstances(Map<String, HistoricDecisionInstanceEntity> decisionInstancesById, HistoricDecisionInstanceQueryImpl query) {
     List<HistoricDecisionOutputInstanceEntity> decisionInputInstances = findHistoricDecisionOutputInstancesByDecisionInstanceIds(decisionInstancesById.keySet());
 
     for (HistoricDecisionOutputInstance decisionOutputInstance : decisionInputInstances) {
 
-      HistoricDecisionInstance historicDecisionInstance = decisionInstancesById.get(decisionOutputInstance.getDecisionInstanceId());
-      historicDecisionInstance.getOutputs().add(decisionOutputInstance);
+      HistoricDecisionInstanceEntity historicDecisionInstance = decisionInstancesById.get(decisionOutputInstance.getDecisionInstanceId());
+      historicDecisionInstance.addOutput(decisionOutputInstance);
 
       // do not fetch values for byte arrays eagerly (unless requested by the user)
       if(!isByteArrayValue(decisionOutputInstance) || query.isByteArrayFetchingEnabled()) {

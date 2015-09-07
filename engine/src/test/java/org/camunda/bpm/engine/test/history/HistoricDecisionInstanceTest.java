@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.history.HistoricDecisionInputInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionInstance;
 import org.camunda.bpm.engine.history.HistoricDecisionInstanceQuery;
@@ -82,7 +83,13 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
 
     HistoricDecisionInstanceQuery query = historyService.createHistoricDecisionInstanceQuery();
 
-    assertThat(query.singleResult().getInputs().size(), is(0));
+    try {
+      query.singleResult().getInputs();
+      fail("expected exception: input not fetched");
+    } catch (ProcessEngineException e) {
+      // should throw exception if input is not fetched
+    }
+
     assertThat(query.includeInputs().singleResult().getInputs().size(), is(1));
   }
 
@@ -93,7 +100,13 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
 
     HistoricDecisionInstanceQuery query = historyService.createHistoricDecisionInstanceQuery();
 
-    assertThat(query.singleResult().getOutputs().size(), is(0));
+    try {
+      query.singleResult().getOutputs();
+      fail("expected exception: output not fetched");
+    } catch (ProcessEngineException e) {
+      // should throw exception if output is not fetched
+    }
+
     assertThat(query.includeOutputs().singleResult().getOutputs().size(), is(1));
   }
 
