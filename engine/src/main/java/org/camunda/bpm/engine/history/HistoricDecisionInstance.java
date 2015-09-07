@@ -74,4 +74,6 @@ public interface HistoricDecisionInstance {
    */
   List<HistoricDecisionOutputInstance> getOutputs();
 
+  /** The result of the collect operation if the hit policy 'collect' was used for the decision. */
+  Double getCollectResultValue();
 }

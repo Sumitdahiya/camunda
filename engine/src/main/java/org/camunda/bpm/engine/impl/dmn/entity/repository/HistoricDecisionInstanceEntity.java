@@ -46,6 +46,8 @@ public class HistoricDecisionInstanceEntity extends HistoryEvent implements Hist
 
   protected Date evaluationTime;
 
+  protected Double collectResultValue;
+
   protected List<HistoricDecisionInputInstance> inputs;
   protected List<HistoricDecisionOutputInstance> outputs;
 
@@ -144,4 +146,11 @@ public class HistoricDecisionInstanceEntity extends HistoryEvent implements Hist
     outputs.add(decisionOutputInstance);
   }
 
+  public Double getCollectResultValue() {
+    return collectResultValue;
+  }
+
+  public void setCollectResultValue(Double collectResultValue) {
+    this.collectResultValue = collectResultValue;
+  }
 }

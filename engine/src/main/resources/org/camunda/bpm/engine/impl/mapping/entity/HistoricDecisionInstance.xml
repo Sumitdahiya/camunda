@@ -7,7 +7,7 @@
  <!-- insert -->
 
  <insert id="insertHistoricDecisionInstance" parameterType="org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceEntity">
-    insert into ${prefix}ACT_HI_DECINST(ID_, DEC_DEF_ID_, DEC_DEF_KEY_, DEC_DEF_NAME_, PROC_DEF_KEY_, PROC_DEF_ID_, PROC_INST_ID_, ACT_INST_ID_, ACT_ID_, EVAL_TIME_)
+    insert into ${prefix}ACT_HI_DECINST(ID_, DEC_DEF_ID_, DEC_DEF_KEY_, DEC_DEF_NAME_, PROC_DEF_KEY_, PROC_DEF_ID_, PROC_INST_ID_, ACT_INST_ID_, ACT_ID_, EVAL_TIME_, COLLECT_VALUE_)
     values (#{id, jdbcType=VARCHAR},
             #{decisionDefinitionId, jdbcType=VARCHAR},
             #{decisionDefinitionKey, jdbcType=VARCHAR},
@@ -17,7 +17,8 @@
             #{processInstanceId, jdbcType=VARCHAR},
             #{activityInstanceId, jdbcType=VARCHAR},
             #{activityId, jdbcType=VARCHAR},
-            #{evaluationTime, jdbcType=TIMESTAMP}
+            #{evaluationTime, jdbcType=TIMESTAMP},
+            #{collectResultValue, jdbcType=DOUBLE}
            )
   </insert>
   
@@ -40,6 +41,7 @@
     <result property="activityInstanceId" column="ACT_INST_ID_" jdbcType="VARCHAR"/>
     <result property="activityId" column="ACT_ID_" jdbcType="VARCHAR"/>
     <result property="evaluationTime" column="EVAL_TIME_" jdbcType="TIMESTAMP"/>
+    <result property="collectResultValue" column="COLLECT_VALUE_" jdbcType="DOUBLE"/>
   </resultMap>
 
   <!-- select -->

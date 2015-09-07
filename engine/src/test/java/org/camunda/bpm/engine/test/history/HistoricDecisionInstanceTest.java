@@ -46,6 +46,7 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
   public static final String DECISION_MULTIPLE_OUTPUT_DMN = "org/camunda/bpm/engine/test/history/HistoricDecisionInstanceTest.decisionMultipleOutput.dmn10.xml";
   public static final String DECISION_COMPOUND_OUTPUT_DMN = "org/camunda/bpm/engine/test/history/HistoricDecisionInstanceTest.decisionCompoundOutput.dmn10.xml";
   public static final String DECISION_MULTIPLE_INPUT_DMN = "org/camunda/bpm/engine/test/history/HistoricDecisionInstanceTest.decisionMultipleInput.dmn10.xml";
+  public static final String DECISION_COLLECT_SUM_DMN = "org/camunda/bpm/engine/test/history/HistoricDecisionInstanceTest.decisionCollectSum.dmn10.xml";
 
   @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })
   public void testDecisionInstanceProperties() {
@@ -310,6 +311,17 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
     assertThat(secondOutput.getRuleOrder(), is(1));
     assertThat(secondOutput.getVariableName(), is("result2"));
     assertThat(secondOutput.getTextValue(), is("not okay"));
+  }
+
+  @Deployment(resources = { DECISION_PROCESS, DECISION_COLLECT_SUM_DMN })
+  public void testCollectResultValue() {
+
+    startProcessInstanceAndEvaluateDecision();
+
+    HistoricDecisionInstance historicDecisionInstance = historyService.createHistoricDecisionInstanceQuery().singleResult();
+
+    assertThat(historicDecisionInstance.getCollectResultValue(), is(notNullValue()));
+    assertThat(historicDecisionInstance.getCollectResultValue(), is(3.0));
   }
 
   @Deployment(resources = { DECISION_PROCESS, DECISION_SINGLE_OUTPUT_DMN })

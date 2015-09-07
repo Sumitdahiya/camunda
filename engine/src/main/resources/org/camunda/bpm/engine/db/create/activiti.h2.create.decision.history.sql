@@ -10,6 +10,7 @@ create table ACT_HI_DECINST (
     ACT_INST_ID_ varchar(64),
     ACT_ID_ varchar(255),
     EVAL_TIME_ timestamp not null,
+    COLLECT_VALUE_ double,
     primary key (ID_)
 );
 
@@ -24,8 +25,7 @@ create table ACT_HI_DEC_IN (
     DOUBLE_ double,
     LONG_ bigint,
     TEXT_ varchar(4000),
-    TEXT2_ varchar(4000),
-    RESULT_VALUE_ double,
+    TEXT2_ varchar(4000),    
     primary key (ID_)
 );
 

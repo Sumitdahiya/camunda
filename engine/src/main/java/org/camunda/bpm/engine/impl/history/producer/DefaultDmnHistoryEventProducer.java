@@ -73,6 +73,11 @@ public class DefaultDmnHistoryEventProducer implements DmnHistoryEventProducer {
     event.setActivityId(execution.getActivityId());
     event.setActivityInstanceId(execution.getActivityInstanceId());
 
+    if(decisionTableResult.getCollectResultValue() != null) {
+      double collectResultValue = decisionTableResult.getCollectResultValue().doubleValue();
+      event.setCollectResultValue(collectResultValue);
+    }
+
     List<HistoricDecisionInputInstance> historicDecisionInputInstances = createHistoricDecisionInputInstances(decisionTableResult);
     event.setInputs(historicDecisionInputInstances);
 
