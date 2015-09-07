@@ -20,12 +20,11 @@ import static org.camunda.bpm.engine.authorization.Resources.DECISION_DEFINITION
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.camunda.bpm.engine.AuthorizationException;
 import org.camunda.bpm.engine.history.HistoricDecisionInstanceQuery;
-import org.camunda.bpm.engine.impl.dmn.entity.repository.HistoricDecisionInstanceEntity;
-import org.camunda.bpm.engine.impl.interceptor.Command;
-import org.camunda.bpm.engine.impl.interceptor.CommandContext;
-import org.camunda.bpm.engine.impl.util.ClockUtil;
 import org.camunda.bpm.engine.test.authorization.AuthorizationTest;
 
 /**
@@ -132,7 +131,9 @@ public class HistoricDecisionInstanceAuthorizationTest extends AuthorizationTest
   }
 
   protected void startProcessInstanceAndEvaluateDecision() {
-    startProcessInstanceByKey(PROCESS_KEY);
+    Map<String, Object> variables = new HashMap<String, Object>();
+    variables.put("input1", null);
+    startProcessInstanceByKey(PROCESS_KEY, variables);
   }
 
 }

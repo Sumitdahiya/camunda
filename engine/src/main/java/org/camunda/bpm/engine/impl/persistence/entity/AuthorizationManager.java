@@ -883,7 +883,7 @@ public class AuthorizationManager extends AbstractManager {
   }
 
   public void configureHistoricDecisionInstanceQuery(HistoricDecisionInstanceQueryImpl query) {
-    configureQuery(query, DECISION_DEFINITION, "DECISION_KEY_", READ_HISTORY);
+    configureQuery(query, DECISION_DEFINITION, "DEC_DEF_KEY_", READ_HISTORY);
   }
 
   // user operation log query ///////////////////////////////
