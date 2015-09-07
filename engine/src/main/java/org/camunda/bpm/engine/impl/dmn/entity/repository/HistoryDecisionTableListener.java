@@ -23,6 +23,7 @@ import org.camunda.bpm.engine.impl.history.event.HistoryEvent;
 import org.camunda.bpm.engine.impl.history.event.HistoryEventTypes;
 import org.camunda.bpm.engine.impl.history.producer.DmnHistoryEventProducer;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
+import org.camunda.bpm.engine.repository.DecisionDefinition;
 
 public class HistoryDecisionTableListener implements DmnDecisionTableListener {
 
@@ -48,10 +49,19 @@ public class HistoryDecisionTableListener implements DmnDecisionTableListener {
   }
 
   public HistoryEvent createHistoryEvent(DelegateExecution execution, DmnDecisionTable decisionTable, DmnDecisionTableResult decisionTableResult) {
-    if(historyLevel.isHistoryEventProduced(HistoryEventTypes.DMN_DECISION_EVALUATE, null)) {
+    if(historyLevel.isHistoryEventProduced(HistoryEventTypes.DMN_DECISION_EVALUATE, null) && isDeployedDecisionTable(decisionTable)) {
       return eventProducer.createDecisionEvaluatedEvt(execution, decisionTable, decisionTableResult);
     } else {
       return null;
+    }
+  }
+
+  protected boolean isDeployedDecisionTable(DmnDecisionTable decisionTable) {
+    if(decisionTable instanceof DecisionDefinition) {
+      // ignore decisions that are evaluated in a script task
+      return ((DecisionDefinition) decisionTable).getId() != null;
+    } else {
+      return false;
     }
   }
 

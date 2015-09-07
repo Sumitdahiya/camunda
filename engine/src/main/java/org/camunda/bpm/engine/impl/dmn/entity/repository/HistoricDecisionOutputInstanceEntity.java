@@ -105,6 +105,10 @@ public class HistoricDecisionOutputInstanceEntity extends HistoryEvent implement
     return typedValueField.getTypeName();
   }
 
+  public void setTypeName(String typeName) {
+    typedValueField.setSerializerName(typeName);
+  }
+
   @Override
   public Object getValue() {
     return typedValueField.getValue();
@@ -187,16 +191,6 @@ public class HistoricDecisionOutputInstanceEntity extends HistoryEvent implement
   @Override
   public void setByteArrayValue(byte[] bytes) {
     byteArrayField.setByteArrayValue(bytes);
-  }
-
-  @Override
-  public String getSerializerName() {
-    return typedValueField.getSerializerName();
-  }
-
-  @Override
-  public void setSerializerName(String serializerName) {
-    typedValueField.setSerializerName(serializerName);
   }
 
   public void setValue(TypedValue typedValue) {

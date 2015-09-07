@@ -13,7 +13,6 @@
 
 package org.camunda.bpm.engine.history;
 
-import org.camunda.bpm.engine.impl.variable.serializer.TypedValueSerializer;
 import org.camunda.bpm.engine.impl.variable.serializer.ValueFields;
 import org.camunda.bpm.engine.variable.value.TypedValue;
 
@@ -65,9 +64,4 @@ public interface HistoricDecisionInputInstance extends ValueFields {
    */
   String getErrorMessage();
 
-  /** Returns the name of the {@link TypedValueSerializer} what serialize the value.  */
-  String getSerializerName();
-
-  /** Set the name of the {@link TypedValueSerializer} what serialize the value. */
-  void setSerializerName(String serializerName);
 }

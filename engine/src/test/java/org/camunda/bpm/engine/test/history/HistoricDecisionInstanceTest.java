@@ -175,7 +175,7 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
     assertThat(inputs.size(), is(1));
 
     HistoricDecisionInputInstance input = inputs.iterator().next();
-    assertThat(input.getSerializerName(), is("string"));
+    assertThat(input.getTypeName(), is("string"));
     assertThat(input.getTextValue(), is("a"));
     assertThat(input.getValue(), is((Object) "a"));
   }
@@ -190,7 +190,7 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
     assertThat(inputs.size(), is(1));
 
     HistoricDecisionInputInstance input = inputs.iterator().next();
-    assertThat(input.getSerializerName(), is("long"));
+    assertThat(input.getTypeName(), is("long"));
     assertThat(input.getLongValue(), is(1L));
     assertThat(input.getValue(), is((Object) 1L));
   }
@@ -205,7 +205,7 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
     assertThat(inputs.size(), is(1));
 
     HistoricDecisionInputInstance input = inputs.iterator().next();
-    assertThat(input.getSerializerName(), is("double"));
+    assertThat(input.getTypeName(), is("double"));
     assertThat(input.getDoubleValue(), is(2.5));
     assertThat(input.getValue(), is((Object) 2.5));
   }
@@ -221,7 +221,7 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
     assertThat(inputs.size(), is(1));
 
     HistoricDecisionInputInstance input = inputs.iterator().next();
-    assertThat(input.getSerializerName(), is("bytes"));
+    assertThat(input.getTypeName(), is("bytes"));
     assertThat(input.getByteArrayValueId(), is(notNullValue()));
     assertThat(input.getValue(), is((Object) bytes));
   }
@@ -237,7 +237,7 @@ public class HistoricDecisionInstanceTest extends PluggableProcessEngineTestCase
     assertThat(inputs.size(), is(1));
 
     HistoricDecisionInputInstance input = inputs.iterator().next();
-    assertThat(input.getSerializerName(), is("bytes"));
+    assertThat(input.getTypeName(), is("bytes"));
     assertThat(input.getByteArrayValueId(), is(notNullValue()));
     assertThat(input.getValue(), is(nullValue()));
   }
